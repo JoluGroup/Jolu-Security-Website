@@ -14,9 +14,9 @@ export function Navbar() {
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <ContactBar />
-      <div className="bg-gradient-to-b from-background/90 to-transparent">
+      <div className="border-b border-border/60 bg-background/95 backdrop-blur-md">
         <div className="mx-auto flex h-(--nav-h) max-w-7xl items-center justify-between gap-4 px-5 lg:px-8">
-          <BrandLogo />
+          <BrandLogo priority />
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -42,7 +42,11 @@ export function Navbar() {
                   <span className="block h-px w-4 bg-foreground" />
                 </span>
               </SheetTrigger>
-              <SheetContent side="top" className="h-svh overflow-y-auto border-0 bg-background p-0" showCloseButton>
+              <SheetContent
+                side="top"
+                className="data-[side=top]:h-dvh data-[side=top]:max-h-dvh overflow-y-auto overscroll-contain border-0 bg-background p-0"
+                showCloseButton
+              >
                 <MenuPanel onNavigate={() => setOpen(false)} />
               </SheetContent>
             </Sheet>
@@ -87,7 +91,7 @@ function ContactBar() {
 function MenuPanel({ onNavigate }: { onNavigate: () => void }) {
   const { contact } = siteConfig
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-5 pt-5 pb-28 md:pb-10 lg:px-8">
+    <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-5 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-[calc(2.5rem+env(safe-area-inset-bottom))] lg:px-8">
       <SheetTitle className="sr-only">Site menu</SheetTitle>
       <div className="flex h-11 items-center">
         <BrandLogo />

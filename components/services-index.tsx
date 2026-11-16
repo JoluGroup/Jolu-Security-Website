@@ -29,6 +29,15 @@ export type ServiceIndexItem = {
 
 const numeral = (i: number) => String(i + 1).padStart(2, "0")
 
+// Link scroll={false} keeps Next from jumping on every query change, so the click scrolls explicitly.
+// scrollIntoView honours the html scroll-padding-top (--header-h).
+function scrollToEnquiry() {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  requestAnimationFrame(() => {
+    document.getElementById("contact")?.scrollIntoView({ behavior: reduceMotion ? "instant" : "smooth", block: "start" })
+  })
+}
+
 export function ServicesIndex({ items }: { items: ServiceIndexItem[] }) {
   const [active, setActive] = useState(0)
   const current = items[active]
@@ -44,6 +53,7 @@ export function ServicesIndex({ items }: { items: ServiceIndexItem[] }) {
               <Link
                 href={`/?service=${service.id}#contact`}
                 scroll={false}
+                onClick={scrollToEnquiry}
                 onMouseEnter={() => setActive(i)}
                 onFocus={() => setActive(i)}
                 data-active={isActive || undefined}

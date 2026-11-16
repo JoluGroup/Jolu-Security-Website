@@ -10,14 +10,24 @@ export function Eyebrow({ children, className }: { children: ReactNode; classNam
   )
 }
 
-export function SectionTitle({ id, children, className }: { id: string; children: ReactNode; className?: string }) {
+export function SectionTitle({
+  id,
+  children,
+  className,
+  as: Heading = "h2",
+}: {
+  id: string
+  children: ReactNode
+  className?: string
+  as?: "h1" | "h2"
+}) {
   return (
-    <h2
+    <Heading
       id={id}
       className={cn("text-balance text-4xl font-semibold leading-[1.02] tracking-tight text-foreground md:text-6xl", className)}
     >
       {children}
-    </h2>
+    </Heading>
   )
 }
 

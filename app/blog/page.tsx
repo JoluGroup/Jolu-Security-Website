@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { siteConfig } from "@/lib/site-config"
 
 export const metadata: Metadata = {
-  title: "Blog",
+  title: `Blog | ${siteConfig.name}`,
   description: `Articles from ${siteConfig.name} about security for homes, estates, businesses and events.`,
   alternates: { canonical: "/blog" },
   // Keep out of search results until real articles are published.
@@ -20,7 +20,7 @@ export default function BlogPage() {
         <div className="mx-auto flex min-h-[70svh] max-w-7xl flex-col justify-center gap-10 px-5 pt-[calc(var(--header-h)+4rem)] pb-24 md:pb-32 lg:px-8">
           <div className="flex max-w-3xl flex-col gap-6">
             <Eyebrow>Blog</Eyebrow>
-            <SectionTitle id="blog-title">Articles are on the way</SectionTitle>
+            <SectionTitle as="h1" id="blog-title">Articles are on the way</SectionTitle>
             <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground">
               Articles about security for homes, estates, businesses and events will be published here.
             </p>

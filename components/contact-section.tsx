@@ -1,14 +1,15 @@
 import { Download, Mail, MessageCircle, Phone } from "lucide-react"
 import { EnquiryForm } from "@/components/enquiry-form"
+import { OfficeList } from "@/components/office-list"
 import { Eyebrow, SectionTitle } from "@/components/section-heading"
 import { Button } from "@/components/ui/button"
 import { siteConfig, whatsappLink } from "@/lib/site-config"
 
 export function ContactSection() {
-  const { contact, offices, downloads } = siteConfig
+  const { contact, downloads } = siteConfig
 
   return (
-    <section id="contact" aria-labelledby="contact-title" className="scroll-mt-20 border-t border-border bg-card">
+    <section id="contact" aria-labelledby="contact-title" className="scroll-mt-(--header-h) border-t border-border bg-card">
       <div className="mx-auto grid max-w-7xl gap-16 px-5 py-24 md:grid-cols-12 md:gap-8 md:py-32 lg:px-8">
         <div className="flex flex-col gap-10 md:col-span-5">
           <div className="flex flex-col gap-6">
@@ -26,9 +27,15 @@ export function ContactSection() {
 
           <dl className="flex flex-col">
             <ContactRow label="Phone" icon={<Phone className="size-4" aria-hidden="true" />}>
-              <a href={contact.phoneHref} className="font-mono text-lg text-foreground underline-offset-4 hover:underline">
-                {contact.phoneDisplay}
-              </a>
+              <ul className="flex flex-col gap-1">
+                {contact.phones.map((phone) => (
+                  <li key={phone.e164}>
+                    <a href={phone.href} className="font-mono text-lg text-foreground underline-offset-4 hover:underline">
+                      {phone.displayIntl}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </ContactRow>
             <ContactRow label="Email" icon={<Mail className="size-4" aria-hidden="true" />}>
               <a href={`mailto:${contact.email}`} className="text-lg text-foreground underline-offset-4 hover:underline">
@@ -39,15 +46,7 @@ export function ContactSection() {
 
           <div className="flex flex-col gap-4">
             <h3 className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">Offices</h3>
-            {/* TODO(jolu): confirm office names and locations with the company. */}
-            <ul className="flex flex-col">
-              {offices.map((office) => (
-                <li key={office.name} className="flex items-baseline justify-between gap-4 border-t border-border py-3 last:border-b">
-                  <span className="text-foreground">{office.name}</span>
-                  <span className="text-sm text-muted-foreground">{office.detail}</span>
-                </li>
-              ))}
-            </ul>
+            <OfficeList />
           </div>
 
           <div className="flex flex-col gap-4">

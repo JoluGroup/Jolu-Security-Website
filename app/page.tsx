@@ -1,12 +1,10 @@
 import { ContactSection } from "@/components/contact-section"
 import { IndustriesSection } from "@/components/industries-section"
 import { IntroSection } from "@/components/intro-section"
-import { MobileActionBar } from "@/components/mobile-action-bar"
-import { Navbar } from "@/components/navbar"
 import { PeopleSection } from "@/components/people-section"
 import { ProtectionStage } from "@/components/protection-stage"
 import { ServicesSection } from "@/components/services-section"
-import { SiteFooter } from "@/components/site-footer"
+import { SiteShell } from "@/components/site-shell"
 import { TrustStrip } from "@/components/trust-strip"
 import { WhySection } from "@/components/why-section"
 import { firstClearedPhoto, resolvePhoto } from "@/lib/photo-library"
@@ -32,14 +30,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c") }}
       />
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-card focus:px-4 focus:py-2 focus:text-sm"
-      >
-        Skip to content
-      </a>
-      <Navbar />
-      <main id="main">
+      <SiteShell>
         <ProtectionStage heroPoster={heroPoster} layerPhotos={layerPhotos} />
         <TrustStrip />
         <IntroSection />
@@ -48,9 +39,7 @@ export default function HomePage() {
         <WhySection />
         <PeopleSection />
         <ContactSection />
-      </main>
-      <SiteFooter />
-      <MobileActionBar />
+      </SiteShell>
     </>
   )
 }

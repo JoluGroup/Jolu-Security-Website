@@ -10,7 +10,7 @@ export function WhySection() {
   const claims = getApprovedClaims()
 
   return (
-    <section id="why-jolu" aria-labelledby="why-title" className="scroll-mt-20 border-t border-border">
+    <section id="why-jolu" aria-labelledby="why-title" className="scroll-mt-(--header-h) border-t border-border">
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-5 py-24 md:py-32 lg:px-8">
         <FadeUp className="flex flex-col gap-6">
           <Eyebrow>Why {siteConfig.name}</Eyebrow>

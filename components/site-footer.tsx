@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache"
 import { BrandLogo } from "@/components/brand-logo"
+import { OfficeList } from "@/components/office-list"
 import { INDUSTRIES, SERVICES } from "@/lib/services"
 import { siteConfig } from "@/lib/site-config"
 
@@ -10,7 +11,7 @@ async function CurrentYear() {
 }
 
 export function SiteFooter() {
-  const { contact, offices } = siteConfig
+  const { contact } = siteConfig
   return (
     <footer className="border-t border-border pb-24 md:pb-0">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-12 md:gap-8 lg:px-8">
@@ -33,11 +34,13 @@ export function SiteFooter() {
           ))}
         </FooterList>
         <FooterList title="Contact" className="md:col-span-2">
-          <li>
-            <a href={contact.phoneHref} className="font-mono hover:text-foreground">
-              {contact.phoneDisplay}
-            </a>
-          </li>
+          {contact.phones.map((phone) => (
+            <li key={phone.e164}>
+              <a href={phone.href} className="font-mono hover:text-foreground">
+                {phone.displayIntl}
+              </a>
+            </li>
+          ))}
           <li>
             <a href={contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
               WhatsApp<span className="sr-only"> (opens in a new tab)</span>
@@ -49,13 +52,12 @@ export function SiteFooter() {
             </a>
           </li>
         </FooterList>
-        <FooterList title="Offices" className="md:col-span-2">
-          {offices.map((o) => (
-            <li key={o.name}>
-              {o.name} <span className="text-muted-foreground/80">· {o.detail}</span>
-            </li>
-          ))}
-        </FooterList>
+        <section aria-labelledby="footer-offices-title" className="md:col-span-6 lg:col-span-2">
+          <h2 id="footer-offices-title" className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Offices
+          </h2>
+          <OfficeList compact className="mt-4" />
+        </section>
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-5 py-6 font-mono text-xs text-muted-foreground lg:px-8">

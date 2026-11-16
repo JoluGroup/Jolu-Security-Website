@@ -55,6 +55,18 @@
   --ring: #f4f4f5;
   --status: #22c55e;
   --radius: 0.625rem;
+
+  /* Fixed header geometry: contact bar + main nav row. Used for every offset below the header. */
+  --contact-bar-h: 2.75rem;
+  --nav-h: 4rem;
+  --header-h: calc(var(--contact-bar-h) + var(--nav-h));
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --contact-bar-h: 2.25rem;
+    --nav-h: 5rem;
+  }
 }
 
 @layer base {
@@ -64,6 +76,7 @@
   html {
     @apply font-sans;
     color-scheme: dark;
+    scroll-padding-top: var(--header-h);
   }
   body {
     @apply bg-background text-foreground;

@@ -116,7 +116,7 @@ function PinnedStage({ heroPoster, layerPhotos }: StageProps) {
 
         <div className="stage-veil pointer-events-none absolute inset-0" />
 
-        <div className="relative mx-auto grid h-full max-w-7xl px-5 pt-24 pb-44 md:pb-32 lg:px-8">
+        <div className="relative mx-auto grid h-full max-w-7xl px-5 pt-[calc(var(--header-h)+1rem)] pb-44 md:pb-32 lg:px-8">
           <div className="relative col-start-1 row-start-1 self-center md:max-w-2xl">
             <IntroCopy active={step === 0} />
             {PROTECTION_LAYERS.map((layer, i) => (

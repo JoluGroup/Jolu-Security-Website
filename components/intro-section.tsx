@@ -5,7 +5,7 @@ import { siteConfig } from "@/lib/site-config"
 
 export function IntroSection() {
   return (
-    <section id="about" aria-labelledby="about-title" className="scroll-mt-20 border-t border-border">
+    <section id="about" aria-labelledby="about-title" className="scroll-mt-(--header-h) border-t border-border">
       <div className="mx-auto grid max-w-7xl gap-12 px-5 py-24 md:grid-cols-12 md:gap-8 md:py-36 lg:px-8">
         <FadeUp className="flex flex-col gap-8 md:col-span-7">
           <Eyebrow>About {siteConfig.name}</Eyebrow>

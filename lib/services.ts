@@ -27,7 +27,7 @@ export const SERVICES = [
   {
     id: "alarm-response",
     name: "Alarm Response",
-    description: "Response to alarm activations at subscribed properties.",
+    description: "Response to alarm activations.",
   },
   {
     id: "vip-close-protection",

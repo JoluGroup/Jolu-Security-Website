@@ -9,12 +9,10 @@ export function BrandLogo() {
         alt=""
         width={40}
         height={40}
-        unoptimized
-        priority
         className="size-10 object-contain"
       />
-      <span className="text-sm font-semibold leading-tight tracking-[0.14em] text-foreground">
-        JOLU GROUP <span className="block text-muted-foreground sm:inline">SECURITY</span>
+      <span className="text-sm font-semibold leading-tight tracking-[0.14em] text-foreground uppercase">
+        Jolu <span className="text-muted-foreground">Security</span>
       </span>
     </a>
   )

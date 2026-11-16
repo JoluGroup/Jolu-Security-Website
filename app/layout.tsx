@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
+import { siteConfig } from "@/lib/site-config"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -20,9 +21,11 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "Jolu Group Security | Layers of Protection",
+  metadataBase: new URL(siteConfig.url),
+  title: siteConfig.name,
   description:
-    "Electric fencing, manned guarding, CCTV, alarm response, K9 and VIP close protection across Kenya. Confidence in every layer of protection.",
+    "Security services across Kenya: manned guarding, events security, K9 unit, CCTV installation, electric fencing, alarm response and VIP close protection.",
+  alternates: { canonical: "/" },
   keywords: [
     "security services Kenya",
     "manned guarding",
@@ -32,9 +35,11 @@ export const metadata: Metadata = {
     "VIP close protection",
   ],
   openGraph: {
-    title: "Jolu Group Security",
-    description:
-      "Manned guarding, K9, CCTV, electric fencing and VIP close protection across Kenya.",
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: "/",
+    siteName: siteConfig.name,
+    images: [{ url: siteConfig.logo.src, alt: siteConfig.logo.alt }],
     type: "website",
     locale: "en_KE",
   },

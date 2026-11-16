@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -12,10 +12,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 })
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+  style: ["italic"],
+})
+
 export const metadata: Metadata = {
-  title: "Jolu Group Security | Licensed Private Security Services in Kenya",
+  title: "Jolu Group Security | Layers of Protection",
   description:
-    "Manned guarding, K9, CCTV, electric fencing and VIP close protection across Kenya. Licensed, vetted, 24/7 monitored.",
+    "Electric fencing, manned guarding, CCTV, alarm response, K9 and VIP close protection across Kenya. Confidence in every layer of protection.",
   keywords: [
     "security services Kenya",
     "manned guarding",
@@ -42,7 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark bg-background antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} dark bg-background antialiased`}
     >
       <body className="min-h-svh">{children}</body>
     </html>

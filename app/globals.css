@@ -26,7 +26,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-status: var(--status);
+  --font-serif: var(--font-instrument-serif);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -72,4 +72,71 @@
     outline: 2px solid var(--ring);
     outline-offset: 3px;
   }
+}
+
+/* Layers of Protection scenes */
+.scene {
+  --scene-line: rgb(255 255 255 / 0.45);
+  --scene-faint: rgb(255 255 255 / 0.07);
+}
+.scene svg * {
+  transform-box: view-box;
+}
+.scene-grid {
+  background-image:
+    linear-gradient(var(--scene-faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--scene-faint) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(60% 60% at 70% 50%, #000, transparent 75%);
+}
+.scene svg {
+  will-change: transform;
+}
+.scene-glow {
+  background: radial-gradient(60% 55% at 70% 50%, rgb(225 29 46 / 0.14), transparent 70%);
+}
+.stage-veil {
+  background:
+    linear-gradient(90deg, var(--background) 0%, rgb(10 10 11 / 0.85) 35%, rgb(10 10 11 / 0.2) 70%, transparent 100%),
+    linear-gradient(0deg, var(--background) 0%, transparent 30%);
+}
+@media (max-width: 767px) {
+  .stage-veil {
+    background: linear-gradient(0deg, var(--background) 10%, rgb(10 10 11 / 0.75) 55%, rgb(10 10 11 / 0.55) 100%);
+  }
+}
+
+@keyframes scene-spin { to { transform: rotate(360deg); } }
+@keyframes scene-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes scene-dash { to { stroke-dashoffset: -320; } }
+@keyframes scene-scan-y { from { transform: translateY(220px); } to { transform: translateY(680px); } }
+@keyframes scene-scan-cam { from { transform: translateY(0); } to { transform: translateY(150px); } }
+@keyframes scene-pulse-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(5); opacity: 0; }
+}
+@keyframes scene-breathe { 50% { opacity: 0.45; } }
+@keyframes scene-trace { from { stroke-dashoffset: 800; } to { stroke-dashoffset: -800; } }
+
+.anim-spin { animation: scene-spin 6s linear infinite; }
+.anim-spin-slow { animation: scene-spin 60s linear infinite; }
+.anim-spin-rev { animation: scene-spin-rev 90s linear infinite; }
+.anim-dash { animation: scene-dash 6s linear infinite; }
+.anim-scan-y { animation: scene-scan-y 3.6s ease-in-out infinite alternate; }
+.anim-scan-cam { animation: scene-scan-cam 2.4s linear infinite; }
+.anim-pulse-ring { animation: scene-pulse-ring 2.4s ease-out infinite; }
+.anim-breathe { animation: scene-breathe 4s ease-in-out infinite; }
+.anim-trace { animation: scene-trace 5s linear infinite; }
+
+/* Lighter motion on small screens */
+@media (max-width: 767px) {
+  .scene [class*="anim-"] { animation-duration: 12s; }
+  .scene .anim-spin { animation-duration: 10s; }
+  .scene .anim-scan-cam,
+  .scene .anim-trace { animation: none; opacity: 0; }
+}
+
+.scene-static [class*="anim-"] { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .scene [class*="anim-"] { animation: none !important; }
 }

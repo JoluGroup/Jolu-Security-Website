@@ -1,5 +1,5 @@
 import { Navbar } from "@/components/navbar"
-import { Hero } from "@/components/hero"
+import { ProtectionStage } from "@/components/protection-stage"
 import { TrustStrip } from "@/components/trust-strip"
 import { MobileActionBar } from "@/components/mobile-action-bar"
 
@@ -14,7 +14,7 @@ export default function HomePage() {
       </a>
       <Navbar />
       <main id="main" className="pb-20 md:pb-0">
-        <Hero />
+        <ProtectionStage />
         <TrustStrip />
       </main>
       <MobileActionBar />

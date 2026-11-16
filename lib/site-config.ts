@@ -1,4 +1,4 @@
-// Single source of truth for every number, contact detail and status shown on the homepage.
+// Single source of truth for contact details, navigation and trust content on the homepage.
 // Edit values here; components read from this object only.
 export const siteConfig = {
   name: "Jolu Group Security",
@@ -10,18 +10,7 @@ export const siteConfig = {
     phoneDisplay: "+254 790 298 003",
     phoneHref: "tel:+254790298003",
     whatsappHref: "https://wa.me/254790298003",
-    replyPromise: "Reply within 2 business hours",
   },
-  stats: [
-    { value: "5+", label: "Years operating" },
-    { value: "250+", label: "Guards deployed" },
-  ],
-  operationsCentre: {
-    label: "Operations centre",
-    status: "24/7 active",
-    timeZone: "Africa/Nairobi",
-  },
-  regions: ["Nairobi", "Nakuru", "Rongo/Migori"],
   licence: {
     // TODO(jolu): replace with the official licence number before publishing.
     number: "[LICENCE NO. — TO BE CONFIRMED]",
@@ -43,5 +32,6 @@ export const siteConfig = {
     { label: "Contact", href: "#contact" },
     { label: "Blog", href: "#blog" },
   ],
-  assessmentHref: "#contact",
+  quoteHref: "#contact",
+  servicesHref: "#services",
 } as const

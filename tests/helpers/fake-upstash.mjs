@@ -1,6 +1,6 @@
 // A local stand-in for the Upstash Redis REST API, used ONLY by the automated tests.
 // It models the documented behaviour of the few commands the limiter uses
-// (POST /multi-exec; SET key value EX seconds NX; INCR; PTTL; EXPIRE) with a virtual
+// (POST /multi-exec; SET key value EX seconds NX; GET; INCR; PTTL; EXPIRE) with a virtual
 // clock, and rejects any other command or option shape. It is a MODEL of Upstash,
 // not the real service: integration with a real database is verified separately.
 import http from "node:http"
@@ -28,6 +28,10 @@ export async function startFakeUpstash() {
         if (live(key)) return { result: null }
         state.store.set(key, { value: Number(args[0]), expiresAt: state.nowMs + Number(args[2]) * 1000 })
         return { result: "OK" }
+      }
+      case "GET": {
+        const e = live(key)
+        return { result: e ? String(e.value) : null } // Redis returns strings
       }
       case "INCR": {
         let e = live(key)

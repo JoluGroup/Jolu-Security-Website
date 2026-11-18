@@ -12,8 +12,9 @@ export function getDeliveryConfig(): DeliveryConfig | null {
 }
 
 /**
- * Explicit delivery mode, read from ENQUIRY_DELIVERY. It does not depend on NODE_ENV,
- * so previews (which run production builds) behave exactly as configured.
+ * Explicit delivery mode, read from ENQUIRY_DELIVERY. The mode itself does not depend on
+ * NODE_ENV; test mode in a production build (previews included) additionally needs
+ * ENQUIRY_ALLOW_PRODUCTION_TEST=true, enforced in the route.
  *
  *   live      send through Resend. Requires RESEND_API_KEY, ENQUIRY_FROM and ENQUIRY_TO.
  *             Having credentials alone never enables sending.
@@ -21,6 +22,17 @@ export function getDeliveryConfig(): DeliveryConfig | null {
  *   disabled  anything else (unset, empty, misspelled): the endpoint returns 503.
  */
 export type DeliveryMode = "live" | "test" | "disabled"
+
+/**
+ * Test mode in a production build (NODE_ENV=production, which includes preview
+ * deployments) discards real enquiries, so it must be opted into explicitly with
+ * ENQUIRY_ALLOW_PRODUCTION_TEST=true. This flag only permits test mode there. It never
+ * enables sending: test mode contacts Resend under no circumstances, and the flag has no
+ * effect on live mode.
+ */
+export function isProductionTestAllowed() {
+  return process.env.ENQUIRY_ALLOW_PRODUCTION_TEST?.trim().toLowerCase() === "true"
+}
 
 export function getDeliveryMode(): DeliveryMode {
   const value = process.env.ENQUIRY_DELIVERY?.trim().toLowerCase()

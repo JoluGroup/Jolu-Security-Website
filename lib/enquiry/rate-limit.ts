@@ -12,10 +12,20 @@ import { createHash, createHmac } from "node:crypto"
  * two adjacent windows); the global cap bounds that.
  *
  * TWO LIMITS, CHECKED IN THIS ORDER:
+ *  0. Read-only peek at the global counter (trusted-client mode only). If the global cap is
+ *     already reached the request is refused here, WITHOUT touching either counter, so a
+ *     visitor retrying during a global lockout does not use up their own client quota.
  *  1. Per-client (default 5 / 10 min), only when a trusted client identity exists.
  *  2. Global (default 200 / hour), always.
  * A request refused by the per-client limit does not count toward the global cap,
- * so one noisy client cannot use up the site-wide allowance.
+ * so one noisy client cannot use up the site-wide allowance. The peek is not atomic with
+ * step 2, so a few concurrent requests can pass it together; step 2 still enforces the cap
+ * exactly, and those requests are then refused having used one client slot (benign).
+ *
+ * QUOTA CONSUMPTION: every request that gets past the early checks counts, whether or not
+ * it later turns out to be valid (malformed JSON, validation errors, honeypot hits, aborted
+ * or oversized bodies). Only requests refused before the limiter (wrong content type, bad or
+ * oversized Content-Length, cross-origin, not configured) cost nothing.
  *
  * Each counter is updated by one atomic Upstash /multi-exec transaction:
  *   SET key 0 EX <window> NX  ->  INCR key  ->  PTTL key
@@ -113,12 +123,29 @@ async function upstashHit(config: UpstashConfig, key: string, windowSeconds: num
   return { count, ttlMs }
 }
 
+/** Read-only: current count and remaining TTL of a counter, without creating or changing it. */
+async function upstashPeek(config: UpstashConfig, key: string): Promise<Hit | null> {
+  const results = await upstashPost(config, [["GET", key], ["PTTL", key]])
+  if (!results) return null
+  const raw = results[0]?.result
+  const count = raw === null || raw === undefined ? 0 : Number(raw)
+  const ttlMs = Number(results[1]?.result)
+  if (!Number.isFinite(count) || !Number.isFinite(ttlMs)) return null
+  return { count, ttlMs }
+}
+
 // Development / test-mode fallback. Not durable and not shared across instances.
 const memory = new Map<string, { count: number; resetAt: number }>()
 
 /** Test hook: clears the in-memory fallback. */
 export function resetMemoryRateLimit() {
   memory.clear()
+}
+
+function memoryPeek(key: string): Hit {
+  const entry = memory.get(key)
+  const now = Date.now()
+  return entry && entry.resetAt > now ? { count: entry.count, ttlMs: entry.resetAt - now } : { count: 0, ttlMs: -2 }
 }
 
 function memoryHit(key: string, windowSeconds: number): Hit {
@@ -165,6 +192,15 @@ export async function checkRateLimit(
   const retryAfter = (ttlMs: number) => Math.max(1, Math.ceil(ttlMs / 1000))
 
   if (clientId !== null) {
+    // Step 0: refuse during a global lockout without consuming client or global quota.
+    const peeked = upstash
+      ? await upstashPeek(upstash, GLOBAL_KEY).catch(() => null)
+      : memoryPeek(GLOBAL_KEY)
+    if (!peeked) return { ok: false, reason: "unavailable" }
+    if (peeked.count >= config.globalLimit && peeked.ttlMs > 0) {
+      return { ok: false, reason: "limited", scope: "global", retryAfterSeconds: retryAfter(peeked.ttlMs) }
+    }
+
     const key = upstash
       ? clientKey(clientId, upstash.token)
       : `dev:c:${createHash("sha256").update(clientId).digest("hex")}`

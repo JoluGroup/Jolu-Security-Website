@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { afterEach, after, before, beforeEach, describe, it, mock } from "node:test"
 import { startFakeUpstash } from "../helpers/fake-upstash.mjs"
-import { isolateEnv, useFakeUpstash } from "../helpers/env.mjs"
+import { isolateEnv, pointAtFakeUpstash } from "../helpers/env.mjs"
 
 const route = await import("@/app/api/enquiry/route")
 const { getDeliveryMode } = await import("@/lib/enquiry/deliver")
@@ -63,15 +63,16 @@ const post = (body = VALID, headers = {}) =>
   )
 
 const liveEnv = () => {
-  useFakeUpstash(fake)
+  pointAtFakeUpstash(fake)
   process.env.ENQUIRY_DELIVERY = "live"
   process.env.RESEND_API_KEY = "re_test"
   process.env.ENQUIRY_FROM = "enquiries@example.test"
   process.env.ENQUIRY_TO = "inbox@example.test"
 }
 const testEnv = () => {
-  useFakeUpstash(fake)
+  pointAtFakeUpstash(fake)
   process.env.ENQUIRY_DELIVERY = "test"
+  process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true" // production builds need this opt-in for test mode
 }
 
 describe("delivery modes", () => {
@@ -103,6 +104,7 @@ describe("delivery modes", () => {
   it("test mode never contacts Resend, even with credentials and in a production build", async () => {
     liveEnv()
     process.env.ENQUIRY_DELIVERY = "test" // NODE_ENV is "production" here, as on a preview
+    process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true"
     const res = await post()
     assert.equal(res.status, 200)
     assert.deepEqual(await res.json(), { ok: true, delivered: false, mode: "test" })
@@ -120,6 +122,7 @@ describe("delivery modes", () => {
   it("test mode works on a production build without Upstash (in-memory limiter, nothing is sent)", async () => {
     process.env.NODE_ENV = "production"
     process.env.ENQUIRY_DELIVERY = "test"
+    process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true"
     assert.equal((await post()).status, 200)
   })
 
@@ -162,6 +165,127 @@ describe("delivery modes", () => {
     const res = await post()
     assert.equal(res.status, 502)
     assert.equal((await res.json()).code, "delivery_failed")
+  })
+})
+
+describe("production test-mode safeguard", () => {
+  it("test mode in a production build without the opt-in fails closed (503 not_configured), touching nothing", async () => {
+    liveEnv()
+    process.env.ENQUIRY_DELIVERY = "test" // NODE_ENV=production, credentials present, no ENQUIRY_ALLOW_PRODUCTION_TEST
+    const res = await post()
+    assert.equal(res.status, 503)
+    assert.deepEqual(await res.json(), { ok: false, code: "not_configured" })
+    assert.equal(resendCalls.length, 0)
+    assert.equal(fake.transactions.length, 0, "no rate-limit quota is consumed either")
+  })
+
+  it("only an explicit true opts in; anything else stays blocked", async () => {
+    for (const value of ["false", "yes", "1", "on", "", "truee"]) {
+      liveEnv()
+      process.env.ENQUIRY_DELIVERY = "test"
+      process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = value
+      assert.equal((await post()).status, 503, JSON.stringify(value))
+    }
+    for (const value of ["true", "TRUE", " true "]) {
+      liveEnv()
+      process.env.ENQUIRY_DELIVERY = "test"
+      process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = value
+      assert.equal((await post()).status, 200, JSON.stringify(value))
+    }
+    assert.equal(resendCalls.length, 0)
+  })
+
+  it("the opt-in never permits real delivery: test mode with the flag and full credentials sends nothing", async () => {
+    liveEnv()
+    process.env.ENQUIRY_DELIVERY = "test"
+    process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true"
+    for (let i = 0; i < 3; i++) {
+      const body = await (await post()).json()
+      assert.deepEqual(body, { ok: true, delivered: false, mode: "test" })
+    }
+    assert.equal(resendCalls.length, 0)
+  })
+
+  it("the flag does not turn an unset or invalid mode into anything but 503", async () => {
+    for (const mode of [undefined, "", "prod", "tset"]) {
+      liveEnv()
+      if (mode === undefined) delete process.env.ENQUIRY_DELIVERY
+      else process.env.ENQUIRY_DELIVERY = mode
+      process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true"
+      assert.equal((await post()).status, 503, String(mode))
+    }
+    assert.equal(resendCalls.length, 0)
+  })
+
+  it("the flag has no effect on live mode (live still needs its own configuration)", async () => {
+    liveEnv()
+    process.env.ENQUIRY_ALLOW_PRODUCTION_TEST = "true"
+    delete process.env.RESEND_API_KEY
+    assert.equal((await post()).status, 503)
+    assert.equal(resendCalls.length, 0)
+    process.env.RESEND_API_KEY = "re_test"
+    const res = await post()
+    assert.equal(res.status, 200)
+    assert.equal((await res.json()).state, "accepted") // genuine live path, not a simulation
+    assert.equal(resendCalls.length, 1)
+  })
+
+  it("outside production, test mode needs no opt-in", async () => {
+    process.env.NODE_ENV = "development"
+    process.env.ENQUIRY_DELIVERY = "test"
+    assert.equal((await post()).status, 200)
+    assert.equal(resendCalls.length, 0)
+  })
+})
+
+describe("which requests consume quota (documented behaviour)", () => {
+  const counters = () => {
+    const out = { client: 0, global: 0 }
+    for (const [key, entry] of fake.store) out[key.startsWith("enquiry:rl:c:") ? "client" : "global"] = entry.value
+    return out
+  }
+  const trusted = (extra = {}) => ({ "x-real-ip": "1.1.1.1", ...extra })
+
+  it("requests that fail after the limiter still count once against client and global", async () => {
+    const cases = {
+      "validation error": () => post({ ...VALID, email: "nope" }, trusted()),
+      "malformed JSON": () => post("{nope", trusted()),
+      "honeypot": () => post({ ...VALID, company_website: "x" }, trusted()),
+    }
+    for (const [name, send] of Object.entries(cases)) {
+      testEnv()
+      process.env.ENQUIRY_TRUSTED_PROXY = "vercel"
+      fake.reset()
+      const res = await send()
+      assert.equal(res.status, 400, name)
+      assert.deepEqual(counters(), { client: 1, global: 1 }, name)
+    }
+  })
+
+  it("requests refused before the limiter cost nothing", async () => {
+    testEnv()
+    process.env.ENQUIRY_TRUSTED_PROXY = "vercel"
+    const wrongType = await route.POST(new Request(URL_, { method: "POST", headers: { "content-type": "text/plain", ...trusted() }, body: "x" }))
+    assert.equal(wrongType.status, 415)
+    assert.equal((await post(VALID, trusted({ "content-length": "99999" }))).status, 413)
+    assert.equal((await post(VALID, trusted({ origin: "https://evil.example", host: "localhost:3000" }))).status, 403)
+    assert.equal((await post(VALID, trusted({ "content-length": "abc" }))).status, 400)
+    assert.deepEqual(counters(), { client: 0, global: 0 })
+    assert.equal(fake.transactions.length, 0)
+  })
+
+  it("a visitor retrying during a global lockout keeps their own client quota (over HTTP)", async () => {
+    testEnv()
+    process.env.ENQUIRY_TRUSTED_PROXY = "vercel"
+    process.env.ENQUIRY_GLOBAL_LIMIT = "1"
+    assert.equal((await post(VALID, { "x-real-ip": "9.9.9.9" })).status, 200)
+    for (let i = 0; i < 4; i++) {
+      const res = await post(VALID, trusted())
+      assert.equal(res.status, 429)
+      assert.equal(res.headers.get("retry-after"), "3600")
+    }
+    const clientKeys = [...fake.store.keys()].filter((k) => k.startsWith("enquiry:rl:c:"))
+    assert.equal(clientKeys.length, 1, "only the first visitor has a client counter")
   })
 })
 

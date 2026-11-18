@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { afterEach, before, after, beforeEach, describe, it, mock } from "node:test"
 import { startFakeUpstash } from "../helpers/fake-upstash.mjs"
-import { isolateEnv, useFakeUpstash } from "../helpers/env.mjs"
+import { isolateEnv, pointAtFakeUpstash } from "../helpers/env.mjs"
 
 const { checkRateLimit, getRateLimitConfig, isRateLimitAvailable, resetMemoryRateLimit } = await import(
   "@/lib/enquiry/rate-limit"
@@ -17,7 +17,7 @@ beforeEach(() => {
   restoreEnv = isolateEnv()
   fake.reset()
   resetMemoryRateLimit()
-  useFakeUpstash(fake)
+  pointAtFakeUpstash(fake)
 })
 afterEach(() => {
   restoreEnv()
@@ -61,8 +61,9 @@ describe("fixed-duration window (Upstash path)", () => {
 
   it("sets the expiry only when the window is created (SET ... EX ... NX, INCR, PTTL in one transaction)", async () => {
     await hits("v4:4.4.4.4", 2)
-    assert.equal(fake.transactions.length, 4) // client + global, per request
-    const client = fake.transactions[0]
+    assert.equal(fake.transactions.length, 6) // peek + client + global, per request
+    assert.deepEqual(fake.transactions[0].map((c) => c[0]), ["GET", "PTTL"]) // the peek is read-only
+    const client = fake.transactions[1]
     assert.deepEqual(client.map((c) => c[0]), ["SET", "INCR", "PTTL"])
     assert.deepEqual(client[0].slice(2), [0, "EX", 600, "NX"])
     assert.ok(!fake.transactions.flat().some((c) => c[0] === "EXPIRE"))
@@ -110,6 +111,49 @@ describe("global and per-client limits", () => {
     assert.equal(noisy.filter((r) => r.ok).length, 2)
     assert.equal((await checkRateLimit("v4:other")).ok, true) // global count is now 3
     assert.equal((await checkRateLimit("v4:another")).ok, false) // global cap reached
+  })
+
+  it("during a global lockout a trusted client is refused without consuming client or global quota", async () => {
+    process.env.ENQUIRY_GLOBAL_LIMIT = "2"
+    await checkRateLimit("v4:a")
+    await checkRateLimit("v4:b") // global is now at its cap
+    fake.transactions.length = 0
+    for (let i = 0; i < 4; i++) {
+      const r = await checkRateLimit("v4:c")
+      assert.deepEqual([r.ok, r.reason, r.scope], [false, "limited", "global"])
+    }
+    assert.ok(fake.transactions.every((t) => t.every((c) => c[0] === "GET" || c[0] === "PTTL")), "only read-only commands")
+    assert.equal(fake.store.get("enquiry:rl:global").value, 2, "global counter must not grow while locked out")
+    assert.equal([...fake.store.keys()].filter((k) => k.startsWith("enquiry:rl:c:")).length, 2, "no client key for the refused visitor")
+  })
+
+  it("the lockout Retry-After counts down from the global window, and a visitor has a full client quota afterwards", async () => {
+    process.env.ENQUIRY_GLOBAL_LIMIT = "1"
+    await checkRateLimit("v4:a")
+    fake.advance(100)
+    const locked = await checkRateLimit("v4:c")
+    assert.equal(locked.retryAfterSeconds, 3500)
+    await checkRateLimit("v4:c")
+    await checkRateLimit("v4:c")
+    fake.advance(3501) // global window over
+    process.env.ENQUIRY_GLOBAL_LIMIT = "200" // so only the client limit (5) is under test below
+    const after = await hits("v4:c", 5)
+    assert.equal(after.filter((r) => r.ok).length, 5, "client quota untouched by the lockout retries")
+  })
+
+  it("the peek does not weaken the cap under concurrency (INCR still decides)", async () => {
+    process.env.ENQUIRY_GLOBAL_LIMIT = "3"
+    const results = await Promise.all(Array.from({ length: 10 }, (_, i) => checkRateLimit(`v4:parallel-${i}`)))
+    assert.equal(results.filter((r) => r.ok).length, 3)
+    assert.ok(results.filter((r) => !r.ok).every((r) => r.reason === "limited" && r.scope === "global"))
+  })
+
+  it("an expired global counter does not lock anyone out", async () => {
+    process.env.ENQUIRY_GLOBAL_LIMIT = "1"
+    await checkRateLimit("v4:a")
+    assert.equal((await checkRateLimit("v4:b")).ok, false)
+    fake.advance(3601)
+    assert.equal((await checkRateLimit("v4:b")).ok, true)
   })
 
   it("global window expires and resets", async () => {
@@ -176,6 +220,20 @@ describe("configuration and the in-memory fallback", () => {
     delete process.env.UPSTASH_REDIS_REST_TOKEN
     assert.equal(isRateLimitAvailable(true), true)
     assert.equal((await checkRateLimit("v4:7.7.7.7", { allowMemory: true })).ok, true)
+  })
+
+  it("memory fallback also refuses a lockout without consuming client quota", async () => {
+    delete process.env.UPSTASH_REDIS_REST_URL
+    delete process.env.UPSTASH_REDIS_REST_TOKEN
+    process.env.NODE_ENV = "development"
+    process.env.ENQUIRY_GLOBAL_LIMIT = "2"
+    mock.timers.enable({ apis: ["Date"], now: 0 })
+    await checkRateLimit("v4:a")
+    await checkRateLimit("v4:b")
+    for (let i = 0; i < 4; i++) assert.equal((await checkRateLimit("v4:c")).scope, "global")
+    mock.timers.tick(3601_000)
+    process.env.ENQUIRY_GLOBAL_LIMIT = "200" // so only the client limit (5) is under test below
+    assert.equal((await hits("v4:c", 5)).filter((r) => r.ok).length, 5)
   })
 
   it("memory fallback uses the same fixed-duration window", async () => {

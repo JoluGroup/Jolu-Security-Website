@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto"
 import { readBodyWithLimit } from "@/lib/enquiry/body"
 import { getTrustedProxyMode, resolveClientId } from "@/lib/enquiry/client-ip"
 import { checkRateLimit, isRateLimitAvailable } from "@/lib/enquiry/rate-limit"
-import { deliverEnquiry, getDeliveryConfig, getDeliveryMode } from "@/lib/enquiry/deliver"
+import { deliverEnquiry, getDeliveryConfig, getDeliveryMode, isProductionTestAllowed } from "@/lib/enquiry/deliver"
 import { HONEYPOT_FIELD, LIMITS, validateEnquiry, type EnquiryResponse } from "@/lib/enquiry/schema"
 
 const REF_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -64,13 +64,24 @@ export async function POST(request: Request) {
   const delivery = mode === "live" ? getDeliveryConfig() : null
   // Test mode sends nothing, so the in-memory limiter is acceptable there (previews).
   const allowMemory = mode === "test"
+  // In a production build (including previews) test mode would discard real enquiries, so it
+  // needs an explicit opt-in. Without it the endpoint fails closed. This never enables sending.
+  const testBlocked = mode === "test" && process.env.NODE_ENV === "production" && !isProductionTestAllowed()
+  if (testBlocked) {
+    log("test_mode_blocked")
+    return respond({ ok: false, code: "not_configured" }, 503)
+  }
   if (mode === "disabled" || (mode === "live" && !delivery) || !isRateLimitAvailable(allowMemory)) {
     log("not_configured")
     return respond({ ok: false, code: "not_configured" }, 503)
   }
 
   // Rate limiting runs before the body is read, so refused requests cost no parsing.
-  // The client identity is null unless a trusted proxy mode was explicitly enabled.
+  // Consequence (intentional): any request that reaches this point counts against the quota,
+  // including ones that later fail (malformed JSON, validation errors, honeypot hits, oversized
+  // or aborted bodies). Only requests rejected above (415, 403, bad or oversized Content-Length,
+  // not configured) are free. The client identity is null unless a trusted proxy mode was
+  // explicitly enabled.
   const clientId = resolveClientId(request.headers, getTrustedProxyMode())
   const limit = await checkRateLimit(clientId, { allowMemory })
   if (!limit.ok) {

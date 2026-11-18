@@ -3,6 +3,7 @@ const KEYS = [
   "UPSTASH_REDIS_REST_URL",
   "UPSTASH_REDIS_REST_TOKEN",
   "ENQUIRY_DELIVERY",
+  "ENQUIRY_ALLOW_PRODUCTION_TEST",
   "ENQUIRY_TRUSTED_PROXY",
   "ENQUIRY_CLIENT_LIMIT",
   "ENQUIRY_CLIENT_WINDOW_SECONDS",
@@ -25,7 +26,7 @@ export function isolateEnv() {
   }
 }
 
-export function useFakeUpstash(fake) {
+export function pointAtFakeUpstash(fake) {
   process.env.NODE_ENV = "production"
   process.env.UPSTASH_REDIS_REST_URL = fake.url
   process.env.UPSTASH_REDIS_REST_TOKEN = fake.token

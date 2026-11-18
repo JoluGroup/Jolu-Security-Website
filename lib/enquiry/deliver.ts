@@ -60,16 +60,30 @@ function buildText(enquiry: Enquiry, ref: string) {
 }
 
 /**
- * Submits the enquiry to Resend. A 2xx response with an `id` means the provider
- * ACCEPTED the message for sending; it does not confirm inbox delivery.
+ * What we know after asking Resend to send the enquiry.
+ *
+ *   accepted   2xx with a message id: the provider ACCEPTED the message for sending. This does
+ *              not confirm inbox delivery.
+ *   rejected   the provider answered with a 4xx (other than 408/409): it refused the request, so
+ *              nothing was sent and the visitor can safely retry.
+ *   uncertain  we cannot tell whether the message was sent: a timeout or network error after the
+ *              request may have been received, a 5xx, a 408/409, or a 2xx without a usable id.
+ *              The visitor must NOT be told that nothing was sent.
  */
-export async function deliverEnquiry(
-  enquiry: Enquiry,
-  ref: string,
-  config: DeliveryConfig,
-): Promise<{ ok: true; id: string } | { ok: false }> {
+export type DeliveryOutcome =
+  | { kind: "accepted"; id: string }
+  | { kind: "rejected"; status: number }
+  | { kind: "uncertain"; reason: "timeout" | "network" | "server_error" | "conflict" | "bad_response" }
+
+/**
+ * Submits the enquiry to Resend. `ref` doubles as the Idempotency-Key, so a retry that reuses the
+ * same ref (see dedup.ts) asks Resend not to send a second message. Whether Resend honours the key
+ * for this endpoint is an external assumption that is not verified here.
+ */
+export async function deliverEnquiry(enquiry: Enquiry, ref: string, config: DeliveryConfig): Promise<DeliveryOutcome> {
+  let res: Response
   try {
-    const res = await fetch("https://api.resend.com/emails", {
+    res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
@@ -86,10 +100,17 @@ export async function deliverEnquiry(
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     })
-    if (!res.ok) return { ok: false }
-    const body = (await res.json().catch(() => null)) as { id?: unknown } | null
-    return typeof body?.id === "string" && body.id ? { ok: true, id: body.id } : { ok: false }
-  } catch {
-    return { ok: false }
+  } catch (error) {
+    const name = (error as { name?: string } | null)?.name
+    return { kind: "uncertain", reason: name === "TimeoutError" || name === "AbortError" ? "timeout" : "network" }
   }
+  if (res.ok) {
+    const body = (await res.json().catch(() => null)) as { id?: unknown } | null
+    return typeof body?.id === "string" && body.id
+      ? { kind: "accepted", id: body.id }
+      : { kind: "uncertain", reason: "bad_response" }
+  }
+  if (res.status === 408 || res.status === 409) return { kind: "uncertain", reason: "conflict" }
+  if (res.status >= 400 && res.status < 500) return { kind: "rejected", status: res.status }
+  return { kind: "uncertain", reason: "server_error" }
 }

@@ -70,7 +70,7 @@ export function getRateLimitConfig(): RateLimitConfig {
 
 const isProduction = () => process.env.NODE_ENV === "production"
 
-function upstashConfig() {
+export function upstashConfig() {
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim()
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
   return url && token ? { url: url.replace(/\/+$/, ""), token } : null
@@ -85,9 +85,9 @@ export function isRateLimitAvailable(allowMemory = false) {
 }
 
 type Hit = { count: number; ttlMs: number }
-type UpstashConfig = NonNullable<ReturnType<typeof upstashConfig>>
+export type UpstashConfig = NonNullable<ReturnType<typeof upstashConfig>>
 
-async function upstashPost(config: UpstashConfig, commands: Array<Array<string | number>>) {
+export async function upstashPost(config: UpstashConfig, commands: Array<Array<string | number>>) {
   const res = await fetch(`${config.url}/multi-exec`, {
     method: "POST",
     headers: { Authorization: `Bearer ${config.token}`, "Content-Type": "application/json" },

@@ -11,9 +11,20 @@ export function getDeliveryConfig(): DeliveryConfig | null {
   return apiKey && from && to ? { apiKey, from, to } : null
 }
 
-/** Test mode is honoured only outside production. */
-export function isTestMode() {
-  return process.env.ENQUIRY_DELIVERY === "test" && process.env.NODE_ENV !== "production"
+/**
+ * Explicit delivery mode, read from ENQUIRY_DELIVERY. It does not depend on NODE_ENV,
+ * so previews (which run production builds) behave exactly as configured.
+ *
+ *   live      send through Resend. Requires RESEND_API_KEY, ENQUIRY_FROM and ENQUIRY_TO.
+ *             Having credentials alone never enables sending.
+ *   test      validate and respond, never contact Resend, even if credentials exist.
+ *   disabled  anything else (unset, empty, misspelled): the endpoint returns 503.
+ */
+export type DeliveryMode = "live" | "test" | "disabled"
+
+export function getDeliveryMode(): DeliveryMode {
+  const value = process.env.ENQUIRY_DELIVERY?.trim().toLowerCase()
+  return value === "live" || value === "test" ? value : "disabled"
 }
 
 function buildText(enquiry: Enquiry, ref: string) {

@@ -101,4 +101,7 @@ export type EnquiryResponse =
   | { ok: true; ref: string; state: "accepted" }
   | { ok: true; delivered: false; mode: "test" }
   | { ok: false; code: "invalid"; errors: FieldErrors }
-  | { ok: false; code: "rate_limited" | "not_configured" | "delivery_failed" | "rejected" | "bad_request" }
+  | {
+      ok: false
+      code: "rate_limited" | "not_configured" | "unavailable" | "delivery_failed" | "rejected" | "bad_request"
+    }

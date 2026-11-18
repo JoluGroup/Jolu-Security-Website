@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { Loader2, MessageCircle, Phone } from "lucide-react"
 import { CountyCombobox } from "@/components/county-combobox"
@@ -32,7 +32,8 @@ type Status =
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Please check the highlighted fields.",
   not_configured: "Online enquiries are not available at the moment, so nothing was sent.",
-  rate_limited: "Too many enquiries have been sent from this connection. Please try again later.",
+  rate_limited: "Too many enquiries are being sent right now, so nothing was sent. Please try again in a few minutes.",
+  unavailable: "Online enquiries are temporarily unavailable, so nothing was sent. Please try again shortly.",
   delivery_failed: "Your enquiry could not be submitted, so nothing was sent.",
   network: "Your enquiry could not be submitted because of a connection problem, so nothing was sent.",
 }
@@ -62,7 +63,9 @@ export function EnquiryForm() {
     setValues((v) => ({ ...v, [key]: value }))
     if (errors[key as EnquiryField]) setErrors((e) => ({ ...e, [key]: undefined }))
   }
-  const setService = useRef((id: string) => setValues((v) => ({ ...v, service: id }))).current
+  // Stable identity (setValues never changes), so ServiceFromUrl's effect re-runs only when
+  // the ?service= value changes and never overwrites a choice the visitor made afterwards.
+  const setService = useCallback((id: string) => setValues((v) => ({ ...v, service: id })), [])
 
   const focusFirstError = (errs: FieldErrors) => {
     const first = ENQUIRY_FIELDS.find((f) => errs[f])

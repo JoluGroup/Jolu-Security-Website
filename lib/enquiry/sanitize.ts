@@ -2,7 +2,6 @@
 
 // C0/C1 control characters except tab (\u0009) and line feed (\u000A), plus bidi
 // override and zero-width characters that can disguise text in email clients.
-// eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u0008\u000B-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g
 
 export function stripControl(value: string): string {

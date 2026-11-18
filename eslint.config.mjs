@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated, minified bundle from the old static site. Not source code; linting it
+    // crashes ESLint ("RangeError: Invalid string length" while formatting results).
+    "legacy-static/assets/**",
   ]),
 ]);
 

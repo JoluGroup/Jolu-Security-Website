@@ -1,9 +1,10 @@
 import Image from "next/image"
+import Link from "next/link"
 import { siteConfig } from "@/lib/site-config"
 
 export function BrandLogo({ priority = false }: { priority?: boolean }) {
   return (
-    <a href="/" className="flex items-center gap-3 rounded-md" aria-label={`${siteConfig.name} home`}>
+    <Link href="/" className="flex items-center gap-3 rounded-md" aria-label={`${siteConfig.name} home`}>
       <Image
         src={siteConfig.logo.src}
         alt=""
@@ -15,6 +16,6 @@ export function BrandLogo({ priority = false }: { priority?: boolean }) {
       <span className="text-sm font-semibold leading-tight tracking-[0.14em] text-foreground uppercase">
         Jolu <span className="text-muted-foreground">Security</span>
       </span>
-    </a>
+    </Link>
   )
 }

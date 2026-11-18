@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react"
 import { useSearchParams } from "next/navigation"
 import { Loader2, MessageCircle, Phone } from "lucide-react"
 import { CountyCombobox } from "@/components/county-combobox"
@@ -63,7 +63,9 @@ export function EnquiryForm() {
     setValues((v) => ({ ...v, [key]: value }))
     if (errors[key as EnquiryField]) setErrors((e) => ({ ...e, [key]: undefined }))
   }
-  const setService = useRef((id: string) => setValues((v) => ({ ...v, service: id }))).current
+  // Stable identity (setValues never changes), so ServiceFromUrl's effect re-runs only when
+  // the ?service= value changes and never overwrites a choice the visitor made afterwards.
+  const setService = useCallback((id: string) => setValues((v) => ({ ...v, service: id })), [])
 
   const focusFirstError = (errs: FieldErrors) => {
     const first = ENQUIRY_FIELDS.find((f) => errs[f])

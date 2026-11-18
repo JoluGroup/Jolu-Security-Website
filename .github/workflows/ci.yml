@@ -1,0 +1,55 @@
+name: CI
+
+# Runs on every pull request. Read-only token, no secrets, no deployment.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Test, typecheck, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
+      # Node 22 (latest 22.x): the unit tests rely on Node's built-in TypeScript type
+      # stripping, which needs 22.18 or later.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Generate Next.js route types
+        run: pnpm exec next typegen
+
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+
+      - name: ESLint
+        run: pnpm lint
+
+      # Uses the real next/font/google configuration; GitHub-hosted runners can reach Google Fonts.
+      - name: Production build
+        run: pnpm build

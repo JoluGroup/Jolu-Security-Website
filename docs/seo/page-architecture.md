@@ -1,4 +1,4 @@
-# Publication-gated page architecture (Milestones 5D.2 and 5D.4)
+# Publication-gated page architecture (Milestones 5D.2, 5D.4 and 5D.6)
 
 Infrastructure for future service and location pages. **Nothing is published**: no route, sitemap entry, navigation link or structured data exists for any of the ten planned pages. It follows the proposals in the 5B.1 and 5B.2 preparation documents (PR #5, PR #6) and uses the evidence ids of the Business Verification Pack (PR #7). 5D.4 hardened it after the independent audit of PR #8 (findings F-01 to F-13).
 
@@ -53,6 +53,21 @@ Prerendered code may not read the current time (build error), so the gate judges
 
 `Published<T>` is a type-level brand and can be forged by a cast. The real boundary is `assertPublished`, which accepts only objects the gate itself created and registered in a private `WeakMap`. Every page component calls it; copies, spreads and clones are rejected.
 
+## Corrections added in Milestone 5D.6
+
+These refine the gate above (finding ids are from the 5D.5 audit). Nothing is published and the ledger and allowlist remain empty.
+
+- **Current evidence only (F5D5-01).** Evidence may be superseded by a replacement (`supersededBy` / `replaces`). The gate follows the chain to its tail (cycles, depth over 16, mismatched back-links and scope changes are rejected) and judges, and reads attested values from, the tail only. The approval must cite the tail id. NAP and the COM-05 phone are therefore compared with the current attestation; expired, revoked or malformed replacements make the page unpublishable.
+- **Evidence scope (F5D5-04).** Every ledger entry carries `scope`: `company`, `office:<slug>` or `service:<slug>`. The gate checks it against the scope derived from the evidence code (`expectedScope` in `publication-requirements.ts`) and allows a page to use company-wide evidence or evidence scoped to its own office or service. This is explicit validation, not a prefix guess.
+- **Text policy (F5D5-03).** `lib/seo/text-policy.ts` rejects (it never "cleans") hidden, control, formatting, private-use, unassigned and surrogate characters, line/paragraph separators, whitespace other than a plain space, combining marks, text that is not NFKC-stable (fullwidth, ligatures, compatibility forms), non-Latin letters and non-ASCII digits, in every rendered field, before claim scanning.
+- **Claim scope (F5D5-05).** `lib/seo/claim-scope.ts` maps each claim id in `lib/claims.ts` (which is unchanged) to the categories and wording it may cover. A claim-sensitive span is unlocked only by a bound, approved claim whose scope covers it and whose statement covers it by position. A claim with no entry authorises nothing, and its statement must contain wording its scope covers. A changed statement needs a new approval. The scanner is still a heuristic; editorial and compliance review remain the real control, and nothing here proves a statement is true.
+- **Designations (F5D5-06).** `DESIGNATIONS` is an allowlist (Regional Office, Branch Office, Head Office, Regional Office & Showroom), each bound to evidence; designation wording in a display name is rejected. Owner decision needed before use: the vocabulary.
+- **Reviewed-content digest (F5D5-09).** `editorialReview` and `complianceReview` carry `contentDigest`, a SHA-256 of the path, title, description, evidence references, sections (including claim bindings), NAP and coverage. A reviewer computes it with the exported `contentDigest(record, manifestEntry)`. Any material change after review invalidates the approval.
+- **Dependency snapshot (F5D5-10).** Dependencies (ledger, claims, manifest, as-of date) are copied through a JSON round trip, which also drops inherited fields, before evaluation. Failures stay closed; the runtime boundary is unchanged.
+- **Manifest routes (F5D5-07).** `tests/helpers/manifest-routes.mjs` holds the canonical route template and a verifier. Tests prove, with temporary fixtures, that an approved manifest entry needs a real route file with valid metadata and the right `assertPublished` use, and that the production check is not vacuous. No production route exists.
+- **Expiry monitoring (F5D5-02).** `lib/seo/evidence-monitor.ts` and `scripts/check-evidence-freshness.mjs` (read-only) report expired or soon-expiring evidence, stale as-of dates, revoked or superseded evidence still relied on, and licence evidence needing attention. `.github/workflows/evidence-freshness.yml` runs it weekly with `contents: read` only. GitHub runs scheduled workflows only from the default branch, so it does nothing until the file is on `main`. See `evidence-expiry-runbook.md`.
+- **Mutation tests (F5D5-08).** `tests/helpers/gate-mutants.mjs` lists the mutants; `tests/seo/page-gate-mutation.test.mjs` runs them. A mutant that does not apply, load or compile fails the test (never a kill). Security mutants must be killed by a "rejects:" case; one property mutant (no snapshot) is killed by an "accepts:" case and reported separately; equivalent mutants must survive, must run (tracer) and carry a written reason.
+
 ## Publishing the first page (future milestone)
 
 1. Owner authorises the page in writing; record the reference.
@@ -66,5 +81,6 @@ Prerendered code may not read the current time (build error), so the gate judges
 ## Known limits
 
 - The gate cannot prove an approval really came from the owner; that is a review-process control.
-- The claim scan is heuristic; per-statement approvals are the real control.
+- The claim scan and claim scope are heuristic; per-statement approvals and human review are the real control, and the gate does not prove factual accuracy.
+- Separation of duties between reviewers is not enforced in code.
 - Route-file existence and rendering are checked by tests in CI, not at runtime.

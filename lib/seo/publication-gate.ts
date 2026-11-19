@@ -12,13 +12,16 @@
 // The gate works on a frozen snapshot of the record, so a record that changes between reads cannot pass. Pages it
 // approves are frozen snapshots registered in a private WeakSet: components accept only those (`assertPublished`).
 import { CLAIM_RULES } from "@/lib/seo/claim-classifier"
+import { CATEGORY, CLAIM_SCOPE } from "@/lib/seo/claim-scope"
+import { sha256Hex } from "@/lib/seo/digest"
 import { deepFreeze, snapshot } from "@/lib/seo/freeze"
 import { ALL_PAGE_RECORDS } from "@/lib/seo/page-records"
 import type { EvidenceRecord, PageKind, PageRecord, Published } from "@/lib/seo/page-models"
 import { PLANNED_PAGES } from "@/lib/seo/planned-pages"
 import { defaultDeps, type GateDeps } from "@/lib/seo/publication-deps"
 import type { ManifestEntry } from "@/lib/seo/publication-manifest"
-import { DESIGNATION_EVIDENCE, LICENCE_EVIDENCE, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, SERVICE_IDENTITY } from "@/lib/seo/publication-requirements"
+import { DESIGNATION_WORDS, DESIGNATIONS, expectedScope, LICENCE_EVIDENCE, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, SERVICE_IDENTITY } from "@/lib/seo/publication-requirements"
+import { textProblem } from "@/lib/seo/text-policy"
 import { SERVICES } from "@/lib/services"
 import { siteConfig } from "@/lib/site-config"
 
@@ -59,38 +62,71 @@ export function knownSlugs(kind: PageKind): readonly string[] {
 }
 
 // ---------------------------------------------------------------------------------------------------- claim scan
-// Backstop only: explicit per-statement approvals are the control. The classifier rules are extended here with
-// wording the 5D.3 audit showed slipping through.
-const EXTRA_CLAIM_PATTERNS: readonly RegExp[] = [
-  /\b24\s?x\s?7\b/i,
-  /\btwenty[- ]four\b/i,
-  /\b(award|awarded|awards|award-winning)\b/i,
-  /\b(nationwide|countrywide)\b/i,
-  /\b(number one|no\.? ?1|#1|market leader|leader|foremost|unrivalled|unmatched)\b/i,
-  /\b(approved|authori[sz]ed|bonded|insured|iso ?\d+)\b/i,
-  /\b(over|more than)\s+[\d,]+\+?\s+(clients|customers|guards|sites|years)\b/i,
-  /\b\d[\d,]*\+\s*(clients|customers|guards|sites|years)\b/i,
-  /\bsince\s+(19|20)\d{2}\b/i,
-  /\b(guarantee|guarantees|guaranteed|warranty)\b/i,
+// Heuristic detection of claim-sensitive wording. It is a safety net, NOT proof that text is free of claims or true:
+// wording the rules do not recognise is controlled only by editorial and compliance review. The control that matters is
+// that every span the rules DO find must be authorised by a bound, approved claim whose scope (lib/seo/claim-scope.ts)
+// permits that span. Text is first required to pass lib/seo/text-policy.ts, so the scan sees exactly what is rendered.
+const EXTRA_CLAIM_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
+  { category: CATEGORY.availability, pattern: /\b24\s?x\s?7\b/i },
+  { category: CATEGORY.availability, pattern: /\btwenty[- ]four\b/i },
+  { category: CATEGORY.recognition, pattern: /\b(award|awarded|awards|award-winning)\b/i },
+  { category: CATEGORY.coverage, pattern: /\b(nationwide|countrywide)\b/i },
+  { category: CATEGORY.quality, pattern: /\b(number one|no\.? ?1|#1|market leader|leader|foremost|unrivalled|unmatched)\b/i },
+  { category: CATEGORY.licensing, pattern: /\b(approved|authori[sz]ed|bonded|insured|iso ?\d+)\b/i },
+  { category: CATEGORY.statistics, pattern: /\b(over|more than)\s+[\d,]+\+?\s+(clients|customers|guards|sites|years)\b/i },
+  { category: CATEGORY.statistics, pattern: /\b\d[\d,]*\+\s*(clients|customers|guards|sites|years)\b/i },
+  { category: CATEGORY.statistics, pattern: /\bsince\s+(19|20)\d{2}\b/i },
+  { category: CATEGORY.guarantee, pattern: /\b(guarantee|guarantees|guaranteed|warranty)\b/i },
+  { category: CATEGORY.designation, pattern: /\b(head ?office|head ?quarters?|hq|main office|corporate office|flagship|showroom)\b/i },
 ]
-const SCAN = [...CLAIM_RULES.map((r) => r.pattern), ...EXTRA_CLAIM_PATTERNS].map((p) => new RegExp(p.source, p.flags.includes("g") ? p.flags : `${p.flags}g`))
+const SCAN = [...CLAIM_RULES.map((r) => ({ category: String(r.category), pattern: r.pattern })), ...EXTRA_CLAIM_PATTERNS].map((r) => ({ category: r.category, re: new RegExp(r.pattern.source, r.pattern.flags.includes("g") ? r.pattern.flags : `${r.pattern.flags}g`) }))
 
-/** Character ranges [start, end) of claim-sensitive wording in `text`. */
-function sensitiveRanges(text: string): [number, number][] {
-  const out: [number, number][] = []
-  for (const re of SCAN) {
+type Span = { from: number; to: number; category: string; text: string }
+/** Claim-sensitive spans in `text`. */
+function spansOf(text: string): Span[] {
+  const out: Span[] = []
+  for (const { category, re } of SCAN) {
     re.lastIndex = 0
     for (let m = re.exec(text); m; m = re.exec(text)) {
-      out.push([m.index, m.index + Math.max(m[0].length, 1)])
+      out.push({ from: m.index, to: m.index + Math.max(m[0].length, 1), category, text: m[0] })
       if (m[0].length === 0) re.lastIndex++
     }
   }
   return out
 }
-const hasSensitive = (text: string) => sensitiveRanges(text).length > 0
+const hasSensitive = (text: string) => spansOf(text).length > 0
+/** Does the claim's explicit scope permit this span? Unknown claim ids permit nothing. */
+function permits(claimId: string, span: Span): boolean {
+  const scope = Object.hasOwn(CLAIM_SCOPE, claimId) ? CLAIM_SCOPE[claimId] : undefined
+  if (!scope || !scope.categories.includes(span.category)) return false
+  return !scope.terms || scope.terms.some((t) => t.test(span.text))
+}
+
+// ---------------------------------------------------------------------------------------------------- reviewed content
+/**
+ * Deterministic digest of everything a reviewer approves: text, claim bindings, NAP, coverage, evidence references and
+ * the page metadata. Editorial and compliance reviews must carry this value; any later change voids them.
+ */
+export function contentDigest(record: unknown, entry: { title?: unknown; description?: unknown } | null): string {
+  const r = (isObj(record) ? record : {}) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  const nap = isObj(r.nap) ? r.nap : null
+  const cov = isObj(r.verifiedCoverage) ? r.verifiedCoverage : null
+  const sections = Array.isArray(r.sections) ? r.sections : []
+  const content = {
+    path: r.publicPath ?? null,
+    title: entry?.title ?? null,
+    description: entry?.description ?? null,
+    evidenceRefs: Array.isArray(r.evidenceRefs) ? r.evidenceRefs : [],
+    sections: sections.map((s: any) => ({ id: s?.id ?? null, heading: s?.heading ?? null, body: s?.body ?? null, evidenceIds: s?.evidenceIds ?? null, claims: Array.isArray(s?.claims) ? s.claims.map((c: any) => ({ claimId: c?.claimId ?? null, statement: c?.statement ?? null })) : null })), // eslint-disable-line @typescript-eslint/no-explicit-any
+    nap: nap ? { displayName: nap.displayName ?? null, branchDesignation: nap.branchDesignation ?? null, streetAddress: nap.streetAddress ?? null, locality: nap.locality ?? null, telephone: nap.telephone ?? null } : null,
+    coverage: cov ? { serviceIds: cov.serviceIds ?? null, areas: cov.areas ?? null, evidenceIds: cov.evidenceIds ?? null } : null,
+  }
+  return sha256Hex(JSON.stringify(content))
+}
 
 // ---------------------------------------------------------------------------------------------------- ledger
 type Ledger = { byId: Map<string, EvidenceRecord>; problems: string[] }
+const MAX_CHAIN = 16
 
 function indexLedger(ledger: readonly unknown[]): Ledger {
   const byId = new Map<string, EvidenceRecord>()
@@ -110,20 +146,59 @@ function indexLedger(ledger: readonly unknown[]): Ledger {
     if (e.supersededBy != null) {
       const r = byId.get(e.supersededBy)
       if (!r || r.replaces !== e.id) problems.push(`evidence ${e.id} names a replacement that does not replace it`)
+      else if (r.scope !== e.scope) problems.push(`evidence ${e.id} and its replacement have different scopes`)
     }
     if (e.replaces != null) {
       const t = byId.get(e.replaces)
       if (!t || t.supersededBy !== e.id) problems.push(`evidence ${e.id} replaces an entry that does not name it`)
     }
+    // circular or runaway supersession chains
+    const seen = new Set<string>()
+    let cur: EvidenceRecord | undefined = e
+    while (cur && cur.supersededBy != null) {
+      if (seen.has(cur.id) || seen.size > MAX_CHAIN) {
+        problems.push(`evidence ${e.id} has a circular or over-long supersession chain`)
+        break
+      }
+      seen.add(cur.id)
+      cur = byId.get(cur.supersededBy)
+    }
   }
   return { byId, problems }
+}
+
+/** Follows supersession to the CURRENT entry. Every comparison of attested values and every usability check uses it. */
+function currentOf(byId: Map<string, EvidenceRecord>, id: string): { tail: EvidenceRecord } | { problem: string } {
+  let cur = byId.get(id)
+  if (!cur) return { problem: "is not in the ledger" }
+  const seen = new Set<string>()
+  while (cur.supersededBy != null) {
+    if (seen.has(cur.id) || seen.size > MAX_CHAIN) return { problem: "has a circular or over-long supersession chain" }
+    seen.add(cur.id)
+    const next = byId.get(cur.supersededBy)
+    if (!next || next.replaces !== cur.id) return { problem: "names a replacement that does not replace it" }
+    cur = next
+  }
+  return { tail: cur }
+}
+/** The code the evidence was registered under: follows `replaces` back to the original id. */
+function rootIdOf(byId: Map<string, EvidenceRecord>, id: string): string {
+  let cur = byId.get(id)
+  const seen = new Set<string>()
+  while (cur && cur.replaces != null && !seen.has(cur.id) && seen.size <= MAX_CHAIN) {
+    seen.add(cur.id)
+    const prev = byId.get(cur.replaces)
+    if (!prev) break
+    cur = prev
+  }
+  return cur?.id ?? id
 }
 
 /** Why an entry cannot be used on `approvedOn` (null if usable). */
 function unusable(e: EvidenceRecord | undefined, asOfDay: number, approvedDay: number | null): string | null {
   if (!e) return "is not in the ledger"
-  const keys = ["status", "verifiedBy", "verifiedOn", "document", "expiresOn", "revokedOn", "supersededBy", "replaces", "attested"]
-  if (!isObj(e) || keys.some((k) => !(k in e))) return "has missing verification metadata"
+  const keys = ["status", "verifiedBy", "verifiedOn", "document", "expiresOn", "revokedOn", "supersededBy", "replaces", "attested", "scope"]
+  if (!isObj(e) || keys.some((k) => !Object.hasOwn(e, k))) return "has missing verification metadata"
   if (!STATUSES.includes(e.status)) return "has an invalid status"
   if (e.status !== "VERIFIED") return `is ${e.status}, not VERIFIED`
   if (!nonEmpty(e.verifiedBy)) return "has no verifier"
@@ -144,7 +219,8 @@ function unusable(e: EvidenceRecord | undefined, asOfDay: number, approvedDay: n
 }
 
 // ---------------------------------------------------------------------------------------------------- published registry
-const PUBLISHED_SNAPSHOTS = new WeakMap<object, ManifestEntry>()
+type PublishedMeta = { entry: ManifestEntry; evidence: readonly string[] }
+const PUBLISHED_SNAPSHOTS = new WeakMap<object, PublishedMeta>()
 
 /** True only for objects produced by this module's gate. A TypeScript cast cannot create one. */
 export function isPublishedSnapshot(page: unknown): page is Published<PageRecord> {
@@ -154,21 +230,33 @@ export function assertPublished<T extends PageRecord>(page: unknown): asserts pa
   if (!isPublishedSnapshot(page)) throw new Error("Refusing to render a page that did not pass the publication gate")
 }
 export function getManifestEntry(page: unknown): ManifestEntry | null {
-  return isPublishedSnapshot(page) ? (PUBLISHED_SNAPSHOTS.get(page) ?? null) : null
+  return isPublishedSnapshot(page) ? (PUBLISHED_SNAPSHOTS.get(page)?.entry ?? null) : null
+}
+/** Every evidence id (current entries and the ids the approval cites) a published page relies on. Used by the expiry monitor. */
+export function getPublishedEvidenceIds(page: unknown): readonly string[] {
+  return isPublishedSnapshot(page) ? (PUBLISHED_SNAPSHOTS.get(page)?.evidence ?? []) : []
 }
 
 // ---------------------------------------------------------------------------------------------------- evaluation
-type Result = { reasons: string[]; page: Published<PageRecord> | null; entry: ManifestEntry | null }
+type Result = { reasons: string[]; page: Published<PageRecord> | null; entry: ManifestEntry | null; evidence: string[] }
 
-function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[]): Result {
+function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown[]): Result {
   const reasons: string[] = []
-  const fail = (): Result => ({ reasons: [...new Set(reasons)], page: null, entry: null })
+  const fail = (): Result => ({ reasons: [...new Set(reasons)], page: null, entry: null, evidence: [] })
   let entry: ManifestEntry | null = null
+  const evidence = new Set<string>()
   try {
     const r = snapshot(record) as any // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (!isObj(r)) return { reasons: ["record is missing or not an object"], page: null, entry: null }
+    if (!isObj(r)) return { reasons: ["record is missing or not an object"], page: null, entry: null, evidence: [] }
 
-    // Dependencies
+    // Dependencies: judged on a frozen copy taken once, so getters, proxies, inherited fields and later mutation cannot
+    // change what is authorised. A dependency that cannot be copied as plain data fails closed.
+    let deps: GateDeps
+    try {
+      deps = snapshot(rawDeps)
+    } catch {
+      return { reasons: ["gate dependencies are malformed"], page: null, entry: null, evidence: [] }
+    }
     const depsOk = isObj(deps) && Array.isArray(deps.ledger) && Array.isArray(deps.claims) && Array.isArray(deps.manifest)
     const asOfDay = depsOk ? calendarDay(deps.asOf) : null
     if (!depsOk || asOfDay === null) {
@@ -204,10 +292,18 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
       else {
         if (typeof m.routeFile !== "string" || !ROUTE_FILE.test(m.routeFile) || m.routeFile !== `app/${r.publicPath.slice(1)}/page.tsx`) reasons.push("manifest route file is missing or wrong")
         if (!nonEmpty(m.title) || !nonEmpty(m.description)) reasons.push("manifest metadata is incomplete")
-        else if (hasSensitive(m.title) || hasSensitive(m.description)) reasons.push("manifest metadata contains claim-sensitive wording")
+        else {
+          for (const [label, t] of [["title", m.title], ["description", m.description]] as const) {
+            const bad = textProblem(t)
+            if (bad) reasons.push(`manifest ${label} ${bad}`)
+          }
+          if (hasSensitive(m.title) || hasSensitive(m.description)) reasons.push("manifest metadata contains claim-sensitive wording")
+        }
         entry = { publicPath: m.publicPath, routeFile: m.routeFile, title: m.title, description: m.description }
       }
     }
+    const pageScope = r.kind === "service" ? `service:${slug}` : `office:${slug}`
+    const digest = entry ? contentDigest(r, entry) : null
 
     // Status and approval
     if (r.status !== "approved") reasons.push('status is not "approved"')
@@ -229,6 +325,8 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
         const d = calendarDay(x.reviewedOn)
         if (d === null) reasons.push(`${label} date is not a real date`)
         else if (approvedDay !== null && d > approvedDay) reasons.push(`${label} is dated after the approval`)
+        if (typeof x.contentDigest !== "string" || !/^[0-9a-f]{64}$/.test(x.contentDigest)) reasons.push(`${label} has no content digest`)
+        else if (digest !== null && x.contentDigest !== digest) reasons.push(`${label} was of different content than the page now has`)
       }
       review(a.editorialReview, "editorial review")
       if (a.complianceReview !== null) review(a.complianceReview, "compliance review")
@@ -258,6 +356,11 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
         if (ident && cov.areas.length > 0 && !cov.evidenceIds.includes(ident.areasEvidence)) reasons.push("areas served are not tied to the office's areas evidence")
       }
     }
+    // Attested values always come from the CURRENT entry (the end of any supersession chain).
+    const attestedOf = (id: string): Record<string, unknown> | null => {
+      const c = currentOf(ledger.byId, id)
+      return "tail" in c && isObj(c.tail.attested) ? c.tail.attested : null
+    }
     const nap = r.kind === "location" ? r.nap : null
     if (r.kind === "location") {
       const ident = (LOCATION_IDENTITY as Record<string, any>)[slug] // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -265,35 +368,55 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
       else if (ident) {
         if (!/^\+\d{8,15}$/.test(nap.telephone)) reasons.push("NAP telephone is not E.164")
         const same = (id: string, expected: Record<string, string>) => {
-          const att = ledger.byId.get(id)?.attested
-          if (!isObj(att) || Object.entries(expected).some(([k, v]) => att[k] !== v)) reasons.push(`NAP does not match the values attested by ${id}`)
+          const att = attestedOf(id)
+          if (!isObj(att) || Object.entries(expected).some(([k, v]) => att[k] !== v)) reasons.push(`NAP does not match the values currently attested by ${id}`)
         }
         same(ident.nameEvidence, { displayName: nap.displayName, branchDesignation: nap.branchDesignation })
         same(ident.addressEvidence, { streetAddress: nap.streetAddress, locality: nap.locality })
         same(ident.phoneEvidence, { telephone: nap.telephone })
-        for (const d of DESIGNATION_EVIDENCE) if (d.pattern.test(nap.branchDesignation) || d.pattern.test(nap.displayName)) needed.add(d.evidenceId)
+        // Designation: an explicit allowlist, each value with its own evidence. Designation wording is not allowed elsewhere in the NAP.
+        const des = Object.hasOwn(DESIGNATIONS, nap.branchDesignation) ? DESIGNATIONS[nap.branchDesignation] : undefined
+        if (!des) reasons.push("branch designation is not an allowed designation")
+        else {
+          for (const id of des.evidenceIds) needed.add(id)
+          if (des.offices && !des.offices.includes(slug as never)) reasons.push("this designation is not allowed for this office")
+          if (des.attestedBy) {
+            const att = attestedOf(des.attestedBy.id)
+            if (!isObj(att) || att[des.attestedBy.key] !== r.officeName) reasons.push(`designation is not attested for this office by ${des.attestedBy.id}`)
+          }
+        }
+        if (DESIGNATION_WORDS.test(nap.displayName)) reasons.push("display name contains designation wording")
       }
     }
-    // The contact call to action shows the primary phone: it must be the number COM-05 attests.
-    const com05 = ledger.byId.get("COM-05")?.attested
-    if (!isObj(com05) || com05[PHONE_ATTESTATION_KEY] !== siteConfig.contact.primaryPhone.e164) reasons.push("the primary phone shown is not the number attested by COM-05")
+    // The contact call to action shows the primary phone: it must be the number COM-05 currently attests.
+    const com05 = attestedOf("COM-05")
+    if (!isObj(com05) || com05[PHONE_ATTESTATION_KEY] !== siteConfig.contact.primaryPhone.e164) reasons.push("the primary phone shown is not the number currently attested by COM-05")
 
     const approvedIds = isObj(a) && isStringArray(a.evidenceIds) ? a.evidenceIds : []
-    const resolve = (id: string): string | null => {
-      const e = ledger.byId.get(id)
-      const why = unusable(e, asOfDay, approvedDay)
-      if (!why) return null
-      const rep = e?.supersededBy ? ledger.byId.get(e.supersededBy) : undefined
-      return rep && rep.replaces === id && !unusable(rep, asOfDay, approvedDay) ? null : why
+    // Usable = chain resolves to a current entry that is verified, unexpired, unrevoked, correctly scoped for this page.
+    const resolve = (id: string): { why: string | null; current: string | null } => {
+      const c = currentOf(ledger.byId, id)
+      if ("problem" in c) return { why: c.problem, current: null }
+      const why = unusable(c.tail, asOfDay, approvedDay)
+      if (why) return { why, current: c.tail.id }
+      const expected = expectedScope(rootIdOf(ledger.byId, id))
+      if (expected === null || c.tail.scope !== expected) return { why: "has no valid evidence scope", current: c.tail.id }
+      if (expected !== "company" && expected !== pageScope) return { why: `is scoped to ${expected}, not to this page`, current: c.tail.id }
+      return { why: null, current: c.tail.id }
     }
     for (const id of needed) {
-      const why = resolve(id)
+      const { why, current } = resolve(id)
       if (why) reasons.push(`evidence ${id} ${why}`)
-      if (!approvedIds.includes(id)) reasons.push(`approval does not reference evidence ${id}`)
+      evidence.add(id)
+      if (current) evidence.add(current)
+      if (!approvedIds.includes(id) && !(current && approvedIds.includes(current))) reasons.push(`approval does not reference evidence ${id}`)
+      else if (current && !approvedIds.includes(current)) reasons.push(`approval does not reference the current evidence ${current} replacing ${id}`)
     }
     for (const id of approvedIds) {
-      const why = resolve(id)
+      const { why, current } = resolve(id)
       if (why) reasons.push(`approval cites evidence ${id} that ${why}`)
+      evidence.add(id)
+      if (current) evidence.add(current)
     }
 
     // Sections, claim bindings and rendered text
@@ -322,20 +445,29 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
         reasons.push(`section ${s.id} has malformed claims`)
         continue
       }
+      for (const t of [s.heading, ...(s.body as string[]), ...(s.claims as { statement: string }[]).map((c) => c.statement)]) {
+        const bad = textProblem(t)
+        if (bad) reasons.push(`section ${s.id} text ${bad}`)
+      }
       for (const para of s.body as string[]) {
         if (words(para) < MIN_WORDS) reasons.push(`section ${s.id} has a paragraph under ${MIN_WORDS} words`)
         const key = norm(para)
         if (seenParas.has(key)) reasons.push(`section ${s.id} repeats a paragraph on the same page`)
         seenParas.add(key)
         if (siblingParas.has(key)) reasons.push(`section ${s.id} copies text from another page or the approved service description`)
-        // every claim-sensitive span must sit inside a bound statement
-        const covered: [number, number][] = []
-        for (const c of s.claims as { statement: string }[]) for (let i = para.indexOf(c.statement); i !== -1; i = para.indexOf(c.statement, i + 1)) covered.push([i, i + c.statement.length])
-        for (const [from, to] of sensitiveRanges(para)) if (!covered.some(([cf, ct]) => from >= cf && to <= ct)) reasons.push(`section ${s.id} has claim-sensitive wording without a bound, approved claim`)
+        // every claim-sensitive span must sit inside a statement bound to a claim whose scope permits that span
+        const covers: { from: number; to: number; claimId: string }[] = []
+        for (const c of s.claims as { claimId: string; statement: string }[]) for (let i = para.indexOf(c.statement); i !== -1; i = para.indexOf(c.statement, i + 1)) covers.push({ from: i, to: i + c.statement.length, claimId: c.claimId })
+        for (const span of spansOf(para)) {
+          if (!covers.some((cv) => span.from >= cv.from && span.to <= cv.to && permits(cv.claimId, span))) reasons.push(`section ${s.id} has claim-sensitive wording (${span.category}) that no bound, approved claim covers`)
+        }
       }
       if (hasSensitive(s.heading)) reasons.push(`section ${s.id} heading has claim-sensitive wording`)
       for (const c of s.claims as { claimId: string; statement: string }[]) {
         if (!(s.body as string[]).some((p) => p.includes(c.statement))) reasons.push(`claim ${c.claimId} statement does not appear in section ${s.id}`)
+        const scope = Object.hasOwn(CLAIM_SCOPE, c.claimId) ? CLAIM_SCOPE[c.claimId] : undefined
+        if (!scope) reasons.push(`claim ${c.claimId} has no explicit scope`)
+        else if (scope.categories.length > 0 && !spansOf(c.statement).some((sp) => permits(c.claimId, sp))) reasons.push(`claim ${c.claimId} statement contains no wording that claim covers`)
         const reg = deps.claims.find((x) => isObj(x) && x.id === c.claimId)
         if (!reg || reg.status !== "approved" || !nonEmpty(reg.evidence)) reasons.push(`claim ${c.claimId} is not approved with evidence`)
         bound.push({ claimId: c.claimId, sectionId: s.id, statement: c.statement })
@@ -350,18 +482,25 @@ function evaluate(record: unknown, deps: GateDeps, siblings: readonly unknown[])
     for (const x of approvals) if (!isObj(x) || !bound.some((b) => b.claimId === x.claimId && b.sectionId === x.sectionId && b.statement === x.statement)) reasons.push("an approval refers to a claim that is not in the content")
     if (bound.length > 0 && isObj(a) && a.complianceReview === null) reasons.push("claims are present but there is no compliance review")
 
-    // Every other rendered field is scanned; claims cannot be bound there, so any sensitive wording is rejected.
+    // Every other rendered field is checked; claims cannot be bound there, so any sensitive wording is rejected.
+    // (branchDesignation is validated against the allowlist above.)
     const plain: string[] = []
-    if (r.kind === "location") {
-      if (isObj(nap)) plain.push(nap.displayName, nap.branchDesignation, nap.streetAddress, nap.locality)
-      if (isObj(cov) && isStringArray(cov.areas)) plain.push(...cov.areas)
+    if (r.kind === "location" && isObj(nap)) plain.push(nap.displayName, nap.streetAddress, nap.locality)
+    if (r.kind === "location" && isObj(cov) && isStringArray(cov.areas)) plain.push(...cov.areas)
+    for (const t of plain) {
+      const bad = textProblem(t)
+      if (bad) reasons.push(`a rendered location field ${bad}`)
+      if (typeof t === "string" && hasSensitive(t)) reasons.push("a rendered field contains claim-sensitive wording that cannot be bound to an approval")
     }
-    for (const t of plain) if (typeof t === "string" && hasSensitive(t)) reasons.push("a rendered field contains claim-sensitive wording that cannot be bound to an approval")
+    if (r.kind === "location" && isObj(nap)) {
+      const bad = textProblem(nap.branchDesignation)
+      if (bad) reasons.push(`branch designation ${bad}`)
+    }
 
     if (reasons.length > 0) return fail()
-    return { reasons: [], page: r as Published<PageRecord>, entry }
+    return { reasons: [], page: r as Published<PageRecord>, entry, evidence: [...evidence] }
   } catch {
-    return { reasons: ["gate error: failing closed"], page: null, entry: null }
+    return { reasons: ["gate error: failing closed"], page: null, entry: null, evidence: [] }
   }
 }
 
@@ -373,10 +512,10 @@ export function evaluatePublication(record: unknown, deps: GateDeps = defaultDep
 
 /** Returns the frozen, gate-registered snapshot of a record if (and only if) it is publishable. */
 export function publishRecord(record: unknown, deps: GateDeps = defaultDeps(), siblings: readonly unknown[] = []): Published<PageRecord> | null {
-  const { page, entry, reasons } = evaluate(record, deps, siblings)
+  const { page, entry, reasons, evidence } = evaluate(record, deps, siblings)
   if (!page || reasons.length > 0 || !entry) return null
   deepFreeze(page)
-  PUBLISHED_SNAPSHOTS.set(page, deepFreeze(entry))
+  PUBLISHED_SNAPSHOTS.set(page, deepFreeze({ entry, evidence: deepFreeze([...evidence]) }))
   return page
 }
 

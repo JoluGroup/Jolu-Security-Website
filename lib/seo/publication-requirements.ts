@@ -42,11 +42,40 @@ export const LOCATION_IDENTITY: Readonly<
   rongo: { officeName: "Migori", nameEvidence: "OFF-RON-01", addressEvidence: "OFF-RON-02", phoneEvidence: "OFF-RON-05", servicesEvidence: "OFF-RON-06", areasEvidence: "OFF-RON-10" },
 } as const)
 
-/** Designation wording that additionally needs its own evidence before it may be displayed. */
-export const DESIGNATION_EVIDENCE: readonly { pattern: RegExp; evidenceId: string }[] = [
-  { pattern: /\b(head office|headquarters|HQ)\b/i, evidenceId: "COM-03" },
-  { pattern: /\bshowroom\b/i, evidenceId: "OFF-NAK-11" },
-]
+/**
+ * The ONLY branch designations a location page may display. Any other value is rejected, so wording cannot slip past a
+ * pattern list. Each entry names the evidence it additionally needs. This list approves nothing: it is the vocabulary a
+ * verified designation must come from.
+ *  - `offices`: pages that may use it (omit for any office).
+ *  - `attestedBy`: the evidence entry that must attest `{ [key]: <that page's office name> }`.
+ */
+export const DESIGNATIONS: Readonly<Record<string, { evidenceIds: readonly string[]; offices?: readonly LocationSlug[]; attestedBy?: { id: string; key: string } }>> = deepFreeze({
+  "Regional Office": { evidenceIds: [] },
+  "Branch Office": { evidenceIds: [] },
+  "Head Office": { evidenceIds: ["COM-03"], attestedBy: { id: "COM-03", key: "headOffice" } },
+  "Regional Office & Showroom": { evidenceIds: ["OFF-NAK-11"], offices: ["nakuru"] },
+} as const)
+
+/** Designation wording is not allowed in a display name; it belongs in the allowlisted `branchDesignation` only. */
+export const DESIGNATION_WORDS = /\b(head ?office|head ?quarters?|hq|main office|corporate|flagship|showroom|branch|regional office)\b/i
+
+/**
+ * Explicit evidence scope. Every ledger entry carries a `scope` string, and the gate requires it to equal the scope
+ * this table derives from the evidence code: "company", "office:<location slug>" or "service:<service slug>". A page may
+ * use company-wide evidence and evidence scoped to its own office or service, nothing else. An id that matches no code
+ * here has no scope and is rejected.
+ */
+const OFFICE_CODES = { NBO: "nairobi", NAK: "nakuru", RON: "rongo" } as const
+const SERVICE_CODES = { MG: "manned-guarding", CC: "cctv-installation", EF: "electric-fencing", EV: "events-security", K9: "k9-unit-services", AR: "alarm-response", VP: "vip-close-protection" } as const
+export function expectedScope(id: unknown): string | null {
+  if (typeof id !== "string") return null
+  if (/^(COM|CMP|CNT|CLM|DIG)-\d{2}$/.test(id)) return "company"
+  const o = /^OFF-(NBO|NAK|RON)-\d{2}$/.exec(id)
+  if (o) return `office:${OFFICE_CODES[o[1] as keyof typeof OFFICE_CODES]}`
+  const v = /^SVC-(MG|CC|EF|EV|K9|AR|VP)-\d{2}$/.exec(id)
+  if (v) return `service:${SERVICE_CODES[v[1] as keyof typeof SERVICE_CODES]}`
+  return null
+}
 
 /** Licence, permit and registration evidence. Entries used by a page must carry an expiry date. */
 export const LICENCE_EVIDENCE: readonly string[] = deepFreeze(["CMP-01", "CMP-02", "CMP-03", "CMP-04", "CLM-01"])

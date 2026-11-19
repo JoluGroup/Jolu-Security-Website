@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button"
 import type { PageRecord, Published } from "@/lib/seo/page-models"
+import { assertPublished } from "@/lib/seo/publication-gate"
 import { siteConfig } from "@/lib/site-config"
 
 /** Call to action using only the approved contact details and the existing enquiry form (no new form, no new endpoint). */
 export function ContactCta({ page }: { page: Published<PageRecord> }) {
+  assertPublished(page)
   const quoteHref = page.kind === "service" ? `/?service=${page.serviceId}#contact` : siteConfig.quoteHref
   return (
     <section aria-labelledby="cta-heading" className="mx-auto w-full max-w-6xl px-6 pb-24">

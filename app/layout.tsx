@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
-import { siteConfig } from "@/lib/site-config"
+import { rootMetadata } from "@/lib/seo/metadata"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -20,30 +20,8 @@ const instrumentSerif = Instrument_Serif({
   style: ["italic"],
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: siteConfig.name,
-  description:
-    "Security services across Kenya: manned guarding, events security, K9 unit, CCTV installation, electric fencing, alarm response and VIP close protection.",
-  alternates: { canonical: "/" },
-  keywords: [
-    "security services Kenya",
-    "manned guarding",
-    "K9 unit",
-    "CCTV installation",
-    "electric fencing",
-    "VIP close protection",
-  ],
-  openGraph: {
-    title: siteConfig.name,
-    description: siteConfig.description,
-    url: "/",
-    siteName: siteConfig.name,
-    images: [{ url: siteConfig.logo.src, alt: siteConfig.logo.alt }],
-    type: "website",
-    locale: "en_KE",
-  },
-}
+// Site-wide defaults live in lib/seo/metadata.ts; each page sets its own canonical, Open Graph and Twitter metadata.
+export const metadata: Metadata = rootMetadata
 
 export const viewport: Viewport = {
   themeColor: "#0a0a0b",

@@ -2,7 +2,32 @@ export type Priority = "P1" | "P2" | "P3"
 export type SearchIntent = "Transactional" | "Commercial" | "Informational"
 
 /** Why a workbook keyword cannot simply be written into public copy. */
-export type ClaimCategory = "licensing" | "superlative or quality" | "availability or response time" | "pricing"
+export type ClaimCategory =
+  | "licensing"
+  | "superlative or quality"
+  | "availability or response time"
+  | "pricing"
+  | "local presence or proximity"
+
+/** How a keyword's claim classification was reached (see lib/seo/claim-classifier.ts). */
+export type ClassificationBasis = "rule" | "judgment-included" | "judgment-excluded" | "none"
+
+/** One row of the workbook's KEYWORD MASTER sheet, with where it is planned to be used. No metrics: see PlannedPage. */
+export type WorkbookKeyword = {
+  id: string
+  keyword: string
+  cluster: string
+  geography: string
+  intent: SearchIntent
+  priority: Priority
+  /** "Suggested target URL" exactly as the workbook gives it. */
+  workbookUrl: string
+  /** Where the keyword is planned after consolidation (differs from workbookUrl only for /locations/migori/). "/" is the live homepage. */
+  plannedPath: string
+  disposition: "homepage" | "planned-page" | "editorial"
+  claimSensitive: readonly ClaimCategory[]
+  classification: ClassificationBasis
+}
 
 export type PlannedKeyword = {
   /** Row ID in the workbook's KEYWORD MASTER sheet, for traceability. */

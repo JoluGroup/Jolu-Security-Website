@@ -106,11 +106,15 @@ test("the monitor does not mutate its inputs", () => {
 })
 
 test("script: exits 0 on production data and 1 on an invalid date; makes no network or file writes", () => {
-  const out = execFileSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-11-19"], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+  const out = execFileSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-11-19"], { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], env: { ...process.env, GITHUB_ACTIONS: "" } })
   assert.match(out, /0 published page\(s\), 0 error\(s\), 0 warning\(s\)/)
-  const bad = spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-02-30"], { cwd: ROOT, encoding: "utf8" })
+  const bad = spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-02-30"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "" } })
   assert.equal(bad.status, 1)
   assert.match(bad.stdout, /ERROR: today's date/)
+  // inside GitHub Actions the same failure is printed as a workflow annotation
+  const ann = spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-02-30"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "true" } })
+  assert.equal(ann.status, 1)
+  assert.match(ann.stdout, /::error::today's date/)
   const src = readFileSync(path.join(ROOT, "scripts/check-evidence-freshness.mjs"), "utf8") + readFileSync(path.join(ROOT, "lib/seo/evidence-monitor.ts"), "utf8")
   assert.ok(!/writeFile|appendFile|unlink|rm\(|mkdir|fetch\(|https?:\/\/(?!github)|child_process|process\.env\.(?!GITHUB_ACTIONS)/.test(src.replace(/\/\/.*$/gm, "")))
 })

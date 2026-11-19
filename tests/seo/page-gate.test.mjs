@@ -248,7 +248,7 @@ test("components are server components with no invented claims, testimonials, ba
 test("existing frozen files and the enquiry system are untouched (git diff against the parent)", { skip: !existsSync(path.join(ROOT, ".git")) && !existsSync(path.join(ROOT, "../.git")) }, () => {
   let out = ""
   try { out = execSync("git diff --name-only a9dd82047390848d6b077b76b68c9b27dd7fee9b", { cwd: ROOT, encoding: "utf8" }) } catch { return }
-  const allowed = [/^app\/sitemap\.ts$/, /^lib\/seo\/(page-models|evidence-ledger|publication-requirements|page-records|page-resolve|publication-gate|page-json-ld|page-metadata|publication-manifest|publication-deps|freeze)\.ts$/, /^components\/pages\//, /^tests\/(seo|helpers)\//, /^docs\/seo\//]
+  const allowed = [/^app\/sitemap\.ts$/, /^lib\/seo\/(page-models|evidence-ledger|publication-requirements|page-records|page-resolve|publication-gate|page-json-ld|page-metadata|publication-manifest|publication-deps|freeze|digest|text-policy|claim-scope|evidence-monitor)\.ts$/, /^scripts\/check-evidence-freshness\.mjs$/, /^\.github\/workflows\/evidence-freshness\.yml$/, /^components\/pages\//, /^tests\/(seo|helpers)\//, /^docs\/seo\//]
   for (const f of out.split("\n").filter(Boolean)) assert.ok(allowed.some((a) => a.test(f)), `unexpected change: ${f}`)
   assert.ok(!/(^|\n)(app\/api|lib\/enquiry|components\/enquiry-form|lib\/claims|lib\/photo-library|public\/|app\/page|app\/layout|app\/blog|next\.config)/.test(out))
 })

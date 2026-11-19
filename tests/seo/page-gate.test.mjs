@@ -80,6 +80,16 @@ test("the gate accepts and rejects every case in the shared table (F-02 to F-09)
   assert.deepEqual(results.filter((r) => !r.ok).map((r) => r.name), [])
 })
 
+test("each 5D.6 rejection case fails for the reason it targets, not incidentally", () => {
+  const rejects = W.runCases(gate).filter((r) => r.name.startsWith("rejects: F5D5-"))
+  assert.ok(rejects.length >= 70, `only ${rejects.length} F5D5 rejection cases`)
+  for (const r of rejects) {
+    const id = /F5D5-\d\d/.exec(r.name)[0]
+    assert.ok(W.EXPECTED_REASON[id], `no expected reason for ${id}`)
+    assert.ok(r.reasons.some((x) => W.EXPECTED_REASON[id].test(x)), `${r.name}: gave ${JSON.stringify(r.reasons.slice(0, 3))}`)
+  }
+})
+
 test("a record cannot weaken the canonical requirements (F-02)", () => {
   const { record, deps } = W.world()
   assert.equal(gate.evaluatePublication(record, deps).published, true, "sanity")
@@ -194,14 +204,9 @@ test("sitemap and robots are unchanged; the sitemap never breaks and lists no ne
   assert.ok(/try \{[\s\S]*publishedPagePaths\(\)[\s\S]*\} catch/.test(read("app/sitemap.ts")))
 })
 
-test("the publication manifest matches the route files that exist (vacuous while empty)", () => {
-  for (const e of PUBLICATION_MANIFEST) {
-    assert.ok(existsSync(path.join(ROOT, e.routeFile)), `${e.routeFile} missing`)
-    const src = read(e.routeFile)
-    assert.ok(/PublishedPage/.test(src) && src.includes(e.publicPath.split("/")[2]), `${e.routeFile} does not render ${e.publicPath}`)
-    assert.ok(/gatedPageMetadata|generateMetadata/.test(src), `${e.routeFile} has no metadata`)
-  }
+test("no service or location route exists and no dynamic route exists (route-to-manifest checks live in manifest-routes.test.mjs)", () => {
   assert.ok(!existsSync(path.join(ROOT, "app/services")) && !existsSync(path.join(ROOT, "app/locations")))
+  assert.equal(PUBLICATION_MANIFEST.length, 0)
   const routes = []
   const walk = (d) => { for (const n of readdirSync(d)) { const p = path.join(d, n); if (statSync(p).isDirectory()) walk(p); else routes.push(p) } }
   walk(path.join(ROOT, "app"))

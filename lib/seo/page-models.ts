@@ -30,7 +30,11 @@ export type ContentSection = {
   claims: readonly SectionClaim[]
 }
 
-export type ReviewRecord = { reviewedBy: string; reviewedOn: string; reference: string }
+/**
+ * `contentDigest` is the SHA-256 of the exact content reviewed (see contentDigest in publication-gate.ts). The gate
+ * recomputes it, so any later change to the text, claims, NAP, coverage, evidence references or metadata voids the review.
+ */
+export type ReviewRecord = { reviewedBy: string; reviewedOn: string; reference: string; contentDigest: string }
 
 /** Approval of one claim for one statement in one section. Binds the claim to the exact text it authorises. */
 export type ClaimApproval = {
@@ -127,4 +131,6 @@ export type EvidenceRecord = {
   replaces: string | null
   /** Values the evidence attests, for example { streetAddress, locality }. Pages must display exactly these values. */
   attested: Readonly<Record<string, string>> | null
+  /** "company", "office:<location slug>" or "service:<service slug>". Must equal the scope derived from the evidence code. */
+  scope: string
 }

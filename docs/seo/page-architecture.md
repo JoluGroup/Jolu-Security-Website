@@ -1,4 +1,4 @@
-# Publication-gated page architecture (Milestones 5D.2, 5D.4 and 5D.6)
+# Publication-gated page architecture (Milestones 5D.2, 5D.4, 5D.6 and 5D.8)
 
 Infrastructure for future service and location pages. **Nothing is published**: no route, sitemap entry, navigation link or structured data exists for any of the ten planned pages. It follows the proposals in the 5B.1 and 5B.2 preparation documents (PR #5, PR #6) and uses the evidence ids of the Business Verification Pack (PR #7). 5D.4 hardened it after the independent audit of PR #8 (findings F-01 to F-13).
 
@@ -67,6 +67,16 @@ These refine the gate above (finding ids are from the 5D.5 audit). Nothing is pu
 - **Manifest routes (F5D5-07).** `tests/helpers/manifest-routes.mjs` holds the canonical route template and a verifier. Tests prove, with temporary fixtures, that an approved manifest entry needs a real route file with valid metadata and the right `assertPublished` use, and that the production check is not vacuous. No production route exists.
 - **Expiry monitoring (F5D5-02).** `lib/seo/evidence-monitor.ts` and `scripts/check-evidence-freshness.mjs` (read-only) report expired or soon-expiring evidence, stale as-of dates, revoked or superseded evidence still relied on, and licence evidence needing attention. `.github/workflows/evidence-freshness.yml` runs it weekly with `contents: read` only. GitHub runs scheduled workflows only from the default branch, so it does nothing until the file is on `main`. See `evidence-expiry-runbook.md`.
 - **Mutation tests (F5D5-08).** `tests/helpers/gate-mutants.mjs` lists the mutants; `tests/seo/page-gate-mutation.test.mjs` runs them. A mutant that does not apply, load or compile fails the test (never a kill). Security mutants must be killed by a "rejects:" case; one property mutant (no snapshot) is killed by an "accepts:" case and reported separately; equivalent mutants must survive, must run (tracer) and carry a written reason.
+
+## Corrections added in Milestone 5D.8
+
+Findings are from the 5D.7 verification. Nothing is published; the allowlist, ledger and manifest stay empty.
+
+- **Requirements come from the canonical root (F7-01).** Every requirement the gate applies to an evidence entry (scope, mandatory expiry for licence evidence, and the checks in `unusable`) comes from `rootRequirements(rootId)` in `publication-requirements.ts`, where the root is found by following `replaces` back to the id the evidence was first registered under. A replacement entry may carry any id and inherits the root's requirements. Before 5D.8 the licence-expiry rule read the replacement's own id, so `CMP-01` replaced by `CMP-91` or `ZZZ-91` with no expiry passed. A root that matches no known code has no profile and is rejected, so a new evidence category must be added to that function, with its flags, before it can be used. Limit: only the listed licence codes (`LICENCE_EVIDENCE`) require an expiry; any other company-coded root does not.
+- **Ranking claims (F7-02).** `#1` could never match because `\b` does not hold between a space and `#`. The patterns for `#1`, `No. 1`, `No 1 in ...` and `number one / number 1` now use lookarounds, and site references such as "gate number 1" or "ticket #10" are not flagged. Detection is still a safety net, not proof of any statement.
+- **Sibling records (F7-04).** The `siblings` argument is copied through one JSON pass and frozen like the record and dependencies; a sibling list that cannot be copied fails closed ("sibling records are malformed").
+- **Monitoring (F7-03).** Findings carry a stable `code`. Revoked, superseded-without-citation, licence-without-expiry and expired-at-commit-date conditions surface as ERRORS on an approved-but-unpublishable record, by cause. The script has `--strict`, `--format=json` and `--format=markdown`; the workflow runs strict and writes a job summary. It is still not operational until it is on `main` and enabled (see the runbook).
+- **Mutation harness (F7-05).** The two mutants wrongly called equivalent (a claim with no explicit scope; a superseded entry whose scope differs from its replacement) are now security mutants with rejection cases. Boundary mutants that depend on an acceptance (verification on the approval date) or a stricter-than-original change are reported as property mutants (acceptance kills). Equivalent mutants must still run (tracer) and survive.
 
 ## Publishing the first page (future milestone)
 

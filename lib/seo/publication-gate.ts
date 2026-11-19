@@ -20,7 +20,7 @@ import type { EvidenceRecord, PageKind, PageRecord, Published } from "@/lib/seo/
 import { PLANNED_PAGES } from "@/lib/seo/planned-pages"
 import { defaultDeps, type GateDeps } from "@/lib/seo/publication-deps"
 import type { ManifestEntry } from "@/lib/seo/publication-manifest"
-import { DESIGNATION_WORDS, DESIGNATIONS, expectedScope, LICENCE_EVIDENCE, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, SERVICE_IDENTITY } from "@/lib/seo/publication-requirements"
+import { DESIGNATION_WORDS, DESIGNATIONS, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, rootRequirements, SERVICE_IDENTITY, type EvidenceRequirements } from "@/lib/seo/publication-requirements"
 import { textProblem } from "@/lib/seo/text-policy"
 import { SERVICES } from "@/lib/services"
 import { siteConfig } from "@/lib/site-config"
@@ -71,7 +71,13 @@ const EXTRA_CLAIM_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
   { category: CATEGORY.availability, pattern: /\btwenty[- ]four\b/i },
   { category: CATEGORY.recognition, pattern: /\b(award|awarded|awards|award-winning)\b/i },
   { category: CATEGORY.coverage, pattern: /\b(nationwide|countrywide)\b/i },
-  { category: CATEGORY.quality, pattern: /\b(number one|no\.? ?1|#1|market leader|leader|foremost|unrivalled|unmatched)\b/i },
+  { category: CATEGORY.quality, pattern: /\b(market leader|leader|foremost|unrivalled|unmatched)\b/i },
+  // Ranking claims. "#1" cannot sit behind \b (no word boundary between a space and "#"), so it has its own pattern with
+  // lookarounds; "#10" and "x#1" do not match. "Gate number 1" style site references are not claims.
+  { category: CATEGORY.quality, pattern: /(?<![\w#])#\s?1(?!\d)/i },
+  { category: CATEGORY.quality, pattern: /\bno\.\s?1(?!\d)/i },
+  { category: CATEGORY.quality, pattern: /\bno\s1\b(?=\s+(?:in|choice|provider|company|firm|security|ranked|guard))/i },
+  { category: CATEGORY.quality, pattern: /(?<!\b(?:gate|post|bay|unit|room|floor|door|camera|zone|entrance|channel)\s)\bnumber\s+(?:one|1)(?!\d)/i },
   { category: CATEGORY.licensing, pattern: /\b(approved|authori[sz]ed|bonded|insured|iso ?\d+)\b/i },
   { category: CATEGORY.statistics, pattern: /\b(over|more than)\s+[\d,]+\+?\s+(clients|customers|guards|sites|years)\b/i },
   { category: CATEGORY.statistics, pattern: /\b\d[\d,]*\+\s*(clients|customers|guards|sites|years)\b/i },
@@ -195,7 +201,7 @@ function rootIdOf(byId: Map<string, EvidenceRecord>, id: string): string {
 }
 
 /** Why an entry cannot be used on `approvedOn` (null if usable). */
-function unusable(e: EvidenceRecord | undefined, asOfDay: number, approvedDay: number | null): string | null {
+function unusable(e: EvidenceRecord | undefined, asOfDay: number, approvedDay: number | null, req: EvidenceRequirements): string | null {
   if (!e) return "is not in the ledger"
   const keys = ["status", "verifiedBy", "verifiedOn", "document", "expiresOn", "revokedOn", "supersededBy", "replaces", "attested", "scope"]
   if (!isObj(e) || keys.some((k) => !Object.hasOwn(e, k))) return "has missing verification metadata"
@@ -213,7 +219,7 @@ function unusable(e: EvidenceRecord | undefined, asOfDay: number, approvedDay: n
     const exp = calendarDay(e.expiresOn)
     if (exp === null) return "has an invalid expiry date"
     if (exp <= asOfDay || (approvedDay !== null && exp <= approvedDay)) return "is expired"
-  } else if (LICENCE_EVIDENCE.includes(e.id)) return "is licence evidence without an expiry date"
+  } else if (req.expiryRequired) return "is licence evidence without an expiry date"
   if (e.attested !== null && !(isObj(e.attested) && Object.values(e.attested).every((v) => typeof v === "string"))) return "has malformed attested values"
   return null
 }
@@ -256,6 +262,15 @@ function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown
       deps = snapshot(rawDeps)
     } catch {
       return { reasons: ["gate dependencies are malformed"], page: null, entry: null, evidence: [] }
+    }
+    // Sibling records are judged on a frozen copy too (getters, proxies and later mutation cannot skip or change the
+    // duplicate-text check); a sibling list that cannot be copied as plain data fails closed.
+    let sibs: readonly unknown[]
+    try {
+      sibs = snapshot(siblings)
+      if (!Array.isArray(sibs)) throw new Error("siblings is not a list")
+    } catch {
+      return { reasons: ["sibling records are malformed"], page: null, entry: null, evidence: [] }
     }
     const depsOk = isObj(deps) && Array.isArray(deps.ledger) && Array.isArray(deps.claims) && Array.isArray(deps.manifest)
     const asOfDay = depsOk ? calendarDay(deps.asOf) : null
@@ -397,11 +412,13 @@ function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown
     const resolve = (id: string): { why: string | null; current: string | null } => {
       const c = currentOf(ledger.byId, id)
       if ("problem" in c) return { why: c.problem, current: null }
-      const why = unusable(c.tail, asOfDay, approvedDay)
+      // Requirements come from the canonical ROOT of the chain, never from the replacement's own id.
+      const req = rootRequirements(rootIdOf(ledger.byId, id))
+      if (req === null) return { why: "has no valid evidence scope", current: c.tail.id }
+      const why = unusable(c.tail, asOfDay, approvedDay, req)
       if (why) return { why, current: c.tail.id }
-      const expected = expectedScope(rootIdOf(ledger.byId, id))
-      if (expected === null || c.tail.scope !== expected) return { why: "has no valid evidence scope", current: c.tail.id }
-      if (expected !== "company" && expected !== pageScope) return { why: `is scoped to ${expected}, not to this page`, current: c.tail.id }
+      if (c.tail.scope !== req.scope) return { why: "has no valid evidence scope", current: c.tail.id }
+      if (req.scope !== "company" && req.scope !== pageScope) return { why: `is scoped to ${req.scope}, not to this page`, current: c.tail.id }
       return { why: null, current: c.tail.id }
     }
     for (const id of needed) {
@@ -423,7 +440,7 @@ function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown
     const seenIds = new Set<string>()
     const seenParas = new Set<string>()
     const siblingParas = new Set<string>(
-      siblings.flatMap((s) => {
+      sibs.flatMap((s) => {
         try {
           return (isObj(s) && Array.isArray(s.sections) ? s.sections : []).flatMap((x: any) => (isStringArray(x?.body) ? x.body.map(norm) : [])) // eslint-disable-line @typescript-eslint/no-explicit-any
         } catch {

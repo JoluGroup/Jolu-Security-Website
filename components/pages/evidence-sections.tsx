@@ -1,10 +1,12 @@
 import type { ContentSection, PageRecord, Published } from "@/lib/seo/page-models"
+import { assertPublished } from "@/lib/seo/publication-gate"
 
 /**
  * Renders the content sections of a gated page. A section appears only because the gate already verified its
  * evidence and claims; the section's evidence ids are not shown to visitors. No section means nothing renders.
  */
 export function EvidenceSections({ page }: { page: Published<PageRecord> }) {
+  assertPublished(page)
   const sections: readonly ContentSection[] = page.sections
   if (sections.length === 0) return null
   return (

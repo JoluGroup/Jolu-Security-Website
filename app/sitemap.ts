@@ -11,7 +11,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
     priority: page.path === "/" ? 1 : 0.8,
   }))
-  // Service and location pages appear here only after passing the publication gate (lib/seo/publication-gate.ts). Empty today.
-  const gated: MetadataRoute.Sitemap = publishedPagePaths().map((path) => ({ url: canonicalUrl(path), changeFrequency: "monthly", priority: 0.8 }))
+  // Service and location pages appear here only after passing the publication gate, which also requires a manifest entry
+  // with an existing route file and metadata (lib/seo/publication-manifest.ts). Empty today.
+  // Fail safe: whatever happens in the gate, the existing entries above are always returned.
+  let gated: MetadataRoute.Sitemap = []
+  try {
+    gated = publishedPagePaths().map((path) => ({ url: canonicalUrl(path), changeFrequency: "monthly", priority: 0.8 }))
+  } catch {
+    gated = []
+  }
   return [...live, ...gated]
 }

@@ -35,15 +35,7 @@ function publicSourceFiles() {
   return files
 }
 
-// Words and phrases that would be unsupported public claims today (lib/claims.ts: every claim "needs-evidence").
-const CLAIM_PATTERNS = [
-  /licen[cs]ed/i, /registered/i, /certified/i, /accredited/i, /compliant/i, /\bpsra\b/i,
-  /24\s?\/\s?7/, /24[- ]hours?/i, /round[- ]the[- ]clock/i, /around the clock/i,
-  /(?<![\w-])best(?![\w-])/i, /(?<![\w-])top[- ](rated|tier)(?![\w-])/i, /(?<![\w-])leading(?![\w-])/i, /\btrusted\b/i, /\bno\.?\s?1\b/i, /#1/, /award/i,
-  /guarantee/i, /\brapid\b/i, /(?<![\w-])fast(?![\w-])/i, /within \d+/i, /\b\d+\s*(minutes?|hours?|hrs?)\b/i, /\d+\+/, /since \d{4}/i, /\bover \d+ years/i,
-  /testimonial/i, /\breviews?\b/i, /rated/i, /\bstars?\b/i, /\bcheap/i, /\baffordable\b/i,
-]
-const claimsIn = (text) => CLAIM_PATTERNS.filter((rx) => rx.test(text)).map(String)
+const { claimsIn } = await import("../helpers/claim-patterns.mjs")
 
 describe("existing URL behaviour is preserved", () => {
   it("the published routes are exactly / and /blog", () => {

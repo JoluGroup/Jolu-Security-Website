@@ -252,7 +252,7 @@ describe("Redis failures", () => {
 
   it("if recording the result fails after sending, the visitor still gets the true outcome (sent)", async () => {
     liveEnv()
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "DEL")
+    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
     const res = await post()
     assert.equal(res.status, 200)
     assert.equal((await res.json()).state, "accepted")

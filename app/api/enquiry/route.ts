@@ -148,7 +148,9 @@ export async function POST(request: Request) {
   const outcome = await deliverEnquiry(result.data, ref, delivery!)
 
   if (outcome.kind === "accepted") {
-    if (!(await finishDedup(handle, "sent", ref))) log("dedup_record_failed", ref)
+    const finish = await finishDedup(handle, "sent", ref)
+    if (finish === "error") log("dedup_record_failed", ref)
+    else if (finish === "lock_lost") log("dedup_lock_lost", ref)
     log("accepted", ref)
     return respond({ ok: true, ref, state: "accepted" }, 200)
   }
@@ -162,7 +164,9 @@ export async function POST(request: Request) {
 
   // Unknown outcome (timeout, network error, 5xx, missing id). The email may have been sent, so this is
   // neither success nor "not sent". The ref is kept so a retry reuses it as the idempotency key.
-  if (!(await finishDedup(handle, "unsure", ref))) log("dedup_record_failed", ref)
+  const finish = await finishDedup(handle, "unsure", ref)
+  if (finish === "error") log("dedup_record_failed", ref)
+  else if (finish === "lock_lost") log("dedup_lock_lost", ref)
   log(`delivery_uncertain_${outcome.reason}`, ref)
   return respond({ ok: false, code: "delivery_uncertain", ref }, 202)
 }

@@ -68,13 +68,42 @@ test("old verification dates produce a warning", () => {
   assert.ok(msgs(run(w, "2026-11-19"), "warning").some((m) => m.includes("COM-05") && /last verified on 2025-06-01/.test(m)))
 })
 
-test("approved but unpublishable records are reported (revoked, superseded without citation)", () => {
+test("approved but unpublishable records are ERRORS, coded by cause (F7-03)", () => {
+  const codes = (r) => r.findings.filter((f) => f.level === "error").map((f) => f.code)
   const revoked = W.world(); revoked.deps.ledger.find((e) => e.id === "COM-05").revokedOn = "2026-11-18"
   const r1 = run(revoked, "2026-11-19")
-  assert.ok(msgs(r1, "warning").some((m) => /marked approved but is not publishable/.test(m) && /COM-05/.test(m)))
+  assert.ok(codes(r1).includes("REVOKED_EVIDENCE"))
+  assert.ok(msgs(r1, "error").some((m) => /marked approved but is not publishable/.test(m) && /COM-05/.test(m)))
   assert.deepEqual(r1.publishedPaths, [])
+  assert.ok(r1.errors >= 1)
   const sup = W.world(); const old = sup.deps.ledger.find((e) => e.id === "CMP-07"); old.supersededBy = "CMP-07-R2"; sup.deps.ledger.push(W.entry("CMP-07-R2", { replaces: "CMP-07" }))
-  assert.ok(msgs(run(sup, "2026-11-19"), "warning").some((m) => /approved but is not publishable/.test(m)))
+  assert.ok(codes(run(sup, "2026-11-19")).includes("SUPERSEDED_EVIDENCE"))
+  const exp = W.world({ ...W.SERVICE }, { entryOver: { "COM-05": { expiresOn: "2026-11-01" } } })
+  assert.ok(codes(run(exp, "2026-11-19")).includes("EXPIRED_EVIDENCE"))
+  const lic = licenceWorld(null)
+  assert.ok(codes(run(lic, "2026-11-19")).includes("LICENCE_NO_EXPIRY"))
+  const other = W.world(); other.record.approval.path = "/services/other"
+  assert.ok(codes(run(other, "2026-11-19")).includes("GATE_REJECTED"))
+  // an unapproved record is simply not published and is not an error
+  const draft = W.world(); draft.record.status = "unpublished"
+  assert.equal(run(draft, "2026-11-19").errors, 0)
+})
+
+test("every finding has a stable code, and warnings are not errors", () => {
+  const w = licenceWorld("2026-12-19")
+  const r = run(w, "2026-11-19")
+  for (const f of r.findings) assert.match(f.code, /^[A-Z_]+$/)
+  assert.equal(r.errors, 0)
+  assert.ok(r.warnings > 0)
+  assert.ok(r.findings.some((f) => f.code === "EVIDENCE_EXPIRING" && f.evidenceId === "CMP-01" && f.path === "/services/manned-guarding"))
+})
+
+test("exit status: errors always fail, warnings fail only in strict mode", async () => {
+  const { exitCodeFor } = await import("@/lib/seo/evidence-monitor")
+  assert.equal(exitCodeFor({ errors: 0, warnings: 0 }, true), 0)
+  assert.equal(exitCodeFor({ errors: 0, warnings: 2 }, false), 0)
+  assert.equal(exitCodeFor({ errors: 0, warnings: 2 }, true), 1)
+  assert.equal(exitCodeFor({ errors: 1, warnings: 0 }, false), 1)
 })
 
 test("a superseded entry is accepted when the approval cites the current entry, and is not flagged", () => {
@@ -110,11 +139,25 @@ test("script: exits 0 on production data and 1 on an invalid date; makes no netw
   assert.match(out, /0 published page\(s\), 0 error\(s\), 0 warning\(s\)/)
   const bad = spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-02-30"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "" } })
   assert.equal(bad.status, 1)
-  assert.match(bad.stdout, /ERROR: today's date/)
+  assert.match(bad.stdout, /ERROR \[INVALID_DATE\]: today's date/)
   // inside GitHub Actions the same failure is printed as a workflow annotation
   const ann = spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", "--today=2026-02-30"], { cwd: ROOT, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "true" } })
   assert.equal(ann.status, 1)
-  assert.match(ann.stdout, /::error::today's date/)
+  assert.match(ann.stdout, /::error::\[INVALID_DATE\] today's date/)
+  // F7-03: formats, strict mode and annotation escaping
+  const run1 = (a, env = {}) => spawnSync(process.execPath, ["--import", "./tests/register.mjs", "scripts/check-evidence-freshness.mjs", ...a], { cwd: ROOT, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "", ...env } })
+  const js = run1(["--format=json", "--today=2026-11-19"])
+  assert.equal(js.status, 0)
+  const parsed = JSON.parse(js.stdout)
+  assert.deepEqual([parsed.errors, parsed.warnings, parsed.strict, parsed.exitCode], [0, 0, false, 0])
+  assert.equal(parsed.findings[0].code, "NOTHING_PUBLISHED")
+  const md = run1(["--format=markdown", "--strict", "--today=2026-11-19"])
+  assert.equal(md.status, 0)
+  assert.match(md.stdout, /^## Evidence freshness as of 2026-11-19/)
+  assert.match(md.stdout, /\| NOTE \| NOTHING_PUBLISHED \|/)
+  const badFormat = run1(["--format=xml"])
+  assert.equal(badFormat.status, 2)
+  assert.equal(run1(["--strict", "--today=2026-02-30"]).status, 1)
   const src = readFileSync(path.join(ROOT, "scripts/check-evidence-freshness.mjs"), "utf8") + readFileSync(path.join(ROOT, "lib/seo/evidence-monitor.ts"), "utf8")
   assert.ok(!/writeFile|appendFile|unlink|rm\(|mkdir|fetch\(|https?:\/\/(?!github)|child_process|process\.env\.(?!GITHUB_ACTIONS)/.test(src.replace(/\/\/.*$/gm, "")))
 })
@@ -128,4 +171,9 @@ test("workflow is read-only: schedule + manual only, no write permission, secret
   assert.ok(!/contents:\s*write|issues:|pull-requests:|id-token|secrets\.|GITHUB_TOKEN|git (push|commit|tag)|vercel|deploy|curl|gh (pr|issue|api)/i.test(code))
   assert.ok(!/pull_request|push:/.test(code), "must not run on pushes or PRs")
   assert.match(y, /default branch/i, "the default-branch limitation is stated in the file")
+  assert.match(y, /NOT OPERATIONAL/, "the file says it is not operational until on the default branch")
+  // F7-03: scheduled runs are strict, and the report goes to the job summary (the script itself writes no files)
+  assert.match(code, /STRICT: \$\{\{ github\.event_name == 'schedule'/)
+  assert.match(code, /check-evidence-freshness\.mjs --strict/)
+  assert.match(code, /--format=markdown >> "\$GITHUB_STEP_SUMMARY"/)
 })

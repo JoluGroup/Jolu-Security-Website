@@ -28,7 +28,6 @@ export const MUTANTS = [
   M("F-05 allow non-VERIFIED", 'if (e.status !== "VERIFIED") return `is ${e.status}, not VERIFIED`', ""),
   M("F-05 allow revoked", 'if (e.revokedOn !== null) return "is revoked"', ""),
   M("F-05 allow expired at as-of", "exp <= asOfDay ||", "false ||"),
-  M("F-05 licence needs no expiry", 'else if (LICENCE_EVIDENCE.includes(e.id)) return "is licence evidence without an expiry date"', ""),
   M("F-05 allow no verifier", 'if (!nonEmpty(e.verifiedBy)) return "has no verifier"', ""),
   M("F-05 allow no document", 'if (!nonEmpty(e.document)) return "has no independent document"', ""),
   M("F-05 allow malformed attested", 'return "has malformed attested values"', "return null"),
@@ -89,7 +88,6 @@ export const MUTANTS = [
   // ---- F5D5-01 superseded evidence
   M("F5D5-01 attested values read from the superseded entry", 'return "tail" in c && isObj(c.tail.attested) ? c.tail.attested : null', "return isObj(ledger.byId.get(id)?.attested) ? (ledger.byId.get(id)!.attested as Record<string, unknown>) : null"),
   M("F5D5-01 approval need not cite the replacement", "else if (current && !approvedIds.includes(current)) reasons.push(`approval does not reference the current evidence ${current} replacing ${id}`)", ""),
-  M("F5D5-01 replacement usability not checked", "const why = unusable(c.tail, asOfDay, approvedDay)", "const why = null as string | null"),
   // ---- F5D5-03 Unicode (gate call sites)
   M("F5D5-03 section text policy skipped", "if (bad) reasons.push(`section ${s.id} text ${bad}`)", ""),
   M("F5D5-03 manifest text policy skipped", "if (bad) reasons.push(`manifest ${label} ${bad}`)", ""),
@@ -102,8 +100,6 @@ export const MUTANTS = [
   M("F5D5-03 non-Latin letters allowed", "if (NON_LATIN_LETTER.test(s))", "if (false)", "lib/seo/text-policy.ts"),
   M("F5D5-03 non-ASCII digits allowed", "if (NON_ASCII_DIGIT.test(s))", "if (false)", "lib/seo/text-policy.ts"),
   // ---- F5D5-04 evidence scope
-  M("F5D5-04 ledger scope metadata not compared to the code", "if (expected === null || c.tail.scope !== expected)", "if (expected === null || false)"),
-  M("F5D5-04 page scope not enforced", 'if (expected !== "company" && expected !== pageScope) return { why: `is scoped to ${expected}, not to this page`, current: c.tail.id }', ""),
   // ---- F5D5-05 claim scope
   M("F5D5-05 claim scope ignores categories", "if (!scope || !scope.categories.includes(span.category)) return false", "if (!scope) return false"),
   M("F5D5-05 claim scope ignores wording terms", "return !scope.terms || scope.terms.some((t) => t.test(span.text))", "return true"),
@@ -133,6 +129,26 @@ export const MUTANTS = [
   M("F5D5-09 digest ignores coverage", "coverage: cov ? {", "coverage: false ? {"),
   // ---- F5D5-10 dependency snapshot
   M("F5D5-10 dependencies not snapshotted", "deps = snapshot(rawDeps)", "deps = rawDeps"),
+  // ---- 5D.8: requirements derive from the canonical ROOT of a supersession chain (F7-01)
+  M("F-05 licence needs no expiry", 'else if (req.expiryRequired) return "is licence evidence without an expiry date"', ""),
+  M("F7-01 licence expiry requirement read from the replacement's own id", 'else if (req.expiryRequired) return "is licence evidence without an expiry date"', 'else if (/^(CMP-0[1-4]|CLM-01)$/.test(e.id)) return "is licence evidence without an expiry date"'),
+  M("F5D5-01 replacement usability not checked", "const why = unusable(c.tail, asOfDay, approvedDay, req)", "const why = null as string | null"),
+  M("F5D5-04 ledger scope metadata not compared to the code", "if (c.tail.scope !== req.scope)", "if (false)"),
+  M("F5D5-04 page scope not enforced", 'if (req.scope !== "company" && req.scope !== pageScope)', "if (false)"),
+  M("F7-01 unknown evidence roots get no requirements profile check", "const req = rootRequirements(rootIdOf(ledger.byId, id))", "const req = rootRequirements(rootIdOf(ledger.byId, id)) ?? { scope: c.tail.scope, expiryRequired: false }"),
+  M("F7-05 supersession scope comparison removed from the ledger index", "else if (r.scope !== e.scope) problems.push(`evidence ${e.id} and its replacement have different scopes`)", "else if (false) void 0"),
+  M("F7-05 a claim with no explicit scope is tolerated", "if (!scope) reasons.push(`claim ${c.claimId} has no explicit scope`)", "if (!scope) void 0"),
+  M("F7-05 supersession chain limit removed", "const MAX_CHAIN = 16", "const MAX_CHAIN = 100000"),
+  // ---- 5D.8: ranking claims (F7-02)
+  M("F7-02 '#1' pattern removed", "{ category: CATEGORY.quality, pattern: /(?<![\\w#])#\\s?1(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
+  M("F7-02 'No. 1' pattern removed", "{ category: CATEGORY.quality, pattern: /\\bno\\.\\s?1(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
+  M("F7-02 'No 1 in ...' pattern removed", "{ category: CATEGORY.quality, pattern: /\\bno\\s1\\b(?=\\s+(?:in|choice|provider|company|firm|security|ranked|guard))/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
+  M("F7-02 'number one / number 1' pattern removed", "{ category: CATEGORY.quality, pattern: /(?<!\\b(?:gate|post|bay|unit|room|floor|door|camera|zone|entrance|channel)\\s)\\bnumber\\s+(?:one|1)(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
+  // ---- 5D.8: sibling records are snapshotted (F7-04)
+  M("F7-04 siblings not snapshotted", "sibs = snapshot(siblings)", "sibs = siblings as readonly unknown[]"),
+  // ---- boundary and property mutants: their protection is an acceptance (see EXPECTED kills below)
+  { ...M("F7-05 verification on the approval date is rejected", 'if (approvedDay !== null && verified > approvedDay) return "was verified after the approval date"', 'if (approvedDay !== null && verified >= approvedDay) return "was verified after the approval date"'), killBy: "accepts" },
+  { ...M("F7-01 requirements read from the replacement id instead of the root (stricter: rejects valid replacements)", "rootRequirements(rootIdOf(ledger.byId, id))", "rootRequirements(c.tail.id)"), killBy: "accepts" },
 ]
 
 /** Equivalent mutants: real production edits that no input can distinguish. `trace` is the tracer id they embed. */
@@ -155,18 +171,16 @@ export const EQUIVALENT = [
     reason: 'status "approved" without an approval yields an empty cited-evidence list, so every required id is reported as not cited.' },
   { name: "dependency shape validation removed", file: GATE, trace: "E10", edits: [["if (!depsOk || asOfDay === null) {", `if ((${TRACE("E10")}, false)) {`]],
     reason: "malformed dependencies make the next statements throw, which the surrounding try/catch turns into a rejection." },
-  { name: "supersession scope check removed from the ledger index", file: GATE, trace: "E14", edits: [["else if (r.scope !== e.scope) problems.push(`evidence ${e.id} and its replacement have different scopes`)", `else if ((${TRACE("E14")}, false)) void 0`]],
-    reason: "the usability check compares the current entry's scope with the scope derived from its code and rejects a mismatch." },
   { name: "branch-designation text policy removed", file: GATE, trace: "E15", edits: [["if (bad) reasons.push(`branch designation ${bad}`)", `if ((${TRACE("E15")}, false)) void 0`]],
     reason: "the designation must equal an allowlisted string exactly, which already excludes any character the policy rejects." },
   { name: "designation office restriction removed", file: GATE, trace: "E16", edits: [['if (des.offices && !des.offices.includes(slug as never)) reasons.push("this designation is not allowed for this office")', `if (des.offices && !des.offices.includes(slug as never)) ${TRACE("E16")}`]],
     reason: "the only restricted designation needs OFF-NAK-11, whose evidence scope (office:nakuru) is rejected on any other office page." },
-  { name: "no-explicit-scope reason removed", file: GATE, trace: "E19", edits: [["if (!scope) reasons.push(`claim ${c.claimId} has no explicit scope`)", `if (!scope) ${TRACE("E19")}`]],
-    reason: "a claim with no scope permits no span, so its statement's claim-sensitive wording is still reported as uncovered." },
   { name: "replacement-relationship check removed from chain following", file: GATE, trace: "E12", edits: [['if (!next || next.replaces !== cur.id) return { problem: "names a replacement that does not replace it" }', `if (!next || (${TRACE("E12")}, false)) return { problem: "names a replacement that does not replace it" }`]],
     reason: "the ledger index already rejects every inconsistent supersession pair for all pages." },
   { name: "superseded-status check removed from the usability test", file: GATE, trace: "E20", edits: [['if (e.supersededBy !== null) return "is superseded"', `if ((${TRACE("E20")}, false)) return "is superseded"`]],
     reason: "usability is only ever evaluated on the tail of a supersession chain, which by definition has supersededBy null, so the removed branch cannot be reached." },
   { name: "scope key dropped from the required ledger metadata keys", file: GATE, trace: "E21", edits: [['const keys = ["status", "verifiedBy", "verifiedOn", "document", "expiresOn", "revokedOn", "supersededBy", "replaces", "attested", "scope"]', `const keys = (${TRACE("E21")}, ["status", "verifiedBy", "verifiedOn", "document", "expiresOn", "revokedOn", "supersededBy", "replaces", "attested"])`]],
     reason: "an entry with no scope has scope undefined, which differs from the scope derived from its evidence code, so the scope comparison rejects it with a different message." },
+  { name: "known-slug check removed (kind-prefix check kept)", file: GATE, trace: "E22", edits: [['else if (!knownSlugs(r.kind).includes(slug)) reasons.push("slug is not a planned page")', `else if ((${TRACE("E22")}, false)) void 0`]],
+    reason: "an unplanned slug fails plannedPath (the keyword registry), the serviceId / locationId identity tables and the canonical evidence table, each of which rejects it independently." },
 ]

@@ -1,4 +1,4 @@
-# Evidence expiry runbook (F5D5-02)
+# Evidence expiry runbook (F5D5-02, F7-03)
 
 Status: **operational procedure, not yet exercised**. No page is published and the evidence ledger is empty, so today the monitor reports "no page is published". Nothing here is executed automatically, and nothing here authorises anyone to publish or unpublish a page.
 
@@ -10,18 +10,43 @@ The publication gate decides as of a committed date (`PUBLICATION_AS_OF`) becaus
 
 | Mechanism | What it does | Limit |
 | --- | --- | --- |
-| `scripts/check-evidence-freshness.mjs` (uses `lib/seo/evidence-monitor.ts`) | Re-decides every published page as of **today**, and reports expired, soon-to-expire, revoked, superseded-but-still-cited and stale evidence, licence-related evidence needing attention, an old or future `PUBLICATION_AS_OF`, and old verification dates. Read-only. Exit code 1 on any ERROR. | Reports only. |
-| `.github/workflows/evidence-freshness.yml` | Runs the script weekly (Mondays 05:17 UTC) and on demand. Read-only permissions, no secrets, no deployment. | See "Scheduling limits". |
+| `scripts/check-evidence-freshness.mjs` (uses `lib/seo/evidence-monitor.ts`) | Re-decides every published page as of **today**, and reports expired, soon-to-expire, revoked, superseded-but-still-cited and stale evidence, licence-related evidence needing attention, an old or future `PUBLICATION_AS_OF`, and old verification dates. Read-only. Exit code 1 on any ERROR (and, with `--strict`, on any WARNING). Every finding has a stable `code`; `--format=json` and `--format=markdown` give structured output. | Reports only. |
+| `.github/workflows/evidence-freshness.yml` | Runs the script weekly (Mondays 05:17 UTC) and on demand, in `--strict` mode, and writes a table to the run's job summary. Read-only permissions, no secrets, no deployment. | See "Scheduling limits". |
 | `tests/seo/publication-clock.test.mjs` | Fails a pull request if a published page's evidence has expired or the committed date is stale. | Runs only when a PR is opened. |
 
 Run it yourself at any time (no network, no writes):
 
     node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs
+    node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs --strict          # warnings fail too
+    node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs --format=json     # machine-readable
     node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs --today=2027-01-15   # what-if
 
-Thresholds (warning): evidence expiring within 60 days; licence-related evidence (CMP-01 to CMP-04, CLM-01) within 120 days; verification older than 365 days; `PUBLICATION_AS_OF` within 7 days of its 31-day limit. Anything already expired, revoked, a page failing the gate today, or a date in the future or past 31 days is an ERROR.
+Thresholds (warning): evidence expiring within 60 days; licence-related evidence (CMP-01 to CMP-04, CLM-01) within 120 days; verification older than 365 days; `PUBLICATION_AS_OF` within 7 days of its 31-day limit. Anything already expired, a page failing the gate today, or a date in the future or past 31 days is an ERROR.
+
+### How the findings map to the gate (5D.8)
+
+The gate already refuses revoked evidence, superseded evidence the approval does not cite, licence evidence without an expiry and evidence that has expired as of the committed date. Such a page is therefore never "published"; it appears as a record marked `approved` that the gate refuses, and the monitor reports it as an **ERROR** coded by cause:
+
+| Code | Level | Meaning |
+| --- | --- | --- |
+| `REVOKED_EVIDENCE`, `EXPIRED_EVIDENCE`, `SUPERSEDED_EVIDENCE`, `LICENCE_NO_EXPIRY`, `GATE_REJECTED` | ERROR | An approved record is not publishable. The next build will not serve it. If an older build is still deployed, the page may still be live until it is redeployed. |
+| `PAGE_FAILS_TODAY`, `EVIDENCE_EXPIRED_TODAY` | ERROR | The page passes at the committed date but evidence has expired in real time. |
+| `AS_OF_FUTURE`, `AS_OF_STALE`, `INVALID_EXPIRY`, `INVALID_DATE` | ERROR | The committed date or an expiry is wrong. |
+| `EVIDENCE_EXPIRING`, `LICENCE_EXPIRING`, `AS_OF_NEAR_STALE`, `EVIDENCE_OLD_VERIFICATION`, `UNUSED_EVIDENCE_EXPIRING` | WARNING | Upcoming risk. Fails only in strict mode. |
+| `NOTHING_PUBLISHED` | NOTE | Informational. |
+
+The monitor looks at the repository, not at the live site. It cannot see which build is deployed.
+
+### Detection, escalation, authorisation and response are separate
+
+1. **Detection** (automatic, read-only): the script and, once it is operational, the workflow.
+2. **Escalation** (a person): whoever is named to watch the workflow reads the job summary and tells the reviewers in section 2. Nothing in this repository notifies anyone.
+3. **Owner authorisation** (a person): the owner decides, in writing, to renew or suspend (section 4).
+4. **Operational response** (an authorised operator): a reviewed code change and a deployment (sections 5 and 6). No automation does this.
 
 ### Scheduling limits (read this)
+
+- **The scheduled workflow is NOT operational today.** It becomes operational only when the file is present **and enabled on the default branch (`main`)**. Merging it, enabling Actions and naming who watches it are owner decisions that this milestone did not take.
 
 - GitHub only runs `schedule` triggers from the workflow file **on the default branch (`main`)**. While this file exists only on a feature branch, **the schedule does not run**. It will start only after the file reaches `main`, which is a repository decision outside this milestone.
 - GitHub pauses scheduled workflows in a public repository after 60 days without repository activity, and scheduled runs are best-effort (they can be late or skipped).

@@ -35,7 +35,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   rate_limited: "Too many enquiries are being sent right now, so nothing was sent. Please try again in a few minutes.",
   unavailable: "Online enquiries are temporarily unavailable, so nothing was sent. Please try again shortly.",
   delivery_failed: "Your enquiry could not be submitted, so nothing was sent.",
-  network: "Your enquiry could not be submitted because of a connection problem, so nothing was sent.",
+  in_progress: "Your enquiry is already being sent. Please wait a moment; there is no need to submit it again.",
+  // A dropped connection or an unreadable reply can happen after the server received the enquiry,
+  // so this must not claim that nothing was sent. Retrying is safe: identical enquiries are de-duplicated.
+  network:
+    "We could not confirm that your enquiry reached us because of a connection problem, so it may or may not have been received. Please try again, or call or message us on WhatsApp.",
 }
 const GENERIC_ERROR = "Your enquiry could not be submitted, so nothing was sent."
 
@@ -112,7 +116,14 @@ export function EnquiryForm() {
       return
     } else {
       const code = result && !result.ok ? result.code : ""
-      setStatus({ kind: "error", message: ERROR_MESSAGES[code] ?? GENERIC_ERROR })
+      // The outcome is unknown: it may have reached us, so never say it was not sent.
+      const message =
+        result === null
+          ? ERROR_MESSAGES.network
+          : !result.ok && result.code === "delivery_uncertain"
+          ? `We could not confirm that your enquiry reached us, so it may or may not have been received (reference ${result.ref}). You can send it again, or call or message us on WhatsApp.`
+          : (ERROR_MESSAGES[code] ?? GENERIC_ERROR)
+      setStatus({ kind: "error", message })
     }
     statusRef.current?.focus()
   }

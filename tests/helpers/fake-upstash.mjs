@@ -1,14 +1,22 @@
 // A local stand-in for the Upstash Redis REST API, used ONLY by the automated tests.
 // It models the documented behaviour of the few commands the limiter uses
-// (POST /multi-exec; SET key value EX seconds NX; GET; INCR; PTTL; EXPIRE) with a virtual
+// (POST /multi-exec; SET key value EX seconds [NX]; GET; DEL; INCR; PTTL; EXPIRE; EVAL of the
+// dedup finalize script only) with a virtual
 // clock, and rejects any other command or option shape. It is a MODEL of Upstash,
 // not the real service: integration with a real database is verified separately.
 import http from "node:http"
+
+// The one Lua script the application is allowed to run. The fake does NOT execute Lua: it recognises this
+// exact text and applies the same rules in JavaScript below. The script itself was checked against a real
+// Redis server (see the milestone report); a model of it here only drives the HTTP-level tests.
+const { FINALIZE_SCRIPT } = await import("@/lib/enquiry/dedup")
 
 export async function startFakeUpstash() {
   const state = {
     nowMs: 0,
     mode: "ok", // ok | http500 | garbage | cmderr | hang
+    failIf: null, // optional (commands) => boolean: answer just those transactions with HTTP 500
+    beforeTx: null, // optional (commands) => void: runs just before a transaction executes (to stage races)
     store: new Map(), // key -> { value, expiresAt|null }
     transactions: [], // every request body received, for assertions
     token: "test-token",
@@ -22,12 +30,43 @@ export async function startFakeUpstash() {
     const [op, key, ...args] = cmd.map(String)
     switch (op.toUpperCase()) {
       case "SET": {
-        if (args.length !== 4 || args[1].toUpperCase() !== "EX" || args[3].toUpperCase() !== "NX") {
-          return { error: "ERR unsupported SET form" }
-        }
-        if (live(key)) return { result: null }
-        state.store.set(key, { value: Number(args[0]), expiresAt: state.nowMs + Number(args[2]) * 1000 })
+        // Supported shapes only: SET k v EX n NX (create-if-absent) and SET k v EX n (overwrite).
+        const [value, ex, seconds, nx] = args
+        const shapeOk =
+          (args.length === 4 && ex?.toUpperCase() === "EX" && nx?.toUpperCase() === "NX") ||
+          (args.length === 3 && ex?.toUpperCase() === "EX")
+        if (!shapeOk || !Number.isFinite(Number(seconds))) return { error: "ERR unsupported SET form" }
+        if (nx && live(key)) return { result: null }
+        const stored = /^-?\d+$/.test(value) ? Number(value) : value
+        state.store.set(key, { value: stored, expiresAt: state.nowMs + Number(seconds) * 1000 })
         return { result: "OK" }
+      }
+      case "DEL": {
+        const existed = Boolean(live(key))
+        state.store.delete(key)
+        return { result: existed ? 1 : 0 }
+      }
+      case "EVAL": {
+        // [numkeys, lockKey, stateKey, token, value, ttl]. Same rules as FINALIZE_SCRIPT.
+        if (key !== FINALIZE_SCRIPT || args.length !== 6 || args[0] !== "2") return { error: "ERR unsupported script" }
+        const [, lockKey, stateKey, token, value, ttl] = args
+        const lock = live(lockKey)
+        const owner = Boolean(lock) && String(lock.value) === token
+        if (value !== "") {
+          const cur = live(stateKey)
+          const curValue = cur ? String(cur.value) : null
+          const write = () => state.store.set(stateKey, { value, expiresAt: state.nowMs + Number(ttl) * 1000 })
+          if (value.startsWith("sent:")) {
+            if (!(curValue !== null && curValue.startsWith("sent:"))) write()
+          } else if (curValue === null) {
+            write()
+          }
+        }
+        if (owner) {
+          state.store.delete(lockKey)
+          return { result: 1 }
+        }
+        return { result: 0 }
       }
       case "GET": {
         const e = live(key)
@@ -77,6 +116,11 @@ export async function startFakeUpstash() {
       if (state.mode === "garbage") return res.end("not json")
       const commands = JSON.parse(body)
       state.transactions.push(commands)
+      state.beforeTx?.(commands)
+      if (state.failIf?.(commands)) {
+        res.statusCode = 500
+        return res.end("boom")
+      }
       if (state.mode === "cmderr") return res.end(JSON.stringify(commands.map(() => ({ error: "ERR x" }))))
       res.setHeader("content-type", "application/json")
       res.end(JSON.stringify(commands.map(run)))
@@ -95,6 +139,8 @@ export async function startFakeUpstash() {
     state.store.clear()
     state.transactions.length = 0
     state.mode = "ok"
+    state.failIf = null
+    state.beforeTx = null
     state.nowMs = 0
   }
   return state

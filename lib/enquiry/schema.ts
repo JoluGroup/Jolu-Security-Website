@@ -98,10 +98,20 @@ export function validateEnquiry(
 }
 
 export type EnquiryResponse =
-  | { ok: true; ref: string; state: "accepted" }
+  // `duplicate: true` means an identical enquiry was already accepted a moment ago; nothing new was sent.
+  | { ok: true; ref: string; state: "accepted"; duplicate?: true }
   | { ok: true; delivered: false; mode: "test" }
   | { ok: false; code: "invalid"; errors: FieldErrors }
+  // Delivery outcome unknown: the enquiry may or may not have reached us. Never shown as success.
+  | { ok: false; code: "delivery_uncertain"; ref: string }
   | {
       ok: false
-      code: "rate_limited" | "not_configured" | "unavailable" | "delivery_failed" | "rejected" | "bad_request"
+      code:
+        | "rate_limited"
+        | "not_configured"
+        | "unavailable"
+        | "delivery_failed"
+        | "in_progress"
+        | "rejected"
+        | "bad_request"
     }

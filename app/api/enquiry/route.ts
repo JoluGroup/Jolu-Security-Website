@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto"
 import { readBodyWithLimit } from "@/lib/enquiry/body"
 import { getTrustedProxyMode, resolveClientId } from "@/lib/enquiry/client-ip"
 import { checkRateLimit, isRateLimitAvailable } from "@/lib/enquiry/rate-limit"
+import { beginDedup, finishDedup } from "@/lib/enquiry/dedup"
 import { deliverEnquiry, getDeliveryConfig, getDeliveryMode, isProductionTestAllowed } from "@/lib/enquiry/deliver"
 import { HONEYPOT_FIELD, LIMITS, validateEnquiry, type EnquiryResponse } from "@/lib/enquiry/schema"
 
@@ -125,13 +126,47 @@ export async function POST(request: Request) {
     return respond({ ok: true, delivered: false, mode: "test" }, 200)
   }
 
-  const ref = createRef()
-  const sent = await deliverEnquiry(result.data, ref, delivery!)
-  if (!sent.ok) {
+  // Duplicate protection (live mode only; test mode returned above and never reaches this point).
+  // Identical enquiries within 10 minutes send at most one email; see lib/enquiry/dedup.ts.
+  const claim = await beginDedup(result.data, createRef())
+  if (claim.kind === "unavailable") {
+    // Nothing has been sent yet, so telling the visitor "nothing was sent" is accurate.
+    log("dedup_unavailable")
+    return respond({ ok: false, code: "unavailable" }, 503)
+  }
+  if (claim.kind === "in_progress") {
+    log("dedup_in_progress")
+    return respond({ ok: false, code: "in_progress" }, 409)
+  }
+  if (claim.kind === "duplicate") {
+    // An identical enquiry was already accepted. Same reference, nothing new is sent.
+    log("duplicate", claim.ref)
+    return respond({ ok: true, ref: claim.ref, state: "accepted", duplicate: true }, 200)
+  }
+
+  const { ref, handle } = claim
+  const outcome = await deliverEnquiry(result.data, ref, delivery!)
+
+  if (outcome.kind === "accepted") {
+    const finish = await finishDedup(handle, "sent", ref)
+    if (finish === "error") log("dedup_record_failed", ref)
+    else if (finish === "lock_lost") log("dedup_lock_lost", ref)
+    log("accepted", ref)
+    return respond({ ok: true, ref, state: "accepted" }, 200)
+  }
+
+  if (outcome.kind === "rejected") {
+    // The provider refused the request: nothing was sent, so the visitor may retry straight away.
+    await finishDedup(handle, "failed", ref)
     log("delivery_failed", ref)
     return respond({ ok: false, code: "delivery_failed" }, 502)
   }
 
-  log("accepted", ref)
-  return respond({ ok: true, ref, state: "accepted" }, 200)
+  // Unknown outcome (timeout, network error, 5xx, missing id). The email may have been sent, so this is
+  // neither success nor "not sent". The ref is kept so a retry reuses it as the idempotency key.
+  const finish = await finishDedup(handle, "unsure", ref)
+  if (finish === "error") log("dedup_record_failed", ref)
+  else if (finish === "lock_lost") log("dedup_lock_lost", ref)
+  log(`delivery_uncertain_${outcome.reason}`, ref)
+  return respond({ ok: false, code: "delivery_uncertain", ref }, 202)
 }

@@ -3,15 +3,11 @@ import { ArrowUpRight } from "lucide-react"
 import { Eyebrow, SectionTitle } from "@/components/section-heading"
 import { SiteShell } from "@/components/site-shell"
 import { Button } from "@/components/ui/button"
+import { pageMetadata } from "@/lib/seo/metadata"
 import { siteConfig } from "@/lib/site-config"
 
-export const metadata: Metadata = {
-  title: `Blog | ${siteConfig.name}`,
-  description: `Articles from ${siteConfig.name} about security for homes, estates, businesses and events.`,
-  alternates: { canonical: "/blog" },
-  // Keep out of search results until real articles are published.
-  robots: { index: false, follow: true },
-}
+// noindex placeholder: see LIVE_PAGES in lib/seo/pages.ts. Flip `indexable` there (and add articles) to publish.
+export const metadata: Metadata = pageMetadata("/blog")
 
 export default function BlogPage() {
   return (

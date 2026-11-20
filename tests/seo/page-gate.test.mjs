@@ -81,10 +81,10 @@ test("the gate accepts and rejects every case in the shared table (F-02 to F-09)
 })
 
 test("each 5D.6 and 5D.8 rejection case fails for the reason it targets, not incidentally", () => {
-  const rejects = W.runCases(gate).filter((r) => /^rejects: (F5D5|F7)-/.test(r.name))
+  const rejects = W.runCases(gate).filter((r) => /^rejects: (F5D5|F7|F9)-/.test(r.name))
   assert.ok(rejects.length >= 80, `only ${rejects.length} F5D5/F7 rejection cases`)
   for (const r of rejects) {
-    const id = /(F5D5|F7)-\d\d/.exec(r.name)[0]
+    const id = /(F5D5|F7|F9)-\d\d/.exec(r.name)[0]
     assert.ok(W.EXPECTED_REASON[id], `no expected reason for ${id}`)
     assert.ok(r.reasons.some((x) => W.EXPECTED_REASON[id].test(x)), `${r.name}: gave ${JSON.stringify(r.reasons.slice(0, 3))}`)
   }

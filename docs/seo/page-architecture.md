@@ -1,4 +1,4 @@
-# Publication-gated page architecture (Milestones 5D.2, 5D.4, 5D.6 and 5D.8)
+# Publication-gated page architecture (Milestones 5D.2, 5D.4, 5D.6, 5D.8 and 5D.10)
 
 Infrastructure for future service and location pages. **Nothing is published**: no route, sitemap entry, navigation link or structured data exists for any of the ten planned pages. It follows the proposals in the 5B.1 and 5B.2 preparation documents (PR #5, PR #6) and uses the evidence ids of the Business Verification Pack (PR #7). 5D.4 hardened it after the independent audit of PR #8 (findings F-01 to F-13).
 
@@ -77,6 +77,18 @@ Findings are from the 5D.7 verification. Nothing is published; the allowlist, le
 - **Sibling records (F7-04).** The `siblings` argument is copied through one JSON pass and frozen like the record and dependencies; a sibling list that cannot be copied fails closed ("sibling records are malformed").
 - **Monitoring (F7-03).** Findings carry a stable `code`. Revoked, superseded-without-citation, licence-without-expiry and expired-at-commit-date conditions surface as ERRORS on an approved-but-unpublishable record, by cause. The script has `--strict`, `--format=json` and `--format=markdown`; the workflow runs strict and writes a job summary. It is still not operational until it is on `main` and enabled (see the runbook).
 - **Mutation harness (F7-05).** The two mutants wrongly called equivalent (a claim with no explicit scope; a superseded entry whose scope differs from its replacement) are now security mutants with rejection cases. Boundary mutants that depend on an acceptance (verification on the approval date) or a stricter-than-original change are reported as property mutants (acceptance kills). Equivalent mutants must still run (tracer) and survive.
+
+## Corrections added in Milestone 5D.10
+
+Findings are from the 5D.9 audit. Nothing is published; the allowlist, ledger and manifest stay empty.
+
+- **Requirements come from every canonical identity in the chain (F9-01).** 5D.8 read requirements from the root of a supersession chain, which closed "licence root replaced by another id" but not the inverse: `CMP-07` replaced by the licence id `CMP-01` with no expiry. The gate now walks the whole chain (root to current entry) and calls `chainRequirements` in `publication-requirements.ts`. Rules: the root must be a registered identity (an unknown root is rejected); a replacement id the registry does not recognise inherits the root's requirements; every registered id in the chain must carry the same profile (scope and whether an expiry is mandatory), otherwise the chain is rejected as "mixes canonical evidence identities that carry different requirements". The conflict rule is deliberately stricter than an expiry check: a licence id used as a replacement for a non-licence entry (or the reverse, or a company id for an office entry) is refused even when the replacement is fully valid. There is no CMP-01 special case and no id-prefix heuristic; the licence list is `LICENCE_EVIDENCE`. Same-family replacement (for example `CMP-01` by `CMP-02`) is allowed because the profiles are identical.
+- **Chain bound.** The root walk and the chain walk now use the same bound as the supersession walk, so no id in an accepted chain is left out of the check. At most 17 replacements are accepted; 18 are refused as over-long.
+- **Expiry policy (unchanged, now tested).** An entry is expired on its expiry day: with a decision date of 2026-11-19, an entry expiring on 2026-11-19 is refused and one expiring on 2026-11-20 is accepted. Verification on the approval date is accepted; after the approval date it is refused.
+- **Ranking scanner (F9-03).** Added `Number-one`, `#one`, `1st in ...`, `first-ranked`, `ranked first`, `numero uno` and `first choice for security`. Counter, item, office, extension, ticket and similar numbered references are not flagged. Still a heuristic: phrases such as "first name in guarding" or "second to none" are not detected, and exact-statement approval plus human review remain mandatory.
+- **Sibling records (F9-04).** The sibling list must be a dense array of plain records, each with an own `sections` array whose bodies are string arrays. Anything else (null, functions, sparse lists, missing or non-array fields, inherited fields, class instances, hostile getters or proxies) fails closed as "sibling records are malformed".
+- **Mutation harness.** The two audit gaps (CLM-01 as a licence id, and the `<=` expiry boundary) have rejection cases; the boundary case needs an approval dated before the decision date, because with equal dates a second comparison masks the first. Redundant sibling checks are classified as equivalent with tracers, not as kills.
+- **Known limit (unchanged).** An unregistered company-coded root id (for example `CMP-99`) has no mandatory expiry, because licence evidence is defined only by `LICENCE_EVIDENCE`.
 
 ## Publishing the first page (future milestone)
 

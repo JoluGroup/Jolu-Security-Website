@@ -105,6 +105,23 @@ const licence = (over) => () => {
   const w = world(SERVICE, { extraEvidence: ["CMP-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CMP-01"], entryOver: { "CMP-01": { expiresOn: "2027-06-30", ...over } } })
   return w
 }
+/** 5D.10 chain helpers: replace `id` by hops [id, overrides], each hop inheriting the previous entry's scope. */
+const hop = (w, id, hops) => {
+  let prev = id
+  for (const [rid, over = {}] of hops) {
+    const old = w.deps.ledger.find((e) => e.id === prev)
+    old.supersededBy = rid
+    w.deps.ledger.push(entry(rid, { replaces: prev, scope: old.scope, expiresOn: old.expiresOn, ...over }))
+    w.record.approval.evidenceIds.push(rid)
+    prev = rid
+  }
+  return w
+}
+const longChain = (n, tailId, tailOver = {}) => {
+  const w = world(SERVICE)
+  const hops = Array.from({ length: n }, (_, i) => (i === n - 1 && tailId ? [tailId, { expiresOn: null, ...tailOver }] : [`ZZZ-${String(i).padStart(2, "0")}`, {}]))
+  return hop(w, "CMP-07", hops)
+}
 const svc = (fn) => () => {
   const w = world()
   fn(w)
@@ -300,6 +317,14 @@ const flakyObject = (obj, key, bad, after = 1) => {
 }
 
 GOOD.push(
+  ["F9-01 licence replaced by a same-family id with a valid expiry", () => hop(licence({})(), "CMP-01", [["CMP-02", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 licence replaced under an unregistered id with a valid expiry", () => hop(licence({})(), "CMP-01", [["ZZZ-91", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 non-licence root replaced under an unregistered id without an expiry", () => hop(world(SERVICE), "CMP-07", [["ZZZ-91", { expiresOn: null }]])],
+  ["F9-01 non-licence root replaced by a same-profile company id", () => hop(world(SERVICE), "CMP-07", [["CMP-06", { expiresOn: null }]])],
+  ["F9-01 a chain of seventeen replacements", () => longChain(17)],
+  ["F9-02 evidence that expires the day after the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-20", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
+  ["F9-02 evidence that expires the day after the decision date", () => world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-20" } } })],
+  ["F9-02 CLM-01 evidence with a valid expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } })],
   ["F7-05 evidence verified on the approval date itself", () => { const w = world(SERVICE, { entryOver: { "CNT-10": { verifiedOn: "2026-11-19" } } }); return w }],
   ["F7-05 a supersession chain of five entries", () => { const w = world(SERVICE); let prev = "CMP-07"; for (let i = 0; i < 5; i++) { const rid = `CMP-07-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return redigest(w) }],
   ["F5D5-01 corrected address via a replacement entry", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-02", { streetAddress: "2 New Road", locality: "Testville" }); w.record.nap.streetAddress = "2 New Road"; return redigest(w) }],
@@ -397,6 +422,20 @@ BAD.push(
   ["F5D5-05 an unscoped claim bound to neutral text is not tolerated", () => { const w = world(SERVICE, { approvedClaims: ["brand-new-claim"], compliance: true }); w.record.sections[0].claims = [{ claimId: "brand-new-claim", statement: "written scope sheet" }]; w.record.approval.claimApprovals = [{ claimId: "brand-new-claim", sectionId: w.record.sections[0].id, statement: "written scope sheet", editorialApprovedBy: "E", complianceApprovedBy: "C" }]; return w }],
   ["F5D5-01 a superseded entry whose scope differs from its correct replacement", () => { const w = world(NAIROBI); const old = w.deps.ledger.find((e) => e.id === "OFF-NBO-02"); old.supersededBy = "OFF-NBO-52"; old.scope = "company"; w.deps.ledger.push(entry("OFF-NBO-52", { replaces: "OFF-NBO-02", scope: "office:nairobi", attested: old.attested })); w.record.approval.evidenceIds.push("OFF-NBO-52"); return w }],
   ["F5D5-01 a supersession chain of twenty entries", () => { const w = world(SERVICE); let prev = "CMP-07"; for (let i = 0; i < 20; i++) { const rid = `CMP-07-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return w }],
+  // ---- 5D.10 (F9-01, F9-02, F9-03): every canonical identity in a chain counts
+  ["F9-01 non-licence root replaced by the licence id CMP-01 without an expiry", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: null }]])],
+  ["F9-01 non-licence root replaced by the licence id CMP-01 with a valid expiry", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 licence root replaced by a different company id with a valid expiry", () => hop(licence({})(), "CMP-01", [["CMP-06", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 licence id in the middle of a chain with a non-licence root", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: "2027-09-30" }], ["ZZZ-92", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 non-licence id at the end of a licence chain", () => hop(licence({})(), "CMP-01", [["ZZZ-91", { expiresOn: "2027-09-30" }], ["CMP-06", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 office root replaced by a registered company id", () => { const w = world(NAIROBI); const old = w.deps.ledger.find((e) => e.id === "OFF-NBO-02"); return hop(w, "OFF-NBO-02", [["COM-88", { attested: old.attested }]]) }],
+  ["F9-01 licence id at the end of a 17-replacement chain", () => longChain(17, "CMP-01")],
+  ["F9-02 CLM-01 evidence without an expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: null } } })],
+  ["F9-02 CLM-01 replaced under an unrelated id without an expiry", () => hop(world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } }), "CLM-01", [["ZZZ-91", { expiresOn: null }]])],
+  ["F9-02 evidence that expires on the decision date", () => world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-19" } } })],
+  // the approval is dated BEFORE the decision date, so only the decision-date comparison can refuse this entry
+  ["F9-02 evidence that expires on the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-19", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
+  ...["are Number-one in Kenya", "are #one in Kenya", "are 1st in Kenya", "are first-ranked", "are ranked first", "are the first choice for security", "are numero uno"].map((t) => [`F9-03 ranking claim ${JSON.stringify(t)} without an approved claim`, withSecText(`Our patrol teams ${t} and every post reports to a named supervisor at the start of each shift.`)]),
   // F5D5-06 designation allowlist
   ...["Main Office", "Corporate Office", "Head Quarters", "HQ", "head office", "Regional Office ", "Branch", "Showroom", "Headquarters"].map((d) => [`F5D5-06 designation ${JSON.stringify(d)} is not allowlisted`, () => world(NAIROBI, { nap: { branchDesignation: d } })]),
   ["F5D5-06 head office attested for a different office", () => world(NAIROBI, { nap: { branchDesignation: "Head Office" }, headOfficeFor: "Nakuru" })],
@@ -476,6 +515,17 @@ function runCasesWith(gate) {
     let ok = false
     try { ok = gate.evaluatePublication(a.record, a.deps, "not a list").published === false && gate.evaluatePublication(a.record, a.deps, [{ sections: [{ body: ["An entirely different sibling paragraph about another subject, long enough to count as a paragraph."] }] }]).published === true } catch { ok = false }
     results.push({ name: "rejects: siblings that are not a list", ok })
+    // F9-04: every malformed shape is refused, never silently ignored
+    const sparse = new Array(2); sparse[0] = { sections: [] }
+    const goodSib = { sections: [{ body: ["An entirely different sibling paragraph about another subject, long enough to count as a paragraph."] }] }
+    for (const [n, sibs] of [["null sibling", [null]], ["undefined sibling", [undefined]], ["function sibling", [() => 1]], ["sparse sibling list", sparse], ["sibling without sections", [{}]], ["sibling whose sections are not a list", [{ sections: "x" }]], ["sibling section without a body", [{ sections: [{}] }]], ["sibling whose body is not a list", [{ sections: [{ body: "x" }] }]], ["sibling body with a non-string", [{ sections: [{ body: ["ok", 5] }] }]], ["sibling with inherited sections", [Object.create({ sections: [] })]], ["class instance sibling", [new (class Sib { constructor() { this.sections = [] } })()]], ["sibling whose sections is an empty string", [{ sections: "" }]], ["list that is a proxy", new Proxy([goodSib], { get() { throw new Error("boom") } })]]) {
+      let ok = false, reasons = []
+      try { const d = gate.evaluatePublication(a.record, a.deps, sibs); reasons = d.reasons; ok = d.published === false && d.reasons.length === 1 } catch { ok = false }
+      results.push({ name: `rejects: F9-04 ${n}`, ok, reasons })
+    }
+    let okValid = false
+    try { okValid = gate.evaluatePublication(a.record, a.deps, [goodSib, { sections: [] }]).published === true } catch { okValid = false }
+    results.push({ name: "accepts: F9-04 valid static sibling records", ok: okValid })
     // a valid sibling copy of a paragraph is still caught, and later mutation of the sibling cannot matter
     const sib = { sections: [{ body: [p0] }] }
     let ok2 = false
@@ -500,6 +550,10 @@ export const EXPECTED_REASON = {
   "F5D5-06": /designation|display name contains|evidence COM-03/,
   "F7-01": /licence evidence without an expiry date/,
   "F7-02": /no bound, approved claim covers/,
+  "F9-01": /mixes canonical evidence identities/,
+  "F9-02": /licence evidence without an expiry date|is expired/,
+  "F9-03": /no bound, approved claim covers/,
+  "F9-04": /sibling records are malformed/,
   "F5D5-09": /content digest|different content/,
   "F5D5-10": /dependencies are malformed|not in the ledger|without a valid id|missing verification metadata/,
 }

@@ -81,16 +81,35 @@ export function expectedScope(id: unknown): string | null {
 export const LICENCE_EVIDENCE: readonly string[] = deepFreeze(["CMP-01", "CMP-02", "CMP-03", "CMP-04", "CLM-01"])
 
 /**
- * Everything the gate requires of an evidence entry, derived from the CANONICAL ROOT id only (the id the evidence was
- * first registered under, found by following `replaces` back). A replacement entry may carry any id, so requirements are
- * never read from its own id: it inherits them from the root. A root that matches no known code has no requirements
- * profile and is rejected, so a future category must be added here (with its flags) before it can be used.
+ * Everything the gate requires of an evidence entry, derived from the CANONICAL identities in its whole supersession
+ * chain (Milestone 5D.10). An entry id that the registry recognises carries a profile: its scope and whether it needs an
+ * expiry date. A chain may contain any number of unregistered ids (replacements inherit), but:
+ *  - its ROOT must be registered (an unknown root has no profile and is rejected);
+ *  - every registered id in the chain must carry the SAME profile. A registered id used as a replacement for an entry
+ *    with a different registered meaning (a licence id replacing a non-licence root, or the reverse; a company id
+ *    replacing an office id) is a conflict and the chain is rejected, never silently resolved to one side;
+ *  - the combined requirement is the strictest of the profiles (identical here, but never a downgrade).
  */
 export type EvidenceRequirements = { scope: string; expiryRequired: boolean }
 export function rootRequirements(rootId: unknown): EvidenceRequirements | null {
   const scope = expectedScope(rootId)
   if (scope === null) return null
   return { scope, expiryRequired: typeof rootId === "string" && LICENCE_EVIDENCE.includes(rootId) }
+}
+export type ChainRequirements = { ok: true; req: EvidenceRequirements } | { ok: false; why: string }
+/** `ids` is the complete chain in order, root first. */
+export function chainRequirements(ids: readonly unknown[]): ChainRequirements {
+  if (ids.length === 0) return { ok: false, why: "has no valid evidence scope" }
+  const root = rootRequirements(ids[0])
+  if (root === null) return { ok: false, why: "has no valid evidence scope" }
+  let expiryRequired = root.expiryRequired
+  for (const id of ids.slice(1)) {
+    const p = rootRequirements(id)
+    if (p === null) continue // an unregistered replacement id inherits the registered requirements
+    if (p.scope !== root.scope || p.expiryRequired !== root.expiryRequired) return { ok: false, why: "mixes canonical evidence identities that carry different requirements" }
+    expiryRequired = expiryRequired || p.expiryRequired
+  }
+  return { ok: true, req: { scope: root.scope, expiryRequired } }
 }
 
 

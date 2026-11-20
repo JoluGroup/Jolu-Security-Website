@@ -135,20 +135,37 @@ export const MUTANTS = [
   M("F5D5-01 replacement usability not checked", "const why = unusable(c.tail, asOfDay, approvedDay, req)", "const why = null as string | null"),
   M("F5D5-04 ledger scope metadata not compared to the code", "if (c.tail.scope !== req.scope)", "if (false)"),
   M("F5D5-04 page scope not enforced", 'if (req.scope !== "company" && req.scope !== pageScope)', "if (false)"),
-  M("F7-01 unknown evidence roots get no requirements profile check", "const req = rootRequirements(rootIdOf(ledger.byId, id))", "const req = rootRequirements(rootIdOf(ledger.byId, id)) ?? { scope: c.tail.scope, expiryRequired: false }"),
   M("F7-05 supersession scope comparison removed from the ledger index", "else if (r.scope !== e.scope) problems.push(`evidence ${e.id} and its replacement have different scopes`)", "else if (false) void 0"),
   M("F7-05 a claim with no explicit scope is tolerated", "if (!scope) reasons.push(`claim ${c.claimId} has no explicit scope`)", "if (!scope) void 0"),
   M("F7-05 supersession chain limit removed", "const MAX_CHAIN = 16", "const MAX_CHAIN = 100000"),
   // ---- 5D.8: ranking claims (F7-02)
-  M("F7-02 '#1' pattern removed", "{ category: CATEGORY.quality, pattern: /(?<![\\w#])#\\s?1(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
-  M("F7-02 'No. 1' pattern removed", "{ category: CATEGORY.quality, pattern: /\\bno\\.\\s?1(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
-  M("F7-02 'No 1 in ...' pattern removed", "{ category: CATEGORY.quality, pattern: /\\bno\\s1\\b(?=\\s+(?:in|choice|provider|company|firm|security|ranked|guard))/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
-  M("F7-02 'number one / number 1' pattern removed", "{ category: CATEGORY.quality, pattern: /(?<!\\b(?:gate|post|bay|unit|room|floor|door|camera|zone|entrance|channel)\\s)\\bnumber\\s+(?:one|1)(?!\\d)/i },", "{ category: CATEGORY.quality, pattern: /(?!)/ },"),
   // ---- 5D.8: sibling records are snapshotted (F7-04)
-  M("F7-04 siblings not snapshotted", "sibs = snapshot(siblings)", "sibs = siblings as readonly unknown[]"),
+  // ---- 5D.10: every canonical identity in a chain counts (F9-01)
+  M("F9-01 requirements taken from the root id only", "chainRequirements(chainIdsOf(ledger.byId, id))", "chainRequirements(chainIdsOf(ledger.byId, id).slice(0, 1))"),
+  M("F9-01 requirements taken from the end of the chain only", "chainRequirements(chainIdsOf(ledger.byId, id))", "chainRequirements(chainIdsOf(ledger.byId, id).slice(-1))"),
+  M("F9-01 conflicting canonical identities tolerated", 'return { ok: false, why: "mixes canonical evidence identities that carry different requirements" }', "continue", "lib/seo/publication-requirements.ts"),
+  M("F9-01 conflict check compares scope only", "if (p.scope !== root.scope || p.expiryRequired !== root.expiryRequired) return", "if (p.scope !== root.scope) return", "lib/seo/publication-requirements.ts"),
+  M("F9-01 conflict check compares the expiry flag only", "if (p.scope !== root.scope || p.expiryRequired !== root.expiryRequired) return", "if (p.expiryRequired !== root.expiryRequired) return", "lib/seo/publication-requirements.ts"),
+  M("F9-01 unknown root tolerated", "if (root === null) return { ok: false", "if (root === null) return { ok: true, req: { scope: \"company\", expiryRequired: false } }; if (false) return { ok: false", "lib/seo/publication-requirements.ts"),
+  M("F9-01 chain walk forgets the last id of the longest chain", "while (cur && !seen.has(cur.id) && seen.size <= MAX_CHAIN + 1) {\n    seen.add(cur.id)\n    out.push(cur.id)", "while (cur && !seen.has(cur.id) && seen.size <= MAX_CHAIN) {\n    seen.add(cur.id)\n    out.push(cur.id)"),
+  M("F9-02 CLM-01 not licence evidence", '"CMP-04", "CLM-01"]', '"CMP-04"]', "lib/seo/publication-requirements.ts"),
+  M("F9-02 expiry on the decision date accepted", "if (exp <= asOfDay ||", "if (exp < asOfDay ||"),
+  { ...M("F9-02 expiry the day after the decision date refused", "if (exp <= asOfDay ||", "if (exp <= asOfDay + 1 ||"), killBy: "accepts" },
+  M("F5D5-04 requirements profile not required for the page's scope check", 'if (req.scope !== "company" && req.scope !== pageScope)', "if (false)"),
+  // ---- 5D.10: ranking claims (F7-02, F9-03)
+  M("F7-02 '#1' pattern removed", "(?:1(?!\\d)|one\\b)/i },", "(?:(?!))/i },"),
+  M("F7-02 'No. 1' pattern removed", "\\bno\\.\\s?1(?!\\d)/i },", "\\bno\\.\\s?(?!)/i },"),
+  M("F7-02 'No 1 in ...' pattern removed", "\\bno\\s1\\b(?=\\s+(?:in|choice|provider|company|firm|security|ranked|guard))/i },", "(?!)/i },"),
+  M("F7-02 'number one / number 1' pattern removed", "\\bnumber[\\s-]+(?:one|1)(?!\\d)/i },", "\\bnumber[\\s-]+(?!)/i },"),
+  M("F9-03 ordinal ranking phrases removed", "first[- ]ranked|ranked\\s+(?:first|1st)|numero\\s+uno|1st\\s+(?:in|choice|provider|company|firm|security|ranked|place))\\b/i },", "(?!))\\b/i },"),
+  M("F9-03 'first choice for security' removed", "\\bfirst\\s+choice\\s+(?:for|in|of)\\s+(?:security|guard\\w*|clients|businesses|homes|kenya|nairobi)\\b/i },", "(?!)/i },"),
+  // ---- 5D.10: sibling records are validated and snapshotted (F7-04, F9-04)
+  M("F7-04 siblings not snapshotted", "const copy = snapshot(list)", "const copy = list as unknown[]"),
+  M("F9-04 inherited sibling fields tolerated", 'if (proto !== Object.prototype && proto !== null) throw new Error("sibling is not a plain record")', ""),
+  M("F9-04 sibling sections shape not checked", 'if (!isObj(s) || !Array.isArray(s.sections)) throw new Error("sibling sections are not a list")', ""),
+  M("F9-04 sibling section bodies not checked", 'if (!isObj(x) || !isStringArray(x.body)) throw new Error("sibling section body is malformed")', "if (false) throw new Error()"),
   // ---- boundary and property mutants: their protection is an acceptance (see EXPECTED kills below)
   { ...M("F7-05 verification on the approval date is rejected", 'if (approvedDay !== null && verified > approvedDay) return "was verified after the approval date"', 'if (approvedDay !== null && verified >= approvedDay) return "was verified after the approval date"'), killBy: "accepts" },
-  { ...M("F7-01 requirements read from the replacement id instead of the root (stricter: rejects valid replacements)", "rootRequirements(rootIdOf(ledger.byId, id))", "rootRequirements(c.tail.id)"), killBy: "accepts" },
 ]
 
 /** Equivalent mutants: real production edits that no input can distinguish. `trace` is the tracer id they embed. */
@@ -183,4 +200,14 @@ export const EQUIVALENT = [
     reason: "an entry with no scope has scope undefined, which differs from the scope derived from its evidence code, so the scope comparison rejects it with a different message." },
   { name: "known-slug check removed (kind-prefix check kept)", file: GATE, trace: "E22", edits: [['else if (!knownSlugs(r.kind).includes(slug)) reasons.push("slug is not a planned page")', `else if ((${TRACE("E22")}, false)) void 0`]],
     reason: "an unplanned slug fails plannedPath (the keyword registry), the serviceId / locationId identity tables and the canonical evidence table, each of which rejects it independently." },
+  { name: "chain requirements: expiry flag combined with OR", file: "lib/seo/publication-requirements.ts", trace: "E23", edits: [["expiryRequired = expiryRequired || p.expiryRequired", `expiryRequired = (${TRACE("E23")}, expiryRequired)`]],
+    reason: "the line above already rejects any registered id whose expiry flag differs from the root's, so on every chain that reaches this line p.expiryRequired equals expiryRequired and the OR is idempotent." },
+  { name: "sibling list type check removed (later array check kept)", file: GATE, trace: "E24", edits: [['if (!Array.isArray(list)) throw new Error("siblings is not a list")', `if ((${TRACE("E24")}, false)) throw new Error("x")`]],
+    reason: "a non-array list either throws on `.length` / `in` (null, undefined, numbers) or is copied to a non-array by snapshot, which the Array.isArray check on the copy refuses; no input passes both ways." },
+  { name: "sparse sibling list check removed (element type check kept)", file: GATE, trace: "E25", edits: [['if (!(i in list)) throw new Error("sparse sibling list")', `if ((${TRACE("E25")}, false)) throw new Error("x")`]],
+    reason: "a hole reads as undefined, which the next statement refuses as 'not a record'." },
+  { name: "sibling record type check removed (prototype check kept)", file: GATE, trace: "E26", edits: [['if (typeof s !== "object" || s === null || Array.isArray(s)) throw new Error("sibling is not a record")', `if ((${TRACE("E26")}, false)) throw new Error("x")`]],
+    reason: "null and undefined make Object.getPrototypeOf throw; primitives, functions and arrays have a prototype other than Object.prototype, which the next statement refuses." },
+  { name: "own-sections check removed (prototype and shape checks kept)", file: GATE, trace: "E27", edits: [['if (!Object.hasOwn(s, "sections")) throw new Error("sibling has no own sections")', `if ((${TRACE("E27")}, false)) throw new Error("x")`]],
+    reason: "an inherited sections field implies a prototype other than Object.prototype or null (refused by the prototype check); with no sections at all the later shape check refuses the copy. No input reaches the copy unrefused." },
 ]

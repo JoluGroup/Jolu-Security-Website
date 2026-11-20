@@ -20,7 +20,7 @@ import type { EvidenceRecord, PageKind, PageRecord, Published } from "@/lib/seo/
 import { PLANNED_PAGES } from "@/lib/seo/planned-pages"
 import { defaultDeps, type GateDeps } from "@/lib/seo/publication-deps"
 import type { ManifestEntry } from "@/lib/seo/publication-manifest"
-import { DESIGNATION_WORDS, DESIGNATIONS, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, rootRequirements, SERVICE_IDENTITY, type EvidenceRequirements } from "@/lib/seo/publication-requirements"
+import { DESIGNATION_WORDS, DESIGNATIONS, LOCATION_IDENTITY, PHONE_ATTESTATION_KEY, REQUIRED_EVIDENCE, chainRequirements, SERVICE_IDENTITY, type EvidenceRequirements } from "@/lib/seo/publication-requirements"
 import { textProblem } from "@/lib/seo/text-policy"
 import { SERVICES } from "@/lib/services"
 import { siteConfig } from "@/lib/site-config"
@@ -74,10 +74,14 @@ const EXTRA_CLAIM_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
   { category: CATEGORY.quality, pattern: /\b(market leader|leader|foremost|unrivalled|unmatched)\b/i },
   // Ranking claims. "#1" cannot sit behind \b (no word boundary between a space and "#"), so it has its own pattern with
   // lookarounds; "#10" and "x#1" do not match. "Gate number 1" style site references are not claims.
-  { category: CATEGORY.quality, pattern: /(?<![\w#])#\s?1(?!\d)/i },
-  { category: CATEGORY.quality, pattern: /\bno\.\s?1(?!\d)/i },
+  { category: CATEGORY.quality, pattern: /(?<![\w#])(?<!\b(?:counter|item|ticket|step|line|table|desk|point|gate|post|bay|unit|room|office|floor|door|camera|zone|entrance|channel|extension)\s)#\s?(?:1(?!\d)|one\b)/i },
+  { category: CATEGORY.quality, pattern: /(?<!\b(?:counter|item|ticket|step|line|table|desk|point|gate|post|bay|unit|room|office|floor|door|camera|zone|entrance|channel|extension)\s)\bno\.\s?1(?!\d)/i },
   { category: CATEGORY.quality, pattern: /\bno\s1\b(?=\s+(?:in|choice|provider|company|firm|security|ranked|guard))/i },
-  { category: CATEGORY.quality, pattern: /(?<!\b(?:gate|post|bay|unit|room|floor|door|camera|zone|entrance|channel)\s)\bnumber\s+(?:one|1)(?!\d)/i },
+  { category: CATEGORY.quality, pattern: /(?<!\b(?:counter|item|ticket|step|line|table|desk|point|gate|post|bay|unit|room|office|floor|door|camera|zone|entrance|channel|extension)\s)\bnumber[\s-]+(?:one|1)(?!\d)/i },
+  // High-confidence ordinal ranking phrases. "first choice" alone is too ambiguous ("our first choice of site"), so it is
+  // matched only before "for security"-style objects; "1st floor" and "first aid" are not ranking claims.
+  { category: CATEGORY.quality, pattern: /\b(?:first[- ]ranked|ranked\s+(?:first|1st)|numero\s+uno|1st\s+(?:in|choice|provider|company|firm|security|ranked|place))\b/i },
+  { category: CATEGORY.quality, pattern: /\bfirst\s+choice\s+(?:for|in|of)\s+(?:security|guard\w*|clients|businesses|homes|kenya|nairobi)\b/i },
   { category: CATEGORY.licensing, pattern: /\b(approved|authori[sz]ed|bonded|insured|iso ?\d+)\b/i },
   { category: CATEGORY.statistics, pattern: /\b(over|more than)\s+[\d,]+\+?\s+(clients|customers|guards|sites|years)\b/i },
   { category: CATEGORY.statistics, pattern: /\b\d[\d,]*\+\s*(clients|customers|guards|sites|years)\b/i },
@@ -132,6 +136,8 @@ export function contentDigest(record: unknown, entry: { title?: unknown; descrip
 
 // ---------------------------------------------------------------------------------------------------- ledger
 type Ledger = { byId: Map<string, EvidenceRecord>; problems: string[] }
+// Longest accepted chain: MAX_CHAIN + 1 replacements (MAX_CHAIN + 2 entries). The root and chain walks use the same bound,
+// so no id of an accepted chain is ever left out of the requirements check.
 const MAX_CHAIN = 16
 
 function indexLedger(ledger: readonly unknown[]): Ledger {
@@ -191,13 +197,26 @@ function currentOf(byId: Map<string, EvidenceRecord>, id: string): { tail: Evide
 function rootIdOf(byId: Map<string, EvidenceRecord>, id: string): string {
   let cur = byId.get(id)
   const seen = new Set<string>()
-  while (cur && cur.replaces != null && !seen.has(cur.id) && seen.size <= MAX_CHAIN) {
+  while (cur && cur.replaces != null && !seen.has(cur.id) && seen.size <= MAX_CHAIN + 1) {
     seen.add(cur.id)
     const prev = byId.get(cur.replaces)
     if (!prev) break
     cur = prev
   }
   return cur?.id ?? id
+}
+
+/** The complete chain, root first: follows `replaces` back to the root, then `supersededBy` forward to the tail. */
+function chainIdsOf(byId: Map<string, EvidenceRecord>, id: string): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  let cur = byId.get(rootIdOf(byId, id))
+  while (cur && !seen.has(cur.id) && seen.size <= MAX_CHAIN + 1) {
+    seen.add(cur.id)
+    out.push(cur.id)
+    cur = cur.supersededBy != null ? byId.get(cur.supersededBy) : undefined
+  }
+  return out
 }
 
 /** Why an entry cannot be used on `approvedOn` (null if usable). */
@@ -246,6 +265,32 @@ export function getPublishedEvidenceIds(page: unknown): readonly string[] {
 // ---------------------------------------------------------------------------------------------------- evaluation
 type Result = { reasons: string[]; page: Published<PageRecord> | null; entry: ManifestEntry | null; evidence: string[] }
 
+/**
+ * Sibling records enter the duplicate-text check, so they are validated, not just copied: the list must be a dense array
+ * of plain objects (own properties only; an inherited `sections` is not accepted), each with a `sections` array of
+ * objects whose `body` is an array of strings. Anything else, including null, functions, sparse arrays and hostile
+ * getters or proxies, throws and the caller fails closed. A snapshot is then taken so later mutation cannot matter.
+ */
+function copySiblings(list: unknown): readonly unknown[] {
+  if (!Array.isArray(list)) throw new Error("siblings is not a list")
+  const n = list.length
+  for (let i = 0; i < n; i++) {
+    if (!(i in list)) throw new Error("sparse sibling list")
+    const s: unknown = list[i]
+    if (typeof s !== "object" || s === null || Array.isArray(s)) throw new Error("sibling is not a record")
+    const proto = Object.getPrototypeOf(s)
+    if (proto !== Object.prototype && proto !== null) throw new Error("sibling is not a plain record")
+    if (!Object.hasOwn(s, "sections")) throw new Error("sibling has no own sections")
+  }
+  const copy = snapshot(list)
+  if (!Array.isArray(copy) || copy.length !== n) throw new Error("sibling list changed")
+  for (const s of copy) {
+    if (!isObj(s) || !Array.isArray(s.sections)) throw new Error("sibling sections are not a list")
+    for (const x of s.sections) if (!isObj(x) || !isStringArray(x.body)) throw new Error("sibling section body is malformed")
+  }
+  return copy
+}
+
 function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown[]): Result {
   const reasons: string[] = []
   const fail = (): Result => ({ reasons: [...new Set(reasons)], page: null, entry: null, evidence: [] })
@@ -267,8 +312,7 @@ function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown
     // duplicate-text check); a sibling list that cannot be copied as plain data fails closed.
     let sibs: readonly unknown[]
     try {
-      sibs = snapshot(siblings)
-      if (!Array.isArray(sibs)) throw new Error("siblings is not a list")
+      sibs = copySiblings(siblings)
     } catch {
       return { reasons: ["sibling records are malformed"], page: null, entry: null, evidence: [] }
     }
@@ -412,9 +456,10 @@ function evaluate(record: unknown, rawDeps: GateDeps, siblings: readonly unknown
     const resolve = (id: string): { why: string | null; current: string | null } => {
       const c = currentOf(ledger.byId, id)
       if ("problem" in c) return { why: c.problem, current: null }
-      // Requirements come from the canonical ROOT of the chain, never from the replacement's own id.
-      const req = rootRequirements(rootIdOf(ledger.byId, id))
-      if (req === null) return { why: "has no valid evidence scope", current: c.tail.id }
+      // Requirements come from EVERY canonical identity in the chain (never from one id alone); conflicts are rejected.
+      const cr = chainRequirements(chainIdsOf(ledger.byId, id))
+      if (!cr.ok) return { why: cr.why, current: c.tail.id }
+      const req = cr.req
       const why = unusable(c.tail, asOfDay, approvedDay, req)
       if (why) return { why, current: c.tail.id }
       if (c.tail.scope !== req.scope) return { why: "has no valid evidence scope", current: c.tail.id }

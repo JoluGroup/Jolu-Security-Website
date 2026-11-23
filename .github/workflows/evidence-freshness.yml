@@ -1,0 +1,57 @@
+# Read-only monitoring of publication evidence (Milestones 5D.6 and 5D.8, findings F5D5-02 and F7-03).
+# It only READS the repository and prints findings. It does not deploy, publish, unpublish, push, comment, open
+# issues or use any secret. See docs/seo/evidence-expiry-runbook.md.
+#
+# LIMITATION: GitHub runs `schedule` triggers only from the workflow file on the repository's DEFAULT branch. While this
+# file exists only on a feature branch the schedule will not fire; it can still be run by hand (workflow_dispatch) once
+# on the default branch, or the command below can be run locally. Scheduled runs are also paused by GitHub after 60 days
+# without repository activity in public repositories, and are best-effort (they can be delayed or skipped).
+name: Evidence freshness
+
+# NOT OPERATIONAL until this file is on the default branch (main) AND Actions is enabled for the repository. Nothing in this
+# file can make that so; it is a repository decision (docs/seo/evidence-expiry-runbook.md).
+#
+# Strict mode (--strict) turns upcoming risks (expiring evidence, near-stale as-of date, old verification) red as well as
+# faults, so that a failed run is the signal. Scheduled runs are always strict. It does not run on pushes or pull
+# requests, so it cannot block unrelated development.
+on:
+  schedule:
+    - cron: "17 5 * * 1" # Mondays 05:17 UTC
+  workflow_dispatch:
+    inputs:
+      strict:
+        description: "Fail the run on warnings as well as errors"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  freshness:
+    name: Evidence freshness check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Job summary (read-only report)
+        if: always()
+        continue-on-error: true
+        run: node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs --format=markdown >> "$GITHUB_STEP_SUMMARY"
+      - name: Check evidence freshness
+        env:
+          STRICT: ${{ github.event_name == 'schedule' || inputs.strict == true }}
+        run: |
+          if [ "$STRICT" = "true" ]; then
+            node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs --strict
+          else
+            node --import ./tests/register.mjs scripts/check-evidence-freshness.mjs
+          fi

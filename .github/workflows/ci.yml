@@ -1,0 +1,74 @@
+name: CI
+
+# Runs on every pull request. Read-only token, no secrets, no deployment.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Test, typecheck, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # Dependency, build and machine-local files must never be committed (they would bypass the lockfile and the checks).
+      - name: No tracked dependency, build or machine-local files
+        run: |
+          bad=$(git ls-files | grep -E '(^|/)(node_modules|\.next|\.vercel|coverage|\.turbo)(/|$)|(^|/)(\.env\.local|\.env\.[^/]*\.local|tsconfig\.tsbuildinfo|next-env\.d\.ts|\.DS_Store)$|\.log$' || true)
+          if [ -n "$bad" ]; then echo "$bad"; echo "Tracked build, dependency or machine-local files found"; exit 1; fi
+
+      # Runs BEFORE any install or package script, using only the runner's built-in Node, so install-time code
+      # from a pull request cannot disable it. It is run again after install below.
+      - name: Frozen-files guard (before install)
+        run: node scripts/seo/frozen-files.mjs --check
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
+      # Node 22 (latest 22.x): the unit tests rely on Node's built-in TypeScript type
+      # stripping, which needs 22.18 or later.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Runs the guard directly, so deleting its test files cannot switch it off.
+      - name: Frozen-files guard (after install)
+        run: node scripts/seo/frozen-files.mjs --check
+
+      - name: Unit tests
+        run: pnpm test
+
+      # Fails if unapproved or withheld media is present anywhere in the tree.
+      - name: Asset security checks
+        run: pnpm check:assets
+
+      - name: Generate Next.js route types
+        run: pnpm exec next typegen
+
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+
+      - name: ESLint
+        run: pnpm lint
+
+      # Uses the real next/font/google configuration; GitHub-hosted runners can reach Google Fonts.
+      - name: Production build
+        run: pnpm build

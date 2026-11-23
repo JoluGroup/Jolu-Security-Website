@@ -1,0 +1,693 @@
+{
+  "generatedBy": "scripts/assets/build-inventory.mjs",
+  "baseCommit": "9e8e742",
+  "servedFiles": 7,
+  "withheldFiles": 66,
+  "duplicates": [
+    [
+      "W035",
+      "W036"
+    ],
+    [
+      "W061",
+      "W062"
+    ]
+  ],
+  "served": [
+    {
+      "original": "public/file.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 391,
+      "sha256": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+      "pinnedInAllowlist": true,
+      "type": "framework icon (Next.js template)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    },
+    {
+      "original": "public/globe.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 1035,
+      "sha256": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+      "pinnedInAllowlist": true,
+      "type": "framework icon (Next.js template)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    },
+    {
+      "original": "public/lovable-uploads/jolu-logo.png",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 104558,
+      "sha256": "aa9d5c37dbb24bc66898ac9542b2720abc9b650e110fa9c253ae0920c5196358",
+      "pinnedInAllowlist": true,
+      "type": "logo (company mark, illustration)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": [
+        "lib/site-config.ts"
+      ]
+    },
+    {
+      "original": "public/next.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 1375,
+      "sha256": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",
+      "pinnedInAllowlist": true,
+      "type": "framework icon (Next.js template)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    },
+    {
+      "original": "public/placeholder.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 3253,
+      "sha256": "64badf7aabda0b9630b87020ffb6095cb858ccbcf66b355c2aa08b1063954d3b",
+      "pinnedInAllowlist": true,
+      "type": "generic placeholder graphic",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    },
+    {
+      "original": "public/vercel.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 128,
+      "sha256": "f081337b2fee635b455b63275406a3e7f39d6a014e25ad90dab5a67e62a12ac4",
+      "pinnedInAllowlist": true,
+      "type": "framework icon (Next.js template)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    },
+    {
+      "original": "public/window.svg",
+      "status": "SERVED (allowlisted brand/framework asset)",
+      "sizeBytes": 385,
+      "sha256": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+      "pinnedInAllowlist": true,
+      "type": "framework icon (Next.js template)",
+      "sensitivity": "none",
+      "clearance": "n/a (company mark / template asset)",
+      "referencedByCodeOutsideRegistry": []
+    }
+  ],
+  "withheld": [
+    {
+      "index": "W001",
+      "sha256": "07c1b84331186cc944d0778ccfa6197ef21fb4673171e65c900a9faae1fc140c",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W002",
+      "sha256": "0d54db814b60e4663cbdcc4a81f8187307fb7188b3402be91aba8fca8ee2ea93",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W003",
+      "sha256": "1164cb246572ebbde6c6f0520b120e6ec1bc183ff6f55793eb45f53778cc1ef5",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W004",
+      "sha256": "11fcec893e2a9cb8c4a3caf74e0682245b1df6735106e30d83c4094859abb2c4",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W005",
+      "sha256": "12e7ad8232dc0eab825865d0e91e3982648da7a82dc01a261f98662fdc573051",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W006",
+      "sha256": "14df6359ce3efd953765f6b41229260e527710e5b4ce8a8e4e5a0116d473e8c8",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W007",
+      "sha256": "1705e985b7d8b9f23a16682587fda80bc98f487a0aa234ddb3e12bfbe4b7bdd3",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W008",
+      "sha256": "170862554072dabe6154cc0892fce49f642b3e6d844a32166ef898cf72a8e781",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W009",
+      "sha256": "183cf2767d80f4aaedcd0ac91d332244d1f1c09952d5e6a3a3f2a03fe68c8403",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W010",
+      "sha256": "1afc266d203a9cfa80041258ff80d6695a339bd299bb71bf6f7011344f00eae0",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W011",
+      "sha256": "1cd18462a0f2cb1f48913746513dfb35179c686e8565684c468521c215c421cd",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W012",
+      "sha256": "252401371b60d9e01a0382933177281803b40f9b0d8645c31d62db596f4cb938",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W013",
+      "sha256": "25feef604c27da906a8c87d6c8c61e91dda48b6435c02ba95f2be72a71bf821e",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W014",
+      "sha256": "2a3e55ecf140ad9e5d6086260a7565668346c473b2b299456bf62d4ccb6c053b",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W015",
+      "sha256": "2b68068c6cd43943c41d4391907a3deae44ebbcc18f43414985948039ed0c96a",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W016",
+      "sha256": "2d6ab8571c2ab5a4baa115e9e44f529afff9779ffa67a4c9f941156da382dbf8",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W017",
+      "sha256": "3081a37b7d39cd68bd243678e371dbf3f68d2db4fd019e25ed6880aa0d44fa9a",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W018",
+      "sha256": "320bf1c5927d33bdc6677ab82765602989e76362755fd5db5462436c4702792d",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W019",
+      "sha256": "35ca522303c5b67d780f80bd71bc67d1cd5a2ac4649b6e60c7a6af31a3e5f5e9",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W020",
+      "sha256": "3ff3c9219e2493e2dc7f202bbb2d975998a6ea75640212767b97e2a2c1e00a65",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W021",
+      "sha256": "4a14ef8f38156d8b1b74aaef65dc7888cd7da2b03bbe02123c0e39f102869dbf",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W022",
+      "sha256": "4cc2b9548c0cd6df6f3f5275ddf4a7d4d131fff0c6f28e556a4622a1d0ec7b4b",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W023",
+      "sha256": "4e7a0dbe424dbf673984664f6ba971867e528676d93d4514e3add21baeae36e7",
+      "kind": "document-pdf",
+      "type": "document (PDF)",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W024",
+      "sha256": "4ea786c57a8c27cdb941caf9e450d74646978e6e7c918c917599c700453416fc",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W025",
+      "sha256": "559b85318669fe33a2754bd69caadf8a44b3f931124707837f74a982cba3ca6b",
+      "kind": "page-image",
+      "type": "document (brochure page image showing people)",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W026",
+      "sha256": "5e869b40905f8d858dbe239e1d7126940f56aa0b9226e7a4f6f4ef6d2de97935",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W027",
+      "sha256": "5ffb708948495512f915922e590586bb07cc6adce076385a09526d60d17b66a3",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W028",
+      "sha256": "6a96777683a4434042392ac714ca1c8563cd1863d1bf36c27130ae7c0fc68552",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W029",
+      "sha256": "6d048ee195c6a04656f3ca5668b71012761fad93dcfc9a317bebc7642cce77eb",
+      "kind": "document-pdf",
+      "type": "document (PDF)",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W030",
+      "sha256": "6d9e9670924b009bd9f54b7a9c55f70fcd351f8098e47ad67d008ad726ee0aef",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W031",
+      "sha256": "74afeb925fcdcc7c6469ae9e12823e1e76db4e5c64cf033a686f87dd5dec31dd",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W032",
+      "sha256": "7655d1292b96f5481615f135e313a9fde955b50fd43c0250f2ad6d9bf8ed49b2",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W033",
+      "sha256": "82c86047d93cd623163d4414032dfb8cec29f1f4d9955efa1187251fde3dfce7",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W034",
+      "sha256": "853a2175919956ececf627e7c37d2ff1b74091b149aff3d5029643f496c46af1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W035",
+      "sha256": "8853475579ce03f46f2d333f77afe073d0f43b1dd0b4a669467761f26d9117f1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W036",
+      "sha256": "8853475579ce03f46f2d333f77afe073d0f43b1dd0b4a669467761f26d9117f1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W037",
+      "sha256": "8eacff3f29d3ae69f1cb985783fa8bee96aeacbac1b6b2f127301b1d200ed5e9",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W038",
+      "sha256": "938e1338d627395c43bdc5809f2ad001d0664358a1484c1fcf139b10f3afdc01",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W039",
+      "sha256": "96d1f3caf4b70a619472759d3aac72d8a6e4a56620402ff644f7928112ad5474",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W040",
+      "sha256": "9be52d4c12391d2720080ad2a9ea0e94fd531c15e90d162379d59cf561191523",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W041",
+      "sha256": "9d3f4b8f3ab171b52d6768b9d0b97c813be8a94c62e4bc3a56afc4012fcd94cd",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W042",
+      "sha256": "9dbd81668e3891e06176e535a7dd059e3c9222c4dced70bd6357b39353532508",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W043",
+      "sha256": "a015b8ed04152ef358b65380f175a7b0bd36deb3da9c81bbc2b5115ee34058d9",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W044",
+      "sha256": "a830930da071e914f913c3ee882bd6e9862472972c01d37af1f56dd2f0953618",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W045",
+      "sha256": "ac7c126ce4083da795b0b1bf45ba35e164d0faed354f1da716d16f4e4850ced5",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W046",
+      "sha256": "b08999b14c8ea7e74a7442a978ec22a87da6f33af5b488549cc1552ddaccb542",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W047",
+      "sha256": "b388b870a41e3970d2fe43a0862c503a3436c741ecc55550267152376bb5c3fa",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W048",
+      "sha256": "b97228ec9244a1903b69d7366e567281a8e82a6209e2fc180380b50b34c92275",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W049",
+      "sha256": "ba37fa992e997ff38ad3cd1850c33861c00ee01b18c9b5e7c54ed6d30c4ae96f",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W050",
+      "sha256": "c374dea1b3e709b541c31eda89cb6fbf2780eb94bc64480813e87480b3eaab01",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W051",
+      "sha256": "c4fd6b83909ca5e66544640abdd48cd8b612f40ff8d19007aec1239362ce15db",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W052",
+      "sha256": "c626858b7e52a7a04ea1c0a54e75ab3e53385dd91231aa2150c8293173cb4df1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W053",
+      "sha256": "cb909d29bb093d7060400c9634ba31853723a65cf0fef74c20ef0038e102374e",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W054",
+      "sha256": "cce58d9d31a518367609fa59103d592edede910634774adcd2bb7ea92d022c46",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W055",
+      "sha256": "d4e7e656a2207533c74be7eb78cab9ed725bfafed82ddc93a69ea65b4e3652cc",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W056",
+      "sha256": "da4923090b6208f9d29a976ba270b2a9e25c923d7c4815e426431ac5d8753cdc",
+      "kind": "place-or-stock-photo",
+      "type": "stock/illustration or place photo (some show hands or a person partially)",
+      "sensitivity": "medium",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W057",
+      "sha256": "db992995c13dd19a95af98027da68c325f5c3bd7194aefd6782a8e897a4e71d1",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W058",
+      "sha256": "dc91bfc57f10bd32343444e687610fe14188c3b6dc286b35d04b41b13c2e624a",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W059",
+      "sha256": "e06eec40bd80b25c62f5264b8dfa46bc20548e576f3e5e062c3ad026831b885d",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W060",
+      "sha256": "e26e8d7c2ef90cf20edb613602d5378119df9a9484dce5a3b562125c90c7c81d",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W061",
+      "sha256": "e40daa5c1df8b54d0fe6e1457fae54451a0d79cc77c9fba6384689508436eac1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W062",
+      "sha256": "e40daa5c1df8b54d0fe6e1457fae54451a0d79cc77c9fba6384689508436eac1",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W063",
+      "sha256": "e7152d94ea3460668c71d056cc7baed49fbc64ad6aa5893a1445cd2276fb1ac2",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W064",
+      "sha256": "e9b92efa86b393453b88121b34df4163a97409f9a61be7e1c3834a5bbf1d0db7",
+      "kind": "people-photo",
+      "type": "people photo",
+      "sensitivity": "high",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W065",
+      "sha256": "ea1b4bf30f8aa0b47ff407012143302512859a7b7aa6fb0b1b42b555693377f5",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    },
+    {
+      "index": "W066",
+      "sha256": "ecfc548eb1d0b0284225adc70ace787a9d2299e50fdee4f7ff0d94fcaaf1c82c",
+      "kind": "staff-portrait",
+      "type": "people photo (staff portrait)",
+      "sensitivity": "highest",
+      "status": "WITHHELD (original not in this repository; uncleared)",
+      "clearance": "UNCLEARED"
+    }
+  ]
+}

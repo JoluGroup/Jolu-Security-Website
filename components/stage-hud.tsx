@@ -28,11 +28,11 @@ export function StageHud({
         style={{ scaleX: progress }}
         aria-hidden="true"
       />
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 lg:px-8">
-        <p className="flex min-w-0 items-baseline gap-3 font-mono text-xs uppercase tracking-[0.2em]" aria-live="polite">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 lg:px-8">
+        <p className="flex min-w-0 items-baseline gap-3 font-mono text-xs uppercase tracking-[0.08em] sm:tracking-[0.2em]" aria-live="polite">
           <span className="whitespace-nowrap text-foreground">
             Layer {current ? pad(activeLayer + 1) : "00"}{" "}
-            <span className="text-muted-foreground">/ {pad(total)}</span>
+            <span className="hidden text-muted-foreground min-[375px]:inline">/ {pad(total)}</span>
           </span>
           <span className="hidden truncate text-muted-foreground sm:inline">{current ? current.name : "Overview"}</span>
         </p>

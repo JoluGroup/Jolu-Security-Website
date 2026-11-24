@@ -155,14 +155,14 @@ function HeroActions({ tab }: { tab?: number }) {
           size="lg"
           variant="outline"
           tabIndex={tab}
-          className="h-12 border-input bg-background/40 px-6 text-base backdrop-blur-sm"
+          className="h-12 border-input bg-background/40 px-6 text-base backdrop-blur-sm [@media(max-height:640px)]:hidden"
           nativeButton={false}
           render={<a href={siteConfig.servicesHref} />}
         >
           Explore Services
         </Button>
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm [@media(max-height:640px)]:hidden">
         <a
           href={siteConfig.contact.phoneHref}
           tabIndex={tab}
@@ -210,11 +210,11 @@ function IntroText() {
       </p>
       <h1
         id="stage-title"
-        className="text-balance text-5xl font-semibold leading-[0.98] tracking-tight text-foreground sm:text-6xl lg:text-7xl"
+        className="text-balance text-5xl font-semibold leading-[0.98] tracking-tight text-foreground sm:text-6xl lg:text-7xl [@media(max-height:640px)]:text-4xl"
       >
         Confidence in every <em className="font-serif font-normal italic text-primary">layer</em> of protection.
       </h1>
-      <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl">{siteConfig.description}</p>
+      <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl [@media(max-height:640px)]:hidden">{siteConfig.description}</p>
     </>
   )
 }

@@ -28,7 +28,7 @@ export function StageHud({
         style={{ scaleX: progress }}
         aria-hidden="true"
       />
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4 lg:px-8 [@media(max-height:480px)]:py-1">
         <p className="flex min-w-0 items-baseline gap-3 font-mono text-xs uppercase tracking-[0.08em] sm:tracking-[0.2em]" aria-live="polite">
           <span className="whitespace-nowrap text-foreground">
             Layer {current ? pad(activeLayer + 1) : "00"}{" "}

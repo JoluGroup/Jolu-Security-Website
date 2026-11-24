@@ -407,7 +407,7 @@ export function HeroEmblem({ className }: { className?: string }) {
         <path d="M600 470 H1600 M1170 -100 V1000" stroke={FAINT} />
         <circle cx="1170" cy="470" r="5" fill={RED} opacity="0" />
       </svg>
-      <div className="absolute top-[52%] left-[73%] hidden aspect-square w-[19vw] max-w-[340px] min-w-40 -translate-x-1/2 -translate-y-1/2 lg:block">
+      <div className="absolute top-[52%] left-[73%] hidden aspect-square w-[19vw] max-w-[340px] min-w-40 -translate-x-1/2 -translate-y-1/2 lg:landscape:block">
         <Image src={siteConfig.logo.src} alt="" width={240} height={240} className="size-full object-contain" />
       </div>
     </div>

@@ -116,7 +116,7 @@ function PinnedStage({ heroPoster, layerPhotos }: StageProps) {
 
         <div className="stage-veil pointer-events-none absolute inset-0" />
 
-        <div className="relative mx-auto grid h-full max-w-7xl px-5 pt-[calc(var(--header-h)+1rem)] pb-44 md:pb-32 lg:px-8">
+        <div className="relative mx-auto grid h-full max-w-7xl px-5 pt-[calc(var(--header-h)+1rem)] pb-44 md:pb-32 lg:px-8 [@media(max-height:640px)]:pt-[calc(var(--header-h)+0.5rem)] [@media(max-height:640px)_and_(max-width:767px)]:pb-[9.5rem] [@media(max-height:480px)_and_(max-width:767px)]:pb-[8.5rem]!">
           <div className="relative col-start-1 row-start-1 self-center md:max-w-2xl">
             <IntroCopy active={step === 0} />
             {PROTECTION_LAYERS.map((layer, i) => (
@@ -145,9 +145,9 @@ function PinnedStage({ heroPoster, layerPhotos }: StageProps) {
 
 function HeroActions({ tab }: { tab?: number }) {
   return (
-    <div className="flex flex-col gap-5 pt-2">
+    <div className="flex flex-col gap-5 pt-2 [@media(max-height:640px)]:gap-0 [@media(max-height:640px)]:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button size="lg" tabIndex={tab} className="h-12 px-6 text-base" nativeButton={false} render={<a href={siteConfig.quoteHref} />}>
+        <Button size="lg" tabIndex={tab} className="h-12 px-6 text-base [@media(max-height:640px)]:h-11" nativeButton={false} render={<a href={siteConfig.quoteHref} />}>
           Request a Quote
           <ArrowRight aria-hidden="true" />
         </Button>
@@ -161,8 +161,16 @@ function HeroActions({ tab }: { tab?: number }) {
         >
           Explore Services
         </Button>
+        <a
+          href={siteConfig.servicesHref}
+          tabIndex={tab}
+          className="hidden h-11 items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-foreground underline-offset-4 hover:underline [@media(max-height:640px)]:inline-flex"
+        >
+          Our services
+          <ArrowRight className="size-4 text-primary" aria-hidden="true" />
+        </a>
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm [@media(max-height:640px)]:hidden">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm [@media(max-height:640px)]:hidden [@media(max-height:790px)_and_(max-width:767px)]:hidden">
         <a
           href={siteConfig.contact.phoneHref}
           tabIndex={tab}
@@ -190,7 +198,7 @@ function HeroActions({ tab }: { tab?: number }) {
 function IntroCopy({ active }: { active: boolean }) {
   return (
     <motion.div
-      className={cn("flex flex-col gap-6", !active && "pointer-events-none")}
+      className={cn("flex flex-col gap-6 [@media(max-height:640px)]:gap-4 [@media(max-height:480px)]:gap-2!", !active && "pointer-events-none")}
       initial={{ opacity: 0, y: 24 }}
       animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: -24 }}
       transition={{ duration: 0.7, ease: EASE }}
@@ -210,11 +218,11 @@ function IntroText() {
       </p>
       <h1
         id="stage-title"
-        className="text-balance text-5xl font-semibold leading-[0.98] tracking-tight text-foreground sm:text-6xl lg:text-7xl [@media(max-height:640px)]:text-4xl"
+        className="text-balance text-5xl font-semibold leading-[0.98] tracking-tight text-foreground sm:text-6xl lg:text-7xl [@media(max-height:640px)]:text-4xl [@media(max-height:480px)]:text-3xl!"
       >
         Confidence in every <em className="font-serif font-normal italic text-primary">layer</em> of protection.
       </h1>
-      <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl [@media(max-height:640px)]:hidden">{siteConfig.description}</p>
+      <p className="max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground md:text-xl [@media(max-height:640px)]:hidden [@media(max-height:790px)_and_(max-width:767px)]:hidden">{siteConfig.description}</p>
     </>
   )
 }

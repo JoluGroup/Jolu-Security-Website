@@ -361,8 +361,8 @@ export function RingOrbit({
 export function BrandPlate({ className }: { className?: string }) {
   return (
     <ArtFrame
-      caption="Professional Protection"
-      index={siteConfig.name}
+      caption={siteConfig.name}
+      index="Brand"
       className={cn("aspect-[16/10] w-full", className)}
     >
       <svg

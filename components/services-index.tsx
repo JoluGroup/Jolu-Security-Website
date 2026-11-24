@@ -60,7 +60,7 @@ export function ServicesIndex({ items }: { items: ServiceIndexItem[] }) {
                 className="group grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-x-4 gap-y-2 py-6 md:py-8"
               >
                 <span
-                  className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-primary group-focus-visible:text-primary lg:group-data-active:text-primary"
+                  className="font-mono text-xs text-muted-foreground transition-colors group-hover:text-red-400 group-focus-visible:text-red-400 lg:group-data-active:text-red-400"
                   aria-hidden="true"
                 >
                   {numeral(i)}

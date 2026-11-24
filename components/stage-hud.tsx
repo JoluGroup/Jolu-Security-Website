@@ -47,7 +47,7 @@ export function StageHud({
                   onClick={() => onSelect(i)}
                   aria-current={isActive ? "step" : undefined}
                   aria-label={`Go to layer ${i + 1}: ${layer.name}`}
-                  className="group flex h-10 items-center gap-2 rounded-md px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className="group flex h-11 min-w-11 items-center justify-center gap-2 rounded-md px-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   <span
                     className={cn(

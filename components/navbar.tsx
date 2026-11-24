@@ -165,7 +165,7 @@ function MenuPanel({ onNavigate }: { onNavigate: () => void }) {
                   }
                 >
                   <span
-                    className="w-6 shrink-0 font-mono text-xs font-normal text-muted-foreground transition-colors group-hover:text-primary group-focus-visible:text-primary"
+                    className="w-6 shrink-0 font-mono text-xs font-normal text-muted-foreground transition-colors group-hover:text-red-400 group-focus-visible:text-red-400"
                     aria-hidden="true"
                   >
                     {String(i + 1).padStart(2, "0")}

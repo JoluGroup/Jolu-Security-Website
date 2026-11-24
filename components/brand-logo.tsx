@@ -4,7 +4,7 @@ import { siteConfig } from "@/lib/site-config"
 
 export function BrandLogo({ priority = false }: { priority?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-3 rounded-md" aria-label={`${siteConfig.name} home`}>
+    <Link href="/" className="flex min-h-11 items-center gap-3 rounded-md" aria-label={`${siteConfig.name} home`}>
       <Image
         src={siteConfig.logo.src}
         alt=""

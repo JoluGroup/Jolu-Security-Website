@@ -166,7 +166,7 @@ function HeroActions({ tab }: { tab?: number }) {
         <a
           href={siteConfig.contact.phoneHref}
           tabIndex={tab}
-          className="flex items-center gap-2 rounded-sm font-mono text-foreground underline-offset-4 hover:underline"
+          className="flex min-h-11 items-center gap-2 rounded-sm font-mono text-foreground underline-offset-4 hover:underline"
         >
           <Phone className="size-4 text-primary" aria-hidden="true" />
           {siteConfig.contact.phoneDisplay}
@@ -176,7 +176,7 @@ function HeroActions({ tab }: { tab?: number }) {
           target="_blank"
           rel="noopener noreferrer"
           tabIndex={tab}
-          className="flex items-center gap-2 rounded-sm text-foreground underline-offset-4 hover:underline"
+          className="flex min-h-11 items-center gap-2 rounded-sm text-foreground underline-offset-4 hover:underline"
         >
           <MessageCircle className="size-4 text-primary" aria-hidden="true" />
           WhatsApp us

@@ -54,11 +54,10 @@ export function PeopleSection() {
                     <step.icon className="size-6" strokeWidth={1.25} />
                   </span>
                   <span
-                    className="font-mono text-6xl leading-none font-light tracking-tighter text-foreground/10"
-                    aria-hidden="true"
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                  className="font-mono text-6xl leading-none font-light tracking-tighter text-foreground/10 before:content-[attr(data-n)]"
+                  data-n={String(i + 1).padStart(2, "0")}
+                  aria-hidden="true"
+                />
                 </div>
                 <div className="flex flex-col gap-3">
                   <h3 className="text-2xl font-semibold tracking-tight text-foreground">{step.title}</h3>

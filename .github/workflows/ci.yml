@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      # The real-Redis suite must execute in CI: a missing redis-server makes the test file fail instead of skip.
+      REQUIRE_REAL_REDIS: "1"
     steps:
       - name: Check out
         uses: actions/checkout@v4
@@ -53,8 +55,31 @@ jobs:
       - name: Frozen-files guard (after install)
         run: node scripts/seo/frozen-files.mjs --check
 
+      # The finalize-script tests run the real Lua script on a real redis-server that the test spawns itself on a
+      # free port. Installed from Ubuntu's apt archive (no third-party action, no service container, no secrets);
+      # the package does not need to run as a system service, so the service is stopped to keep the runner clean.
+      - name: Install Redis server (required by the real-Redis tests)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends redis-server
+          sudo systemctl stop redis-server || true
+          command -v redis-server
+          redis-server --version
+          redis-server --version | grep -Eq 'v=(6|7|8)\.' || { echo "Unexpected redis-server major version"; exit 1; }
+
       - name: Unit tests
         run: pnpm test
+
+      # Mandatory-Redis gate: runs the real-Redis suite on its own and requires that all 7 tests ran and none skipped.
+      - name: Real-Redis suite must run (not skip)
+        run: |
+          set -o pipefail
+          tap="$RUNNER_TEMP/redis-suite.tap"
+          node --import ./tests/register.mjs --test --test-reporter=tap tests/enquiry/finalize-script.redis.test.mjs | tee "$tap"
+          grep -Eq '^# tests 7$' "$tap" || { echo "Real-Redis suite did not run exactly 7 tests"; exit 1; }
+          grep -Eq '^# skipped 0$' "$tap" || { echo "Real-Redis suite had skipped tests"; exit 1; }
+          grep -Eq '^# fail 0$' "$tap" || { echo "Real-Redis suite had failures"; exit 1; }
+          rm -f "$tap"
 
       # Fails if unapproved or withheld media is present anywhere in the tree.
       - name: Asset security checks

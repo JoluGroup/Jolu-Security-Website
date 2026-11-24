@@ -1,6 +1,7 @@
 // Runs the REAL dedup finalize Lua script on a REAL redis-server, when one is installed.
 // It starts a private, throwaway server on a free local port (no persistence) and stops it afterwards.
-// Skipped automatically when `redis-server` is not on PATH, so it never blocks machines without Redis.
+// Skipped automatically when `redis-server` is not on PATH, so it never blocks machines without Redis,
+// EXCEPT when REQUIRE_REAL_REDIS=1 or CI=true (CI sets both): then a missing redis-server FAILS the run instead of skipping.
 // It is the check that the Lua is valid and behaves as documented, which the JavaScript fake cannot prove.
 // It does NOT prove behaviour of Upstash's hosted Redis (see the milestone report).
 import assert from "node:assert/strict"
@@ -11,6 +12,10 @@ import { after, before, beforeEach, describe, it } from "node:test"
 const { FINALIZE_SCRIPT } = await import("@/lib/enquiry/dedup")
 
 const hasRedis = spawnSync("redis-server", ["--version"], { stdio: "ignore" }).status === 0
+const requireRedis = process.env.REQUIRE_REAL_REDIS === "1" || process.env.CI === "true"
+if (requireRedis && !hasRedis) {
+  throw new Error("REQUIRE_REAL_REDIS=1 (or CI=true) but redis-server is not on PATH: the real-Redis suite must run, not skip")
+}
 const LOCK = "enquiry:dd:l:test"
 const STATE = "enquiry:dd:s:test"
 

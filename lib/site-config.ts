@@ -28,7 +28,7 @@ const secondaryPhone: Phone = {
 
 export const siteConfig = {
   name: "Jolu Security",
-  url: "https://www.jolusecurity.com",
+  url: "https://jolusecurity.com",
   // No geographic-coverage wording: coverage is unverified (lib/offices.ts, lib/claims.ts).
   description: "Security services: guarding, events, K9, CCTV, electric fencing, alarm response and VIP protection.",
   logo: {

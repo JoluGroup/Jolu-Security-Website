@@ -114,7 +114,7 @@ describe("structured data is gated on approved evidence", () => {
     const site = data["@graph"].find((n) => n["@type"] === "WebSite")
     assert.equal(org.name, "JOLU SECURITY")
     assert.equal(org.alternateName, "Jolu Security")
-    assert.equal(org.logo.url, "https://www.jolusecurity.com/lovable-uploads/jolu-logo.png")
+    assert.equal(org.logo.url, "https://jolusecurity.com/lovable-uploads/jolu-logo.png")
     assert.equal(org.email, "info@jolusecurity.com")
     assert.deepEqual(org.contactPoint.map((c) => c.telephone), ["+254790298003", "+254705038679"])
     assert.equal(site.publisher["@id"], org["@id"])
@@ -176,7 +176,7 @@ describe("approved contact information and branding are unchanged", () => {
   it("the logo reference and the brand name are unchanged and rendered", async () => {
     assert.deepEqual(siteConfig.logo, { src: "/lovable-uploads/jolu-logo.png", alt: "Jolu Security logo" })
     assert.equal(siteConfig.name, "Jolu Security")
-    assert.equal(siteConfig.url, "https://www.jolusecurity.com")
+    assert.equal(siteConfig.url, "https://jolusecurity.com")
     const html = await renderComponent("components/site-footer.tsx", "SiteFooter")
     assert.ok(html.includes('src="/lovable-uploads/jolu-logo.png"'))
     assert.ok(statSync(path.join(ROOT, "public/lovable-uploads/jolu-logo.png")).isFile())

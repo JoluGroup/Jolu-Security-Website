@@ -13,7 +13,7 @@ const SOCIAL_IMAGE = {
 } as const
 
 /**
- * Absolute canonical URL for a live path. The root has no trailing slash ("https://www.jolusecurity.com"),
+ * Absolute canonical URL for a live path. The root has no trailing slash ("https://jolusecurity.com"),
  * which is exactly what Next.js renders into <link rel="canonical">, so sitemap and canonical match character for character.
  */
 export function canonicalUrl(path: string): string {

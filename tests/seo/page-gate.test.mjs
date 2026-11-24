@@ -197,9 +197,9 @@ test("every field the components render is a field the gate scans (F-06)", () =>
 
 test("sitemap and robots are unchanged; the sitemap never breaks and lists no new URL (F-09)", () => {
   const entries = sitemap()
-  assert.deepEqual(entries.map((e) => e.url), ["https://www.jolusecurity.com"])
+  assert.deepEqual(entries.map((e) => e.url), ["https://jolusecurity.com"])
   assert.deepEqual(robots().rules, [{ userAgent: "*", allow: "/", disallow: ["/api/"] }])
-  assert.equal(robots().sitemap, "https://www.jolusecurity.com/sitemap.xml")
+  assert.equal(robots().sitemap, "https://jolusecurity.com/sitemap.xml")
   assert.ok(/try \{[\s\S]*publishedPagePaths\(\)[\s\S]*\} catch/.test(read("app/sitemap.ts")))
 })
 

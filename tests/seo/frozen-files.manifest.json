@@ -63,7 +63,7 @@
     "scripts/seo/update-frozen-manifest.mjs": "778f9668eb1632dc3380eb65b4df2436e2e79ba028ea14178291a45dc810fe8d",
     "tests/assets/assets.test.mjs": "1822ae3cb540d33f1310a380dc37a981e57fc96799f2b8efd96512648ead91a4",
     "tests/ci/ci-workflow.test.mjs": "cdbdcef96f259444f4d5a706fe0384d3fe1e409b02f596afa1b06c42f9bd645f",
-    "tests/content/content-integrity.test.mjs": "1036d47b9cfbec8dfcb568a5eb9a2c3b801030569ff5df2f3c218fb83cdf926a",
+    "tests/content/content-integrity.test.mjs": "e38a92883165a0272612e3cbeeaf974476f46d04c09779b1011cf380f0f91426",
     "tests/content/render-helper.mjs": "61a6c1b0deee32821471c9b7f02a36eedd34d0d2a444ed7fde82f94afb8514ce",
     "tests/enquiry/client-ip.test.mjs": "2049d679d1a855d5f9b7c68c07c46ea2ac859643f756a98aa601d87cc6ddcd7d",
     "tests/enquiry/dedup-ownership.test.mjs": "827bfa0df55078fd946fed8d7fedc2ba832d568f70c496ca126a8af57a48c8a8",
@@ -87,12 +87,12 @@
     "tests/seo/frozen-files-mutation.test.mjs": "2a1ae76e1cef24efff52f463396bc72a5831c72938c4b85ebcc8cd9033f72a6a",
     "tests/seo/frozen-files.test.mjs": "015dae60c04a6ca57bf3100e5438a47067b45a3d2dc57dcaf4b01b4779e7bf65",
     "tests/seo/licence-supersession.test.mjs": "8f25fab07ab4d1ad075b7222e7c0515b2601666e27b4bd5aaa7780bdce00629f",
-    "tests/seo/manifest-routes.test.mjs": "6034bb1d805d4f488b45cd015b0fd5270355c2bf7f8ca3db5437e634d8ffba69",
+    "tests/seo/manifest-routes.test.mjs": "7513a3911393f84989d71e999f326a167a930eabd7c01cf9d1ca5ed99242482d",
     "tests/seo/page-gate-mutation.test.mjs": "2956e0249fcc7e91bd3ba3dd0af1c6fadb9bb8be314689b7e275c0ab49ce7cf4",
-    "tests/seo/page-gate.test.mjs": "eae758adb1efebd4e95c1bd639b38e573589baf3ca8a7f08f9a902ca280e6386",
+    "tests/seo/page-gate.test.mjs": "b8675f47168e38ef779e03de93c5766d0b7464d57693280745a2ad378dcff1c3",
     "tests/seo/publication-clock.test.mjs": "28a00f409d19bb590d1adb654b01265f94aa99131a24926294aa8f70310ad399",
     "tests/seo/scanner-sibling-closure.test.mjs": "bd859eea8393f2acc130f6bf401d8a1bc043179741efd6096473622d182df032",
-    "tests/seo/seo.test.mjs": "6080446db96cc095bfc3e9618fdbed9c5e07d88a4390ff3aef399817ddf362bd",
+    "tests/seo/seo.test.mjs": "d851b2d5597aa6cda03fa884f22caf07e910edac3535ad1f03f750320fdff403",
     "tsconfig.json": "be18523b23b78b6e1a876ddd107d330f0168bddf09d751b57e0b5edce69c66f3"
   }
 }

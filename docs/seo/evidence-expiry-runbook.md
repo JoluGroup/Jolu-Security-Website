@@ -89,8 +89,8 @@ Do this only with the owner's written authorisation. It is a reviewed code chang
 
 After the deployment:
 
-1. `curl -I https://www.jolusecurity.com/<path>` returns `404`.
-2. `curl -s https://www.jolusecurity.com/sitemap.xml` no longer contains the path.
+1. `curl -I https://jolusecurity.com/<path>` returns `404`.
+2. `curl -s https://jolusecurity.com/sitemap.xml` no longer contains the path.
 3. The homepage and other pages no longer link to it (search the page source for the path).
 4. The page's structured data no longer appears in any other page (search for the page's `@id`).
 5. Ask the owner to request removal from search results if the page was already indexed.

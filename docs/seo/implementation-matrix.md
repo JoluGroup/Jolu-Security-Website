@@ -52,8 +52,8 @@ The CLUSTER STRATEGY sheet totals 309 keywords; the Keyword Master has 311. The 
 
 | Route | Indexable | Title | Canonical | In sitemap |
 |---|---|---|---|---|
-| `/` | yes | JOLU SECURITY \| Professional Security Services | `https://www.jolusecurity.com` | yes |
-| `/blog` | no (noindex, follow; placeholder) | Blog \| JOLU SECURITY | `https://www.jolusecurity.com/blog` | no |
+| `/` | yes | JOLU SECURITY \| Professional Security Services | `https://jolusecurity.com` | yes |
+| `/blog` | no (noindex, follow; placeholder) | Blog \| JOLU SECURITY | `https://jolusecurity.com/blog` | no |
 
 ## 4. Homepage keyword mapping (live `/`)
 

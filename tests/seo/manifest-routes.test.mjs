@@ -87,7 +87,7 @@ test("end to end with the real gate: a published synthetic page reaches the site
   // the same record without its manifest entry is not publishable, so it could never be listed
   assert.equal(publishRecord(w.record, { ...w.deps, manifest: [] }), null)
   // and the production sitemap (empty manifest) lists only the homepage, whatever records exist
-  assert.deepEqual(sitemap().map((e) => e.url), ["https://www.jolusecurity.com"])
+  assert.deepEqual(sitemap().map((e) => e.url), ["https://jolusecurity.com"])
   assert.deepEqual(getPublishedPages(), [])
   // route verification of that manifest entry fails unless a real route exists
   assert.equal(withTree({}, (d) => R.verifyManifestRoutes(w.deps.manifest, d)).problems.length > 0, true)

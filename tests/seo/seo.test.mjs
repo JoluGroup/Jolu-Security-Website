@@ -18,7 +18,7 @@ const { COPY_REVIEW_ITEMS, COPY_REVIEW_PATTERN } = await import("@/lib/seo/copy-
 const { SERVICES } = await import("@/lib/services")
 
 const ROOT = path.resolve(import.meta.dirname, "../..")
-const SITE = "https://www.jolusecurity.com"
+const SITE = "https://jolusecurity.com"
 
 const stripComments = (src) => src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1")
 function publicSourceFiles() {
@@ -505,5 +505,37 @@ describe("docs/seo/implementation-matrix.md agrees with the workbook-derived dat
     assert.equal(/\b\d[\d,.]*\s*(searches|\/mo\b|per month|monthly searches|KES)/i.test(doc), false)
     assert.equal(/\b(difficulty|ranking|position)\s*[:=]\s*\d/i.test(doc), false)
     assert.ok(/Not validated/.test(doc))
+  })
+})
+
+describe("canonical host is the apex (https://jolusecurity.com), never www", () => {
+  const APEX = "https://jolusecurity.com"
+  it("uses the apex everywhere a canonical origin is emitted", () => {
+    assert.equal(siteConfig.url, APEX)
+    assert.equal(new URL(siteConfig.url).hostname, "jolusecurity.com")
+    assert.equal(rootMetadata.metadataBase.origin, APEX)
+    assert.equal(canonicalUrl("/"), APEX)
+    assert.equal(robots().sitemap, `${APEX}/sitemap.xml`)
+    const blob = JSON.stringify([
+      sitemap(),
+      robots(),
+      buildHomeJsonLd(),
+      pageMetadata("/"),
+      ...LIVE_PAGES.map((p) => canonicalUrl(p.path)),
+    ])
+    assert.equal(/\/\/www\.jolusecurity\.com/i.test(blob), false)
+    assert.ok(blob.includes(APEX))
+  })
+  it("has no hard-coded www canonical origin in application or library source", () => {
+    const hits = []
+    const walk = (dir) => {
+      for (const name of readdirSync(dir)) {
+        const full = path.join(dir, name)
+        if (statSync(full).isDirectory()) walk(full)
+        else if (/\.(tsx?|mdx?|json|webmanifest)$/.test(name) && /\/\/www\.jolusecurity\.com/i.test(readFileSync(full, "utf8"))) hits.push(full)
+      }
+    }
+    for (const dir of ["app", "components", "lib", "public"]) walk(path.join(ROOT, dir))
+    assert.deepEqual(hits, [])
   })
 })

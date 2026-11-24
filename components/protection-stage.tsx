@@ -198,8 +198,12 @@ function HeroActions({ tab }: { tab?: number }) {
 function IntroCopy({ active }: { active: boolean }) {
   return (
     <motion.div
-      className={cn("flex flex-col gap-6 [@media(max-height:640px)]:gap-4 [@media(max-height:480px)]:gap-2!", !active && "pointer-events-none")}
-      initial={{ opacity: 0, y: 24 }}
+      // Server-rendered visible so the h1 paints before hydration; the entrance is a CSS animation, not a JS-gated opacity:0 state.
+      className={cn(
+        "flex flex-col gap-6 [@media(max-height:640px)]:gap-4 [@media(max-height:480px)]:gap-2! duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:animate-in motion-safe:slide-in-from-bottom-6",
+        !active && "pointer-events-none",
+      )}
+      initial={false}
       animate={active ? { opacity: 1, y: 0 } : { opacity: 0, y: -24 }}
       transition={{ duration: 0.7, ease: EASE }}
     >

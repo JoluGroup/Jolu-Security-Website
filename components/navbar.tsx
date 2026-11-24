@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent } from "react"
 import { Mail, MessageCircle, Phone, X } from "lucide-react"
 import { BrandLogo } from "@/components/brand-logo"
 import { OfficeList } from "@/components/office-list"
@@ -31,10 +31,50 @@ function useActiveSection() {
   return active
 }
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/**
+ * While the full-screen menu is open, make every other top-level part of the page inert so keyboard
+ * focus and assistive tech cannot reach it (Base UI's focus guards alone let Tab reach the skip link
+ * or the browser chrome). Restored on close, before Base UI returns focus to the Menu trigger.
+ */
+function useInertPage(open: boolean) {
+  useEffect(() => {
+    if (!open) return
+    const marked: HTMLElement[] = []
+    for (const el of Array.from(document.body.children)) {
+      if (!(el instanceof HTMLElement)) continue
+      if (el.tagName === "SCRIPT" || el.tagName === "NEXT-ROUTE-ANNOUNCER" || el.hasAttribute("inert")) continue
+      if (el.querySelector('[role="dialog"]') || el.hasAttribute("data-base-ui-inert")) continue
+      el.setAttribute("inert", "")
+      marked.push(el)
+    }
+    return () => marked.forEach((el) => el.removeAttribute("inert"))
+  }, [open])
+}
+
+/** Keep Tab and Shift+Tab cycling inside the menu panel. */
+function trapTab(event: KeyboardEvent<HTMLElement>) {
+  if (event.key !== "Tab") return
+  const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(FOCUSABLE)).filter((el) => el.getClientRects().length > 0)
+  if (items.length === 0) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  const current = document.activeElement
+  if (event.shiftKey && (current === first || current === event.currentTarget || !event.currentTarget.contains(current))) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && (current === last || !event.currentTarget.contains(current))) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 export function Navbar() {
   const [open, setOpen] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
   const active = useActiveSection()
+  useInertPage(open)
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -94,6 +134,7 @@ export function Navbar() {
                 className="data-[side=top]:h-dvh data-[side=top]:max-h-dvh overflow-y-auto overscroll-contain border-0 bg-background p-0"
                 showCloseButton={false}
                 initialFocus={closeRef}
+                onKeyDown={trapTab}
               >
                 <MenuPanel onNavigate={() => setOpen(false)} closeRef={closeRef} />
               </SheetContent>

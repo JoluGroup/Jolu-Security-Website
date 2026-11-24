@@ -252,7 +252,7 @@ describe("Redis failures", () => {
 
   it("if recording the result fails after sending, the visitor still gets the true outcome (sent)", async () => {
     liveEnv()
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
+    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL" && c[1] === dedup.FINALIZE_SCRIPT)
     const res = await post()
     assert.equal(res.status, 200)
     assert.equal((await res.json()).state, "accepted")
@@ -425,18 +425,20 @@ describe("test mode", () => {
 })
 
 describe("interaction with the existing rate limits", () => {
-  it("duplicates still count toward the global cap, which refuses with 429 before the duplicate check", async () => {
+  it("duplicates do NOT consume hourly or daily quota (the duplicate check runs before the site-wide charge)", async () => {
     liveEnv()
-    process.env.ENQUIRY_GLOBAL_LIMIT = "3"
-    assert.equal((await post()).status, 200) // sends
-    assert.equal((await (await post()).json()).duplicate, true)
-    assert.equal((await (await post()).json()).duplicate, true)
-    const txBefore = fake.transactions.length
-    const limited = await post()
+    process.env.ENQUIRY_GLOBAL_LIMIT = "2"
+    process.env.ENQUIRY_DAILY_LIMIT = "2"
+    assert.equal((await post()).status, 200) // sends: charges one slot of each
+    for (let i = 0; i < 5; i++) assert.equal((await (await post()).json()).duplicate, true)
+    assert.equal(fake.store.get("enquiry:rl:global").value, 1)
+    assert.equal(fake.store.get("enquiry:rl:global:day").value, 1)
+    // A genuinely different enquiry still has the second slot, then the cap refuses the third.
+    assert.equal((await post({ ...VALID, details: "Second, different enquiry text here." })).status, 200)
+    const limited = await post({ ...VALID, details: "Third, different enquiry text here." })
     assert.equal(limited.status, 429)
     assert.ok(limited.headers.get("retry-after"))
-    assert.equal(fake.transactions.slice(txBefore).some(isDedupTx), false)
-    assert.equal(resendCalls.length, 1)
+    assert.equal(resendCalls.length, 2)
   })
 
   it("per-client limits apply to repeated identical submissions in trusted-proxy mode", async () => {

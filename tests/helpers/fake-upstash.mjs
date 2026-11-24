@@ -1,7 +1,7 @@
 // A local stand-in for the Upstash Redis REST API, used ONLY by the automated tests.
 // It models the documented behaviour of the few commands the limiter uses
 // (POST /multi-exec; SET key value EX seconds [NX]; GET; DEL; INCR; PTTL; EXPIRE; EVAL of the
-// dedup finalize script only) with a virtual
+// the dedup finalize script and the site-wide ADMIT_SCRIPT only) with a virtual
 // clock, and rejects any other command or option shape. It is a MODEL of Upstash,
 // not the real service: integration with a real database is verified separately.
 import http from "node:http"
@@ -10,6 +10,7 @@ import http from "node:http"
 // exact text and applies the same rules in JavaScript below. The script itself was checked against a real
 // Redis server (see the milestone report); a model of it here only drives the HTTP-level tests.
 const { FINALIZE_SCRIPT } = await import("@/lib/enquiry/dedup")
+const { ADMIT_SCRIPT } = await import("@/lib/enquiry/rate-limit")
 
 export async function startFakeUpstash() {
   const state = {
@@ -47,6 +48,38 @@ export async function startFakeUpstash() {
         return { result: existed ? 1 : 0 }
       }
       case "EVAL": {
+        if (key === ADMIT_SCRIPT) {
+          // [2, hourlyKey, dailyKey, hourlyLimit, hourlyWindow, dailyLimit, dailyWindow]. Same rules as ADMIT_SCRIPT.
+          if (args.length !== 7 || args[0] !== "2") return { error: "ERR unsupported script" }
+          const [, hk, dk, hl, hw, dl, dw] = args
+          const read = (k, window) => {
+            const e = live(k)
+            if (!e) return [0, Number(window) * 1000]
+            if (e.expiresAt === null) e.expiresAt = state.nowMs + Number(window) * 1000
+            if (typeof e.value !== "number") return null
+            return [e.value, e.expiresAt - state.nowMs]
+          }
+          const h = read(hk, hw)
+          const d = read(dk, dw)
+          if (!h || !d) return { error: "ERR counter is not a number" }
+          let which = 0
+          let wait = 0
+          if (h[0] >= Number(hl)) {
+            which = 1
+            wait = h[1]
+          }
+          if (d[0] >= Number(dl) && (which === 0 || d[1] > wait)) {
+            which = 2
+            wait = d[1]
+          }
+          if (which) return { result: [0, which, wait] }
+          for (const [k, w] of [[hk, hw], [dk, dw]]) {
+            const e = live(k) ?? { value: 0, expiresAt: state.nowMs + Number(w) * 1000 }
+            e.value += 1
+            state.store.set(k, e)
+          }
+          return { result: [1, 0, 0] }
+        }
         // [numkeys, lockKey, stateKey, token, value, ttl]. Same rules as FINALIZE_SCRIPT.
         if (key !== FINALIZE_SCRIPT || args.length !== 6 || args[0] !== "2") return { error: "ERR unsupported script" }
         const [, lockKey, stateKey, token, value, ttl] = args

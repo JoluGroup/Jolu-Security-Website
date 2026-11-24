@@ -70,6 +70,8 @@ const liveEnv = () => {
 const accept = (i, id = `email_${i}`) => gates[i].resolve(new Response(JSON.stringify({ id }), { status: 200 }))
 const refuse = (i) => gates[i].resolve(new Response("{}", { status: 422 }))
 const unsure = (i) => gates[i].resolve(new Response("{}", { status: 500 }))
+// Only the dedup finalize script; the site-wide ADMIT_SCRIPT is also an EVAL and must keep working.
+const isFinalizeEval = (c) => c[0] === "EVAL" && c[1] === dedup.FINALIZE_SCRIPT
 const keys = (kind) => [...fake.store.keys()].filter((k) => k.startsWith(`enquiry:dd:${kind}:`))
 const lockValue = () => fake.store.get(keys("l")[0])?.value
 const stateValue = () => fake.store.get(keys("s")[0])?.value
@@ -291,7 +293,7 @@ describe("Redis failures during finalization", () => {
     const logged = []
     mock.restoreAll()
     mock.method(console, "info", (line) => logged.push(String(line)))
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
+    fake.failIf = (cmds) => cmds.some(isFinalizeEval)
 
     const first = post()
     await waitFor(() => resendCalls.length === 1)
@@ -318,7 +320,7 @@ describe("Redis failures during finalization", () => {
 
   it("an uncertain result followed by a Redis failure is still reported as uncertain, never as success", async () => {
     liveEnv()
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
+    fake.failIf = (cmds) => cmds.some(isFinalizeEval)
     const p = post()
     await waitFor(() => resendCalls.length === 1)
     unsure(0)
@@ -329,7 +331,7 @@ describe("Redis failures during finalization", () => {
 
   it("a refusal followed by a Redis failure is still reported as a refusal and the lock expires on its own", async () => {
     liveEnv()
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
+    fake.failIf = (cmds) => cmds.some(isFinalizeEval)
     const p = post()
     await waitFor(() => resendCalls.length === 1)
     refuse(0)
@@ -344,7 +346,7 @@ describe("Redis failures during finalization", () => {
   it("finishDedup reports 'error' when Redis fails and never throws", async () => {
     liveEnv()
     const a = await dedup.beginDedup(ENQ, "JS-20260101-AAAAAA")
-    fake.failIf = (cmds) => cmds.some((c) => c[0] === "EVAL")
+    fake.failIf = (cmds) => cmds.some(isFinalizeEval)
     assert.equal(await dedup.finishDedup(a.handle, "sent", a.ref), "error")
     fake.failIf = null
     fake.mode = "garbage"
@@ -393,16 +395,22 @@ describe("interaction with rate limits and test mode", () => {
     assert.equal(fake.store.get("enquiry:rl:global").value, 2, "one count per request, none added by finalizing")
   })
 
-  it("rate-limited requests never reach the dedup keys or script", async () => {
+  it("a request refused by the site-wide cap sends nothing, and releases its dedup lock without recording a state", async () => {
     liveEnv()
     process.env.ENQUIRY_GLOBAL_LIMIT = "1"
     const a = post()
     await waitFor(() => resendCalls.length === 1)
     accept(0)
     await a
-    const before = fake.transactions.length
-    assert.equal((await post()).status, 429)
-    assert.equal(fake.transactions.slice(before).some((t) => t.some((c) => c[0] === "EVAL" || String(c[1]).startsWith("enquiry:dd:"))), false)
+    const other = { ...VALID, details: "A different enquiry, so it is not a duplicate of the first one." }
+    const res = await post(other)
+    assert.equal(res.status, 429)
+    assert.equal(resendCalls.length, 1)
+    // The refused request claimed and then released its lock (finalize with "record nothing").
+    assert.equal(keys("l").length, 0, "no lock left behind by the refused request")
+    assert.equal(keys("s").length, 1, "only the first enquiry has a recorded state")
+    // So an immediate retry of the refused enquiry is not blocked as in-progress: it gets 429 again, not 409.
+    assert.equal((await post(other)).status, 429)
   })
 
   it("test mode never claims, finalizes (EVAL), or contacts Resend", async () => {
@@ -414,7 +422,7 @@ describe("interaction with rate limits and test mode", () => {
     process.env.ENQUIRY_TO = "inbox@example.test"
     for (let i = 0; i < 3; i++) assert.equal((await post()).status, 200)
     assert.equal(resendCalls.length, 0)
-    assert.equal(fake.transactions.some((t) => t.some((c) => c[0] === "EVAL" || String(c[1]).startsWith("enquiry:dd:"))), false)
+    assert.equal(fake.transactions.some((t) => t.some((c) => isFinalizeEval(c) || String(c[1]).startsWith("enquiry:dd:"))), false)
   })
 })
 

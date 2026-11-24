@@ -62,7 +62,7 @@ describe("fixed-duration window (Upstash path)", () => {
   it("sets the expiry only when the window is created (SET ... EX ... NX, INCR, PTTL in one transaction)", async () => {
     await hits("v4:4.4.4.4", 2)
     assert.equal(fake.transactions.length, 6) // peek + client + global, per request
-    assert.deepEqual(fake.transactions[0].map((c) => c[0]), ["GET", "PTTL"]) // the peek is read-only
+    assert.deepEqual(fake.transactions[0].map((c) => c[0]), ["GET", "PTTL", "GET", "PTTL"]) // the peek is read-only (hourly + daily)
     const client = fake.transactions[1]
     assert.deepEqual(client.map((c) => c[0]), ["SET", "INCR", "PTTL"])
     assert.deepEqual(client[0].slice(2), [0, "EX", 600, "NX"])
@@ -81,8 +81,8 @@ describe("fixed-duration window (Upstash path)", () => {
     fake.store.set("enquiry:rl:global", { value: 0, expiresAt: null })
     const result = await checkRateLimit(null)
     assert.equal(result.ok, true)
-    assert.ok(fake.transactions.some((t) => t[0][0] === "EXPIRE"))
     assert.notEqual(fake.store.get("enquiry:rl:global").expiresAt, null)
+    assert.equal(fake.store.get("enquiry:rl:global").value, 1)
   })
 })
 
@@ -93,7 +93,7 @@ describe("global and per-client limits", () => {
     assert.deepEqual(results.map((r) => r.ok), [true, true, true, false])
     assert.equal(results[3].scope, "global")
     assert.equal(results[3].retryAfterSeconds, 3600)
-    assert.deepEqual([...fake.store.keys()], ["enquiry:rl:global"])
+    assert.deepEqual([...fake.store.keys()].sort(), ["enquiry:rl:global", "enquiry:rl:global:day"])
   })
 
   it("global limit stays effective across different trusted clients", async () => {
@@ -173,8 +173,10 @@ describe("global and per-client limits", () => {
     assert.deepEqual(getRateLimitConfig(), {
       clientLimit: 7,
       clientWindowSeconds: 600,
-      globalLimit: 200,
+      globalLimit: 30,
       globalWindowSeconds: 3600,
+      dailyLimit: 80,
+      dailyWindowSeconds: 86400,
     })
   })
 })

@@ -5,7 +5,7 @@ Status: partially mitigated in this change. One residual risk needs an owner dec
 ## Finding (confirmed at base commit 9e8e742)
 
 With `ENQUIRY_TRUSTED_PROXY` unset (the default), no forwarded header is trusted, every client shares one
-identity, and only the global limit applies (default 200 per hour, fixed window). `app/api/enquiry/route.ts`
+identity, and only the global limit applies (default then 200 per hour, fixed window; the default is now 30 per hour, see daily-limit.md). `app/api/enquiry/route.ts`
 charged that counter before the body was read, so malformed JSON, validation failures and honeypot hits each
 used one of the 200. About 200 junk POSTs per hour were enough to answer every real visitor with 429 until the
 window ended (up to an hour). Each junk request also cost an Upstash round trip (3 commands) forever, even
@@ -64,3 +64,9 @@ Recommended: add a Vercel Firewall rate-limit rule for `POST /api/enquiry` (for 
 minutes per IP, action: deny or challenge) in the dashboard. That is evaluated by Vercel before the function and
 does not depend on header trust. Do not enable `ENQUIRY_TRUSTED_PROXY=vercel` until the conditions in
 `trusted-client-ip.md` are confirmed, in particular that Cloudflare proxying is NOT in front of Vercel.
+
+## Update: hourly default and new daily cap
+
+See `docs/enquiry/daily-limit.md`. A daily site-wide cap (default 80 per 24 h) was added, the hourly default is now
+30, and duplicates no longer consume site-wide quota (the duplicate check now runs before the site-wide charge).
+The "a duplicate enquiry still uses a global slot" statement above is no longer true.

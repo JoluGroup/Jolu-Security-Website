@@ -190,19 +190,21 @@ async function handle(request: Request, progress: Progress): Promise<Response> {
     return respond({ ok: false, code: "invalid", errors: result.errors }, 400)
   }
 
-  // Site-wide cap: charged only for requests that passed validation. Every email send is preceded by
-  // exactly one successful charge (atomic counter), so the cap on emails per window is unchanged, and the
-  // check still fails closed (store unavailable => 503, nothing sent).
-  const globalLimit = await checkGlobalRateLimit({ allowMemory })
-  if (!globalLimit.ok) return refuse(globalLimit)
-
+  // Site-wide caps (hourly AND daily, one atomic script, see lib/enquiry/rate-limit.ts). A request is charged
+  // only when it is ADMITTED: it has passed the per-client limit, validation and (live mode) the duplicate
+  // check, and both caps have room. A refusal increments neither counter. Every email send is preceded by
+  // exactly one successful charge, and the charge fails closed (store unavailable => 503, nothing sent).
   if (mode === "test") {
+    // Test mode has no duplicate protection and sends nothing; it is still counted so previews exercise the caps.
+    const testLimit = await checkGlobalRateLimit({ allowMemory })
+    if (!testLimit.ok) return refuse(testLimit)
     log("test_mode")
     return respond({ ok: true, delivered: false, mode: "test" }, 200)
   }
 
-  // Duplicate protection (live mode only; test mode returned above and never reaches this point).
-  // Identical enquiries within 10 minutes send at most one email; see lib/enquiry/dedup.ts.
+  // Duplicate protection (live mode only). Identical enquiries within 10 minutes send at most one email; see
+  // lib/enquiry/dedup.ts. This runs BEFORE the site-wide charge, so a duplicate (or an in-progress retry)
+  // never consumes hourly or daily quota.
   const claim = await beginDedup(result.data, createRef())
   if (claim.kind === "unavailable") {
     // Nothing has been sent yet, so telling the visitor "nothing was sent" is accurate.
@@ -214,9 +216,17 @@ async function handle(request: Request, progress: Progress): Promise<Response> {
     return respond({ ok: false, code: "in_progress" }, 409)
   }
   if (claim.kind === "duplicate") {
-    // An identical enquiry was already accepted. Same reference, nothing new is sent.
+    // An identical enquiry was already accepted. Same reference, nothing new is sent, no quota is used.
     log("duplicate", claim.ref)
     return respond({ ok: true, ref: claim.ref, state: "accepted", duplicate: true }, 200)
+  }
+
+  const globalLimit = await checkGlobalRateLimit({ allowMemory })
+  if (!globalLimit.ok) {
+    // We hold the dedup lock but will not send: release it (records nothing) so an immediate retry is not
+    // blocked for the 30 s lock lifetime. Best effort; the lock expires by itself otherwise.
+    await finishDedup(claim.handle, "failed", claim.ref).catch(() => undefined)
+    return refuse(globalLimit)
   }
 
   const { ref, handle } = claim

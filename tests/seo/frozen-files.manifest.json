@@ -54,7 +54,7 @@
     "package.json": "e41fcd0b4608fab8897d1bd2251126cc00a17bc1c32c81df6855ffcfcc9c6029",
     "pnpm-lock.yaml": "3325777de7452144e9df25ee7084f6c46384aa8b933aff0272e300260341cd4b",
     "pnpm-workspace.yaml": "6f096f437a72ffe947829a23631ecb9992533a8b307f4978e4ebfa27b2318be6",
-    "scripts/assets/asset-rules.mjs": "860c289f47294e221c52034e699ba80e733e95e6fad9665fe4c34e7c5929b0c1",
+    "scripts/assets/asset-rules.mjs": "6d55f4d4ab5bab0555892b8bf76abf4b3ba7b244615c4f9316ff523b402501b5",
     "scripts/assets/build-inventory.mjs": "1f9a9b1e8b4f7f281a96adacf1e59742d69892067e91a9d8bc2da1bdd440820a",
     "scripts/assets/check-public-assets.mjs": "20470608c401be814aec951f96a4e0f5b48f9312c9c5ab5c7c05b206f316d09f",
     "scripts/check-evidence-freshness.mjs": "dba5487ffaf8a58961632bfe38dd3fbb5f4150685950fc5352bd937c396c9217",
@@ -92,7 +92,7 @@
     "tests/seo/page-gate.test.mjs": "eae758adb1efebd4e95c1bd639b38e573589baf3ca8a7f08f9a902ca280e6386",
     "tests/seo/publication-clock.test.mjs": "28a00f409d19bb590d1adb654b01265f94aa99131a24926294aa8f70310ad399",
     "tests/seo/scanner-sibling-closure.test.mjs": "bd859eea8393f2acc130f6bf401d8a1bc043179741efd6096473622d182df032",
-    "tests/seo/seo.test.mjs": "318f1bf0bda3bb4497d6a900146de0191d8bc3dde78c38b384f15ac862307e22",
+    "tests/seo/seo.test.mjs": "6080446db96cc095bfc3e9618fdbed9c5e07d88a4390ff3aef399817ddf362bd",
     "tsconfig.json": "be18523b23b78b6e1a876ddd107d330f0168bddf09d751b57e0b5edce69c66f3"
   }
 }

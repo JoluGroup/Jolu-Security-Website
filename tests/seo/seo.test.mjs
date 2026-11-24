@@ -108,9 +108,9 @@ describe("page metadata", () => {
       assert.equal(m.openGraph.siteName, BRAND)
       assert.equal(m.openGraph.type, "website")
       assert.equal(m.openGraph.locale, "en_KE")
-      assert.equal(m.openGraph.images[0].url, siteConfig.logo.src)
-      assert.deepEqual([m.openGraph.images[0].width, m.openGraph.images[0].height], [501, 501])
-      assert.equal(m.twitter.card, "summary")
+      assert.equal(m.openGraph.images[0].url, "/brand/jolu-preview.png")
+      assert.deepEqual([m.openGraph.images[0].width, m.openGraph.images[0].height], [1200, 630])
+      assert.equal(m.twitter.card, "summary_large_image")
       assert.equal(m.twitter.title, full)
       assert.equal(m.twitter.description, m.description)
     }

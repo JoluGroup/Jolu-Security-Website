@@ -4,8 +4,13 @@ import { getLivePage, HOME_DESCRIPTION, HOME_TITLE } from "@/lib/seo/pages"
 import type { LivePage } from "@/lib/seo/types"
 import { siteConfig } from "@/lib/site-config"
 
-/** Square logo, the only approved brand image. Replace with a dedicated social image when one is approved. */
-const SOCIAL_IMAGE = { url: siteConfig.logo.src, width: 501, height: 501, alt: siteConfig.logo.alt } as const
+/** Social share card (1200x630), derived from the approved logo and brand typography: scripts/brand/build-brand-assets.py. */
+const SOCIAL_IMAGE = {
+  url: "/brand/jolu-preview.png",
+  width: 1200,
+  height: 630,
+  alt: "JOLU SECURITY: Confidence in every layer of protection",
+} as const
 
 /**
  * Absolute canonical URL for a live path. The root has no trailing slash ("https://www.jolusecurity.com"),
@@ -22,6 +27,15 @@ export const rootMetadata: Metadata = {
   title: { default: HOME_TITLE, template: `%s | ${BRAND}` },
   description: HOME_DESCRIPTION,
   applicationName: BRAND,
+  manifest: "/manifest.webmanifest",
+  // All derived from the approved logo (scripts/brand/build-brand-assets.py). app/favicon.ico is served automatically.
+  icons: {
+    icon: [
+      { url: "/brand/icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 }
 
 /**
@@ -48,7 +62,7 @@ export function pageMetadata(path: LivePage["path"]): Metadata {
       images: [SOCIAL_IMAGE],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: fullTitle,
       description: page.description,
       images: [{ url: SOCIAL_IMAGE.url, alt: SOCIAL_IMAGE.alt }],

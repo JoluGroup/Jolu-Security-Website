@@ -8,6 +8,13 @@ export const MEDIA_EXT = /\.(png|jpe?g|gif|webp|avif|svg|ico|bmp|tiff?|heic|pdf|
 /** Non-photo brand/framework assets allowed directly under public/, pinned by SHA-256. */
 export const BRAND_ALLOWLIST = {
   "lovable-uploads/jolu-logo.png": "aa9d5c37dbb24bc66898ac9542b2720abc9b650e110fa9c253ae0920c5196358",
+  "brand/apple-touch-icon.png": "f4951086a638553b757af98e0d165055bbcbb8dcb72a7ebdaad2d65da978e3d4",
+  "brand/icon-192.png": "fdd23aa74c0e1277e2b9c245778dac85369e12ba5fc6e6e9f7aced2a82184d25",
+  "brand/icon-32.png": "009bcd6cc63683832f64297444d86b9f805e2ce343f518df7c700286ca093c6c",
+  "brand/icon-512.png": "daee713ab72388f6eba216512054cdc0c2bb79a46e381723f1b16b5fe1a9570e",
+  "brand/icon-maskable-512.png": "514717aebea384faa6cc1f98d65d9497d00ac33e09f2cad7e063c16d18a4ced3",
+  "brand/jolu-preview.png": "0729d4fb88742ae14a15d58a6dc9ffd54c304d59b1578834c5a8cc62fb0aff72",
+  "manifest.webmanifest": "1a0a0c8715183a12c33420fdebe7d33b3132602a37ec17d1d04bda92468ada77",
   "file.svg": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
   "globe.svg": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
   "next.svg": "55995dfad6ecb4945a1e856ddca03c5e16aa5bf13fd21b4df6a74ae79357bcfc",

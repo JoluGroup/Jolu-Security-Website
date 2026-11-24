@@ -49,24 +49,65 @@ test("CI refuses tracked dependency, build and machine-local files, before any i
 })
 
 // ---- Mandatory real-Redis execution ----
-// Pure check used by the real tests and by the mutation tests below.
+// Pure structural check used by the real test and by the mutation tests below.
+// Comments are stripped first (full-line comments only; the gate lines are then matched whole, so a trailing
+// comment, `|| true`, `&& true` or any other suffix makes a line fail to match).
+const stripComments = (t) => t.split("\n").filter((l) => !/^\s*#/.test(l)).join("\n")
+function stepBlock(text, name) {
+  const lines = stripComments(text).split("\n")
+  const start = lines.findIndex((l) => l.startsWith("      - name: ") && l.includes(name))
+  if (start < 0) return null
+  let end = lines.findIndex((l, i) => i > start && /^      - /.test(l))
+  if (end < 0) end = lines.length
+  return lines.slice(start, end)
+}
+const GATE_NAME = "Real-Redis suite must run (not skip)"
+const GATE_ALLOWED = [
+  /^      - name: Real-Redis suite must run \(not skip\)$/,
+  /^        run: \|$/,
+  /^          set -o pipefail$/,
+  /^          tap="\$RUNNER_TEMP\/redis-suite\.tap"$/,
+  /^          node --import \.\/tests\/register\.mjs --test --test-reporter=tap tests\/enquiry\/finalize-script\.redis\.test\.mjs \| tee "\$tap"$/,
+  /^          grep -Eq '\^# tests 7\$' "\$tap" \|\| \{ echo "[^"]*"; exit 1; \}$/,
+  /^          grep -Eq '\^# skipped 0\$' "\$tap" \|\| \{ echo "[^"]*"; exit 1; \}$/,
+  /^          grep -Eq '\^# fail 0\$' "\$tap" \|\| \{ echo "[^"]*"; exit 1; \}$/,
+  /^          rm -f "\$tap"$/,
+  /^\s*$/,
+]
 function redisGateProblems(text) {
-  const at = (n) => text.indexOf(n)
   const problems = []
-  const install = at("apt-get install -y --no-install-recommends redis-server")
-  const unit = at("run: pnpm test")
-  const gate = at("Real-Redis suite must run (not skip)")
-  const guard2 = text.indexOf("node scripts/seo/frozen-files.mjs --check", text.indexOf("node scripts/seo/frozen-files.mjs --check") + 1)
+  const at = (n) => text.indexOf(n)
+  const code = stripComments(text)
+  const ci_ = (n) => code.indexOf(n)
+  const install = ci_("apt-get install -y --no-install-recommends redis-server")
+  const unit = ci_("run: pnpm test")
+  const gate = ci_("- name: " + GATE_NAME)
+  const guard1 = ci_("node scripts/seo/frozen-files.mjs --check")
+  const guard2 = code.indexOf("node scripts/seo/frozen-files.mjs --check", guard1 + 1)
   if (install < 0) problems.push("redis install step missing")
-  if (install >= 0 && !(install > text.indexOf("git ls-files") && install < unit)) problems.push("redis install must follow the tracked-files check and precede the unit tests")
-  if (install >= 0 && !(install > text.indexOf("node scripts/seo/frozen-files.mjs --check"))) problems.push("redis install must follow the frozen-files guard")
-  if (!/REQUIRE_REAL_REDIS: "1"/.test(text)) problems.push("REQUIRE_REAL_REDIS env missing")
-  if (gate < 0) problems.push("real-redis gate step missing")
-  if (gate >= 0 && !(gate > unit)) problems.push("gate must run after the unit tests")
-  if (gate >= 0 && !text.includes("tests/enquiry/finalize-script.redis.test.mjs")) problems.push("gate must run the redis test file")
-  if (gate >= 0 && !(text.includes("# tests 7$") && text.includes("# skipped 0$"))) problems.push("gate must assert tests 7 and skipped 0")
-  if (gate >= 0 && !text.includes("set -o pipefail")) problems.push("gate must use pipefail")
-  if (!(guard2 > 0 && guard2 < (install < 0 ? Infinity : install) || guard2 < unit)) problems.push("frozen guard order broken")
+  if (install >= 0 && !(install > ci_("git ls-files") && install < unit)) problems.push("redis install must follow the tracked-files check and precede the unit tests")
+  if (install >= 0 && !(install > guard1)) problems.push("redis install must follow the frozen-files guard")
+  if (!(guard2 > 0 && guard2 < install)) problems.push("frozen guard (after install) must precede the redis install")
+  // Job-level env must force the real-Redis requirement.
+  const head = code.slice(0, code.indexOf("    steps:"))
+  if (!/^      REQUIRE_REAL_REDIS: "1"$/m.test(head)) problems.push("job env REQUIRE_REAL_REDIS missing")
+  // The unit-test step must not override it (or CI) at step level.
+  const unitStep = stepBlock(text, "Unit tests")
+  if (!unitStep) problems.push("unit test step missing")
+  else if (unitStep.some((l) => /^\s+(env:|if:|continue-on-error:)|REQUIRE_REAL_REDIS|\bCI\b/.test(l))) problems.push("unit step must not override env, condition or continue-on-error")
+  else if (!unitStep.some((l) => /^        run: pnpm test$/.test(l))) problems.push("unit step must run pnpm test")
+  const gateStep = stepBlock(text, GATE_NAME)
+  if (!gateStep) problems.push("real-redis gate step missing")
+  else {
+    if (!(gate > unit)) problems.push("gate must run after the unit tests")
+    if (gateStep.some((l) => /^\s+(if|continue-on-error|env|shell|working-directory|timeout-minutes):/.test(l))) problems.push("gate must have no if, continue-on-error, env or shell override")
+    for (const l of gateStep) if (!GATE_ALLOWED.some((re) => re.test(l))) problems.push("unexpected gate line: " + l.trim())
+    for (const must of [GATE_ALLOWED[2], GATE_ALLOWED[4], GATE_ALLOWED[5], GATE_ALLOWED[6], GATE_ALLOWED[7]]) if (!gateStep.some((l) => must.test(l))) problems.push("gate missing required line " + must)
+    const iNode = gateStep.findIndex((l) => GATE_ALLOWED[4].test(l)), iPipe = gateStep.findIndex((l) => GATE_ALLOWED[2].test(l))
+    if (iPipe < 0 || iNode < iPipe) problems.push("pipefail must precede the node pipeline")
+  }
+  if (gate >= 0 && !(gate < ci_("pnpm check:assets"))) problems.push("gate must precede asset checks")
+  void at
   return problems
 }
 
@@ -79,16 +120,30 @@ test("CI installs Redis from apt before the unit tests and gates on the real-Red
   assert.ok(order("Real-Redis suite must run (not skip)") < order("pnpm check:assets"))
 })
 
-test("mutation: removing the Redis install, the env gate or the post-test gate is detected", () => {
+test("mutation: removing or neutralising the Redis install, the env gate or the post-test gate is detected", () => {
   const cut = (from, to) => { const a = ci.indexOf(from), b = ci.indexOf(to); assert.ok(a > -1 && b > a, from); return ci.slice(0, a) + ci.slice(b) }
-  assert.ok(redisGateProblems(cut("      # The finalize-script tests run", "      - name: Unit tests")).length > 0, "install removed")
-  assert.ok(redisGateProblems(ci.replace('REQUIRE_REAL_REDIS: "1"', "")).length > 0, "env removed")
-  assert.ok(redisGateProblems(cut("      # Mandatory-Redis gate", "      # Fails if unapproved")).length > 0, "gate removed")
-  assert.ok(redisGateProblems(ci.replace("# skipped 0$", "")).length > 0, "skipped assertion removed")
-  assert.ok(redisGateProblems(ci.replace("set -o pipefail", "")).length > 0, "pipefail removed")
-  // Moving the install after the unit tests is detected.
+  const sub = (from, to) => { assert.ok(ci.includes(from), from); return ci.replace(from, to) }
+  const detected = (label, text) => assert.ok(redisGateProblems(text).length > 0, label)
+  detected("install removed", cut("      # The finalize-script tests run", "      - name: Unit tests"))
+  detected("env removed", sub('REQUIRE_REAL_REDIS: "1"', ""))
+  detected("gate removed", cut("      # Mandatory-Redis gate", "      # Fails if unapproved"))
+  detected("skipped assertion removed", sub("# skipped 0$", ""))
+  detected("pipefail removed", sub("set -o pipefail", ""))
   const moved = cut("      # The finalize-script tests run", "      - name: Unit tests") + "\n      - run: sudo apt-get install -y --no-install-recommends redis-server\n"
-  assert.ok(redisGateProblems(moved).length > 0, "install moved late")
+  detected("install moved late", moved)
+  // Neutralisers found by independent verification.
+  detected("&& true on skipped grep", sub(`"$tap" || { echo "Real-Redis suite had skipped tests"; exit 1; }`, `"$tap" && true || { echo "Real-Redis suite had skipped tests"; exit 1; }`))
+  detected("|| true on tests-7 grep", sub(`'^# tests 7$' "$tap" ||`, `'^# tests 7$' "$tap" || true; false ||`))
+  detected("|| true after node pipeline", sub(`| tee "$tap"\n`, `| tee "$tap" || true\n`))
+  detected("continue-on-error on gate", sub("      - name: Real-Redis suite must run (not skip)\n", "      - name: Real-Redis suite must run (not skip)\n        continue-on-error: true\n"))
+  detected("if: false on gate", sub("      - name: Real-Redis suite must run (not skip)\n", "      - name: Real-Redis suite must run (not skip)\n        if: false\n"))
+  detected("unit step overrides env", sub("      - name: Unit tests\n        run: pnpm test\n", '      - name: Unit tests\n        env:\n          REQUIRE_REAL_REDIS: "0"\n        run: pnpm test\n'))
+  detected("gate grep exit removed", sub(`|| { echo "Real-Redis suite had failures"; exit 1; }`, ""))
+  // A comment containing the expected text cannot satisfy the check.
+  const commented = sub("          grep -Eq '^# tests 7$'", "          # grep -Eq '^# tests 7$'")
+  detected("tests-7 check commented out", commented)
+  const commentOnly = sub(`grep -Eq '^# fail 0$' "$tap" || { echo "Real-Redis suite had failures"; exit 1; }`, `# grep -Eq '^# fail 0$' "$tap" || { echo "Real-Redis suite had failures"; exit 1; }`)
+  detected("fail-0 check replaced by a comment", commentOnly)
 })
 
 test("the real-Redis test file fails (not skips) when REQUIRE_REAL_REDIS=1 and redis-server is absent", async () => {

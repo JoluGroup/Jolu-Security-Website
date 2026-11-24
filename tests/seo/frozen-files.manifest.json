@@ -62,7 +62,7 @@
     "scripts/seo/frozen-files.mjs": "0f6054706522ac91b4f5c71b934cc1a2a29a9bfdfafe103b65dd891530cec5aa",
     "scripts/seo/update-frozen-manifest.mjs": "778f9668eb1632dc3380eb65b4df2436e2e79ba028ea14178291a45dc810fe8d",
     "tests/assets/assets.test.mjs": "1822ae3cb540d33f1310a380dc37a981e57fc96799f2b8efd96512648ead91a4",
-    "tests/ci/ci-workflow.test.mjs": "6e863502cd2be29519e2cbc38c64486c13f6b9f66a2fc061a888ecaf38a2d397",
+    "tests/ci/ci-workflow.test.mjs": "cdbdcef96f259444f4d5a706fe0384d3fe1e409b02f596afa1b06c42f9bd645f",
     "tests/content/content-integrity.test.mjs": "1036d47b9cfbec8dfcb568a5eb9a2c3b801030569ff5df2f3c218fb83cdf926a",
     "tests/content/render-helper.mjs": "61a6c1b0deee32821471c9b7f02a36eedd34d0d2a444ed7fde82f94afb8514ce",
     "tests/enquiry/client-ip.test.mjs": "2049d679d1a855d5f9b7c68c07c46ea2ac859643f756a98aa601d87cc6ddcd7d",

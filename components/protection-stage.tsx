@@ -230,7 +230,7 @@ function LayerCopy({ layer, index, active }: { layer: ProtectionLayer; index: nu
     >
       <p className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{LAYERS_EYEBROW}</p>
       <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-        <span className="text-primary">Layer {String(index + 1).padStart(2, "0")}</span>
+        <span className="text-red-400">Layer {String(index + 1).padStart(2, "0")}</span>
         <span aria-hidden="true"> / </span>
         {layer.name}
         <span className="sr-only"> — </span>
@@ -264,7 +264,7 @@ function StackedLayers({ heroPoster, layerPhotos }: StageProps) {
             <li key={layer.id} id={`layer-${layer.id}`} className="grid overflow-hidden rounded-xl border border-border bg-card md:grid-cols-2">
               <div className="flex flex-col gap-4 p-6 md:p-10">
                 <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                  <span className="text-primary">Layer {String(i + 1).padStart(2, "0")}</span> / {layer.name}
+                  <span className="text-red-400">Layer {String(i + 1).padStart(2, "0")}</span> / {layer.name}
                 </p>
                 <h2 className="text-balance text-4xl font-semibold leading-tight tracking-tight">
                   {layer.headline.lead} <em className="font-serif font-normal italic text-primary">{layer.headline.emphasis}</em>

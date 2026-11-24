@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { motion } from "framer-motion"
+import { HeroEmblem } from "@/components/brand-art"
 import { PhotoSlot } from "@/components/photo-slot"
 import type { ResolvedPhoto } from "@/lib/photo-library"
 import { siteConfig } from "@/lib/site-config"
@@ -90,12 +91,11 @@ function HeroVideo({ webm, mp4, poster }: { webm: string | null; mp4: string | n
 function TypographicComposition() {
   return (
     <div className="grain absolute inset-0 overflow-hidden bg-background" aria-hidden="true">
-      <div className="absolute inset-y-0 right-0 hidden w-1/2 border-l border-border md:block" />
+      <div className="scene-grid absolute inset-0 scene" style={{ ["--scene-faint" as string]: "rgb(255 255 255 / 0.07)" }} />
+      <div className="scene scene-glow absolute inset-0" />
+      <HeroEmblem />
       <div className="absolute inset-x-0 top-1/3 h-px bg-border" />
       <div className="absolute inset-x-0 bottom-1/4 h-px bg-border" />
-      <span className="hero-outline absolute -right-[4vw] bottom-[8vh] select-none font-semibold leading-none tracking-tighter md:bottom-[14vh]">
-        JOLU
-      </span>
       <span className="absolute top-1/3 right-[6vw] h-px w-24 -translate-y-px bg-primary md:w-40" />
     </div>
   )

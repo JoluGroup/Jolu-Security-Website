@@ -19,20 +19,26 @@ export function WhySection() {
           </SectionTitle>
         </FadeUp>
 
-        <ul className="grid gap-px overflow-hidden border-y border-border md:grid-cols-3">
-          {VALUES.map((value, i) => (
-            <FadeUp
-              key={value.name}
-              delay={i * 0.08}
-              className="flex flex-col gap-4 border-border py-8 md:border-l md:px-8 md:first:border-l-0 md:first:pl-0"
-            >
-              <li className="flex flex-col gap-4">
+        <FadeUp>
+          <ul className="grid overflow-hidden border-y border-border md:grid-cols-3">
+            {VALUES.map((value, i) => (
+              <li
+                key={value.name}
+                className="group relative flex flex-col gap-5 border-border py-8 transition-colors md:border-l md:px-8 md:py-10 md:first:border-l-0 md:first:pl-0"
+              >
+                <span className="font-mono text-xs text-muted-foreground" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 <h3 className="font-serif text-4xl italic text-foreground md:text-5xl">{value.name}</h3>
                 <p className="max-w-xs text-pretty leading-relaxed text-muted-foreground">{value.description}</p>
+                <span
+                  className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-primary transition-transform duration-500 group-hover:scale-x-100 motion-reduce:transition-none"
+                  aria-hidden="true"
+                />
               </li>
-            </FadeUp>
-          ))}
-        </ul>
+            ))}
+          </ul>
+        </FadeUp>
 
         {claims.length > 0 && (
           <ul className="flex flex-wrap gap-x-10 gap-y-3" aria-label="Credentials">
@@ -54,7 +60,12 @@ export function WhySection() {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:col-span-5 md:justify-end">
-            <Button size="lg" className="h-12 px-6 text-base" nativeButton={false} render={<a href={siteConfig.quoteHref} />}>
+            <Button
+              size="lg"
+              className="h-12 px-6 text-base"
+              nativeButton={false}
+              render={<a href={siteConfig.quoteHref} />}
+            >
               Request a Quote
               <ArrowRight aria-hidden="true" />
             </Button>

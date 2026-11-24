@@ -4,10 +4,10 @@ import { useState } from "react"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { ArrowUpRight, BellRing, Cctv, Dog, Fence, ShieldUser, Ticket, UserRoundCheck } from "lucide-react"
+import { ServiceArt } from "@/components/brand-art"
 import { PhotoSlot } from "@/components/photo-slot"
 import type { ResolvedPhoto } from "@/lib/photo-library"
 import type { ServiceId } from "@/lib/services"
-import { cn } from "@/lib/utils"
 
 const ICONS: Record<ServiceId, LucideIcon> = {
   "manned-guarding": ShieldUser,
@@ -93,31 +93,11 @@ export function ServicesIndex({ items }: { items: ServiceIndexItem[] }) {
             {current.photo ? (
               <PhotoSlot photo={current.photo} aspect={current.aspect} sizes="40vw" />
             ) : (
-              <TypographicPanel index={active} item={current} />
+              <ServiceArt id={current.id} index={numeral(active)} total={String(items.length).padStart(2, "0")} />
             )}
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function TypographicPanel({ index, item }: { index: number; item: ServiceIndexItem }) {
-  const Icon = ICONS[item.id]
-  return (
-    <div className={cn("grain relative flex aspect-[4/5] w-full flex-col justify-between overflow-hidden border border-border bg-card p-8")}>
-      <span className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-        <span className="flex items-center gap-3">
-          <span className="h-px w-6 bg-primary" />
-          Service
-        </span>
-        {`${numeral(index)} / 07`}
-      </span>
-      <span className="font-mono text-[9rem] leading-none font-light tracking-tighter text-foreground/10">{numeral(index)}</span>
-      <span className="flex flex-col gap-5">
-        <Icon className="size-10 text-primary" strokeWidth={1} />
-        <span className="text-balance text-4xl font-semibold tracking-tight text-foreground">{item.name}</span>
-      </span>
     </div>
   )
 }

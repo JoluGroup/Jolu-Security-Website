@@ -10,7 +10,7 @@ export function IntroSection() {
 
   return (
     <section id="about" aria-labelledby="about-title" className="scroll-mt-(--header-h) border-t border-border">
-      <div className="mx-auto grid max-w-7xl gap-14 px-5 py-24 md:grid-cols-12 md:gap-x-8 md:gap-y-16 md:py-36 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-14 px-5 py-20 md:grid-cols-12 md:gap-x-8 md:gap-y-16 md:py-28 lg:px-8">
         <FadeUp className="flex flex-col gap-8 md:col-span-8">
           <Eyebrow>About {siteConfig.name}</Eyebrow>
           <SectionTitle id="about-title" className="md:text-7xl">

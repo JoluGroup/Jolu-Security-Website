@@ -126,7 +126,7 @@ function PinnedStage({ heroPoster, layerPhotos }: StageProps) {
         </div>
 
         <motion.div
-          className="pointer-events-none absolute inset-x-0 bottom-36 flex justify-center md:bottom-28"
+          className="pointer-events-none absolute inset-x-0 bottom-36 hidden justify-center md:bottom-28 md:flex [@media(max-height:700px)]:md:hidden"
           animate={{ opacity: step === 0 ? 1 : 0 }}
           transition={{ duration: 0.4 }}
           aria-hidden={step !== 0}

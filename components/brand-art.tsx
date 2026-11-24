@@ -51,212 +51,204 @@ export function ArtFrame({
 
 /* ---------- Services: one diagram per service (400 x 500) ---------- */
 
-function Posts({ pts }: { pts: [number, number][] }) {
-  return (
-    <>
-      {pts.map(([x, y]) => (
-        <rect key={`${x}-${y}`} x={x - 3} y={y - 3} width="6" height="6" fill={LINE} />
-      ))}
-    </>
-  )
-}
-
 function ServiceDiagram({ id }: { id: ServiceId }) {
   switch (id) {
     case "manned-guarding":
+      // Gate with two posts, a guard post and a stationed marker at the entrance.
       return (
         <g>
-          <path d="M40 330 H150 M250 330 H360" stroke={LINE} strokeWidth="1.5" />
-          <Posts
-            pts={[
-              [150, 330],
-              [250, 330],
-            ]}
-          />
-          <path d="M150 330 L150 250 M250 330 L250 250" stroke={LINE} />
-          <path d="M150 250 H250" stroke={RED} strokeWidth="2" strokeDasharray="8 8" className="anim-dash" />
-          {[
-            [120, 300],
-            [280, 300],
-            [200, 372],
-          ].map(([x, y]) => (
-            <g key={`${x}${y}`}>
-              <circle cx={x} cy={y} r="14" stroke={RED} />
-              <circle cx={x} cy={y} r="3" fill={RED} />
-            </g>
-          ))}
-          <path d="M200 120 V330" stroke={FAINT} />
-          <path d="M200 180 L200 330" stroke={RED} strokeDasharray="2 10" />
-          <path d="M184 196 L200 180 L216 196" stroke={RED} />
-          <rect x="170" y="90" width="60" height="40" stroke={LINE} />
-          <path d="M170 90 L200 66 L230 90" stroke={LINE} />
+          <path d="M20 360 H130 M270 360 H380" stroke={LINE} strokeWidth="2" />
+          <rect x="122" y="150" width="16" height="216" stroke={LINE} />
+          <rect x="262" y="150" width="16" height="216" stroke={LINE} />
+          <path d="M138 190 H262 M138 230 H262 M138 270 H262" stroke={FAINT} />
+          <path d="M122 150 H278" stroke={RED} strokeWidth="2" />
+          <rect x="300" y="250" width="56" height="64" stroke={LINE} />
+          <path d="M294 250 L328 222 L362 250" stroke={LINE} />
+          <circle cx="200" cy="420" r="16" stroke={RED} strokeWidth="1.5" />
+          <circle cx="200" cy="420" r="4" fill={RED} />
+          <path d="M200 400 V372" stroke={RED} strokeDasharray="3 6" />
+          <path d="M60 300 L100 300 M80 280 L80 320" stroke={FAINT} />
         </g>
       )
     case "events-security":
+      // Crowd field inside a cordon with two controlled entry points.
       return (
         <g>
-          {Array.from({ length: 6 }).map((_, r) =>
-            Array.from({ length: 9 }).map((__, c) => (
+          {Array.from({ length: 7 }).map((_, r) =>
+            Array.from({ length: 10 }).map((__, c) => (
               <circle
                 key={`${r}-${c}`}
-                cx={60 + c * 35}
-                cy={170 + r * 28}
-                r="2.5"
+                cx={52 + c * 33}
+                cy={150 + r * 30}
+                r="3"
                 fill={LINE}
-                opacity={(r + c) % 4 === 0 ? 1 : 0.45}
+                opacity={(r * 3 + c) % 5 === 0 ? 1 : 0.4}
               />
             )),
           )}
           <rect
-            x="40"
-            y="140"
-            width="320"
-            height="190"
+            x="30"
+            y="122"
+            width="340"
+            height="236"
             stroke={RED}
-            strokeWidth="1.5"
-            strokeDasharray="12 10"
+            strokeWidth="2"
+            strokeDasharray="14 10"
             className="anim-dash"
           />
-          {[40, 120, 200, 280, 360].map((x) => (
-            <rect key={x} x={x - 3} y="337" width="6" height="6" fill={LINE} />
-          ))}
-          <path d="M40 340 H360" stroke={LINE} />
-          <path d="M170 340 V380 M230 340 V380" stroke={RED} strokeWidth="2" />
-          <path d="M150 395 H250" stroke={FAINT} />
-          <circle
-            cx="200"
-            cy="100"
-            r="30"
-            stroke={LINE}
-            strokeDasharray="2 8"
-            className="anim-spin-slow"
-            style={{ transformOrigin: "200px 100px" }}
-          />
-          <circle cx="200" cy="100" r="4" fill={RED} />
+          <path d="M30 358 H150 M250 358 H370" stroke={LINE} strokeWidth="2" />
+          <path d="M150 358 V400 M250 358 V400" stroke={RED} strokeWidth="2" />
+          <path d="M20 90 L60 70 L100 90" stroke={FAINT} />
+          <path d="M300 90 L340 70 L380 90" stroke={FAINT} />
         </g>
       )
     case "k9-unit":
+      // Handler and dog markers along a winding track with paired footprints.
       return (
         <g>
           <path
-            d="M60 380 C110 340 90 290 150 280 S230 300 250 240 S330 200 340 140"
+            d="M50 420 C100 360 40 310 120 290 S250 300 230 220 S350 190 350 110"
+            stroke={FAINT}
+            strokeWidth="14"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 420 C100 360 40 310 120 290 S250 300 230 220 S350 190 350 110"
             stroke={RED}
             strokeWidth="2"
-            strokeDasharray="3 12"
+            strokeDasharray="2 14"
             strokeLinecap="round"
             className="anim-trace"
           />
           {[
-            [60, 380],
-            [150, 280],
-            [250, 240],
-            [340, 140],
+            [78, 372],
+            [96, 330],
+            [150, 288],
+            [214, 276],
+            [240, 226],
+            [290, 204],
+            [338, 160],
           ].map(([x, y], i) => (
-            <g key={x}>
-              <circle cx={x} cy={y} r={i === 3 ? 38 : 22} stroke={LINE} strokeDasharray="2 6" />
-              <circle cx={x} cy={y} r="4" fill={i === 3 ? RED : LINE} />
+            <g key={`${x}${y}`}>
+              <circle cx={x - 5} cy={y} r="3" fill={LINE} />
+              <circle cx={x + 5} cy={y - 6} r="3" fill={LINE} />
+              {i === 6 && <circle cx={x} cy={y} r="22" stroke={RED} />}
             </g>
           ))}
-          <circle cx="340" cy="140" r="64" stroke={FAINT} />
-          <path d="M60 120 H140 M60 140 H110" stroke={FAINT} />
+          <circle cx="50" cy="420" r="12" stroke={LINE} />
+          <circle cx="50" cy="420" r="3" fill={LINE} />
+          <circle cx="350" cy="110" r="9" fill={RED} />
         </g>
       )
     case "cctv-installation":
+      // Camera on a mount with a wide field of view over a site.
       return (
         <g>
-          <path d="M60 380 L340 380 L340 200 L60 200 Z" stroke={LINE} />
-          <path d="M60 200 L200 140 L340 200" stroke={LINE} />
-          <path d="M80 110 L130 96 L142 130 L92 144 Z" stroke={RED} strokeWidth="1.5" />
-          <path d="M100 140 V160" stroke={LINE} />
-          <path d="M142 126 L330 220 L250 380 Z" fill="var(--primary)" fillOpacity="0.07" className="anim-breathe" />
-          <path d="M142 126 L330 220 M142 126 L250 380" stroke={RED} strokeOpacity="0.7" strokeDasharray="6 8" />
-          <rect x="258" y="270" width="40" height="40" stroke={LINE} strokeDasharray="4 4" />
+          <path d="M40 60 H110" stroke={LINE} strokeWidth="2" />
+          <path d="M74 60 V88" stroke={LINE} />
+          <rect x="52" y="88" width="64" height="30" transform="rotate(18 84 103)" stroke={RED} strokeWidth="2" />
+          <path d="M110 112 L380 200 L300 440 Z" fill="var(--primary)" fillOpacity="0.08" className="anim-breathe" />
           <path
-            d="M258 282 V270 H270 M286 270 H298 V282 M298 298 V310 H286 M270 310 H258 V298"
+            d="M110 112 L380 200 M110 112 L300 440 M110 112 L345 320"
             stroke={RED}
-            strokeWidth="1.5"
+            strokeOpacity="0.8"
+            strokeDasharray="6 8"
           />
+          <rect x="250" y="290" width="70" height="70" stroke={LINE} strokeDasharray="4 4" />
+          <path
+            d="M250 304 V290 H264 M306 290 H320 V304 M320 346 V360 H306 M264 360 H250 V346"
+            stroke={RED}
+            strokeWidth="2"
+          />
+          <path d="M40 440 H380" stroke={FAINT} />
         </g>
       )
     case "electric-fencing":
+      // Fence line with live wires and pulses travelling along it.
       return (
         <g>
-          {[80, 160, 240, 320].map((x) => (
+          {[40, 120, 200, 280, 360].map((x) => (
             <g key={x}>
-              <path d={`M${x} 190 V360`} stroke={LINE} strokeWidth="1.5" />
-              <rect x={x - 4} y="184" width="8" height="8" fill={LINE} />
+              <path d={`M${x} 170 V380`} stroke={LINE} strokeWidth="2" />
+              <rect x={x - 5} y="164" width="10" height="10" fill={LINE} />
             </g>
           ))}
-          {[220, 260, 300, 340].map((y) => (
-            <path
-              key={y}
-              d={`M60 ${y} H340`}
-              stroke={y === 260 ? RED : LINE}
-              strokeWidth={y === 260 ? 2 : 1}
-              strokeDasharray={y === 260 ? "14 10" : undefined}
-              className={y === 260 ? "anim-dash" : undefined}
-            />
+          {[210, 260, 310, 360].map((y, i) => (
+            <path key={y} d={`M30 ${y} H370`} stroke={i === 1 ? RED : LINE} strokeWidth={i === 1 ? 2 : 1} />
           ))}
           <path
-            d="M170 200 L186 224 L172 232 L188 262"
+            d="M30 260 H370"
+            stroke={RED}
+            strokeWidth="4"
+            strokeDasharray="4 60"
+            strokeLinecap="round"
+            className="anim-dash"
+          />
+          <path
+            d="M30 310 H370"
+            stroke={RED}
+            strokeWidth="3"
+            strokeDasharray="3 90"
+            strokeLinecap="round"
+            className="anim-trace"
+          />
+          <path
+            d="M160 190 L176 214 L162 224 L178 250"
             stroke={RED}
             strokeWidth="2"
             strokeLinejoin="round"
             className="anim-breathe"
           />
-          <path d="M40 380 H360" stroke={FAINT} />
-          <path d="M60 130 H340" stroke={FAINT} strokeDasharray="2 8" />
+          <path d="M20 400 H380" stroke={FAINT} />
         </g>
       )
     case "alarm-response":
+      // Radar sweep with an alert point and a response route.
       return (
         <g>
-          <circle cx="130" cy="150" r="10" fill={RED} />
-          {[0, 1, 2].map((i) => (
-            <circle
-              key={i}
-              cx="130"
-              cy="150"
-              r="10"
-              stroke={RED}
-              className="anim-pulse-ring"
-              style={{ transformOrigin: "130px 150px", animationDelay: `${i * 0.8}s` }}
-            />
-          ))}
-          <path
-            d="M130 150 C140 230 300 220 270 330 S 250 390 300 400"
+          <circle cx="200" cy="230" r="170" stroke={LINE} />
+          <circle cx="200" cy="230" r="115" stroke={FAINT} />
+          <circle cx="200" cy="230" r="60" stroke={FAINT} />
+          <path d="M30 230 H370 M200 60 V400" stroke={FAINT} />
+          <g className="anim-spin" style={{ transformOrigin: "200px 230px" }}>
+            <path d="M200 230 L200 60 A170 170 0 0 1 320 110 Z" fill="var(--primary)" fillOpacity="0.2" />
+            <path d="M200 230 V60" stroke={RED} strokeWidth="2" />
+          </g>
+          <circle cx="290" cy="150" r="7" fill={RED} />
+          <circle
+            cx="290"
+            cy="150"
+            r="7"
             stroke={RED}
-            strokeWidth="2"
-            strokeDasharray="10 12"
-            className="anim-dash"
+            className="anim-pulse-ring"
+            style={{ transformOrigin: "290px 150px" }}
           />
-          <rect x="294" y="394" width="12" height="12" stroke={LINE} />
-          <circle cx="130" cy="150" r="96" stroke={FAINT} />
-          <circle cx="130" cy="150" r="48" stroke={LINE} strokeDasharray="2 8" />
-          <path d="M40 300 H140 M60 320 H120" stroke={FAINT} />
+          <circle cx="150" cy="300" r="4" fill={LINE} />
+          <path d="M200 230 L290 150" stroke={RED} strokeDasharray="4 8" />
         </g>
       )
     case "vip-close-protection":
+      // Protected point with a close ring, outer arcs and a movement path.
       return (
         <g>
-          <circle cx="200" cy="240" r="8" fill={RED} />
-          <circle cx="200" cy="240" r="38" stroke={LINE} />
+          <circle cx="200" cy="250" r="14" fill={RED} />
+          <circle cx="200" cy="250" r="52" stroke={RED} strokeWidth="1.5" />
           <circle
             cx="200"
-            cy="240"
-            r="78"
+            cy="250"
+            r="100"
             stroke={LINE}
             strokeDasharray="2 10"
             className="anim-spin-slow"
-            style={{ transformOrigin: "200px 240px" }}
+            style={{ transformOrigin: "200px 250px" }}
           />
-          <circle cx="200" cy="240" r="120" stroke={FAINT} />
-          {[0, 90, 180, 270].map((deg) => (
-            <path key={deg} d="M200 130 L200 148" stroke={RED} strokeWidth="2" transform={`rotate(${deg} 200 240)`} />
+          <circle cx="200" cy="250" r="150" stroke={FAINT} />
+          {[0, 72, 144, 216, 288].map((deg) => (
+            <circle key={deg} cx="200" cy="198" r="6" fill={LINE} transform={`rotate(${deg} 200 250)`} />
           ))}
-          <path d="M60 420 C120 380 150 330 200 320" stroke={FAINT} strokeDasharray="4 8" />
+          <path d="M40 440 C110 400 130 350 160 320" stroke={FAINT} strokeDasharray="4 8" />
           <path
-            d="M200 160 C260 120 320 100 350 70"
+            d="M240 210 C290 170 340 130 380 70"
             stroke={RED}
             strokeDasharray="3 10"
             strokeLinecap="round"
@@ -360,11 +352,7 @@ export function RingOrbit({
 
 export function BrandPlate({ className }: { className?: string }) {
   return (
-    <ArtFrame
-      caption={siteConfig.name}
-      index="Brand"
-      className={cn("aspect-[16/10] w-full", className)}
-    >
+    <ArtFrame caption={siteConfig.name} index="Brand" className={cn("aspect-[16/10] w-full", className)}>
       <svg
         className="absolute inset-0 size-full"
         viewBox="0 0 640 400"
@@ -403,7 +391,7 @@ export function HeroEmblem({ className }: { className?: string }) {
         preserveAspectRatio="xMidYMid slice"
         fill="none"
       >
-        {[110, 190, 270, 350, 430].map((r, i) => (
+        {[150, 260, 370, 480, 590].map((r, i) => (
           <circle
             key={r}
             cx="1170"
@@ -416,10 +404,10 @@ export function HeroEmblem({ className }: { className?: string }) {
             style={{ transformOrigin: "1170px 470px" }}
           />
         ))}
-        <path d="M730 470 H1600 M1170 30 V900" stroke={FAINT} />
+        <path d="M600 470 H1600 M1170 -100 V1000" stroke={FAINT} />
         <circle cx="1170" cy="470" r="5" fill={RED} opacity="0" />
       </svg>
-      <div className="absolute top-[52%] left-[73%] hidden size-[15%] min-w-32 -translate-x-1/2 -translate-y-1/2 md:block">
+      <div className="absolute top-[52%] left-[73%] hidden aspect-square w-[19vw] max-w-[340px] min-w-40 -translate-x-1/2 -translate-y-1/2 md:block">
         <Image src={siteConfig.logo.src} alt="" width={240} height={240} className="size-full object-contain" />
       </div>
     </div>

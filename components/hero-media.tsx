@@ -94,9 +94,9 @@ function TypographicComposition() {
       <div className="scene-grid absolute inset-0 scene" style={{ ["--scene-faint" as string]: "rgb(255 255 255 / 0.07)" }} />
       <div className="scene scene-glow absolute inset-0" />
       <HeroEmblem />
-      <div className="absolute inset-x-0 top-1/3 h-px bg-border" />
-      <div className="absolute inset-x-0 bottom-1/4 h-px bg-border" />
-      <span className="absolute top-1/3 right-[6vw] h-px w-24 -translate-y-px bg-primary md:w-40" />
+      <div className="absolute inset-x-0 top-1/3 hidden h-px bg-border md:block" />
+      <div className="absolute inset-x-0 bottom-1/4 hidden h-px bg-border md:block" />
+      <span className="absolute top-1/3 right-[6vw] hidden h-px w-40 -translate-y-px bg-primary md:block" />
     </div>
   )
 }

@@ -28,7 +28,7 @@ export function IndustriesSection() {
       aria-labelledby="industries-title"
       className="scroll-mt-(--header-h) border-t border-border bg-card"
     >
-      <div className="mx-auto grid max-w-7xl gap-16 px-5 py-24 md:py-32 lg:grid-cols-12 lg:gap-8 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-16 px-5 py-16 md:py-24 lg:grid-cols-12 lg:gap-8 lg:px-8">
         <div className="flex flex-col gap-14 lg:col-span-7">
           <FadeUp className="flex flex-col gap-6">
             <Eyebrow>Industries</Eyebrow>

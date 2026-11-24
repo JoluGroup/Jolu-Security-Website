@@ -77,7 +77,7 @@ export function SiteFooter() {
           </section>
         )}
       </div>
-      <div className="relative overflow-hidden border-t border-border" aria-hidden="true">
+      <div className="relative hidden overflow-hidden border-t border-border md:block" aria-hidden="true">
         <p className="hero-outline select-none px-5 text-center font-semibold leading-[0.8] tracking-tighter whitespace-nowrap [font-size:clamp(3.5rem,13.5vw,12rem)] lg:px-8">
           JOLU SECURITY
         </p>

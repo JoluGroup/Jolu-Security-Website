@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 import { ArrowRight, ClipboardList, ShieldCheck, Users } from "lucide-react"
 import { FadeUp } from "@/components/motion-frames"
-import { Emphasis, Eyebrow, SectionTitle } from "@/components/section-heading"
+import { Eyebrow, SectionTitle } from "@/components/section-heading"
 import { siteConfig } from "@/lib/site-config"
 
 // A plain description of how to get in touch. It makes no statement about response times, staffing or procedures.
@@ -26,12 +26,12 @@ const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
 export function PeopleSection() {
   return (
     <section id="people" aria-labelledby="people-title" className="scroll-mt-(--header-h) border-t border-border">
-      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:py-32 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-16 md:py-24 lg:px-8">
         <FadeUp className="grid gap-6 md:grid-cols-12 md:items-end">
           <div className="flex flex-col gap-6 md:col-span-7">
             <Eyebrow>Getting started</Eyebrow>
             <SectionTitle id="people-title">
-              Protection starts with a <Emphasis>conversation</Emphasis>
+              Protection starts with a <span className="underline decoration-primary decoration-2 underline-offset-[0.18em]">conversation</span>
             </SectionTitle>
           </div>
           <p className="text-pretty text-lg leading-relaxed text-muted-foreground md:col-span-4 md:col-start-9">

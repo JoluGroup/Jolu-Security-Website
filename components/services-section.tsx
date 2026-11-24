@@ -24,7 +24,7 @@ export function ServicesSection() {
 
   return (
     <section id="services" aria-labelledby="services-title" className="scroll-mt-(--header-h) border-t border-border">
-      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:py-32 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-16 md:py-24 lg:px-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col gap-6">
             <Eyebrow>Services</Eyebrow>

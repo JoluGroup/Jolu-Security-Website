@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Mail, MessageCircle, Phone, X } from "lucide-react"
 import { BrandLogo } from "@/components/brand-logo"
 import { OfficeList } from "@/components/office-list"
@@ -33,6 +33,7 @@ function useActiveSection() {
 
 export function Navbar() {
   const [open, setOpen] = useState(false)
+  const closeRef = useRef<HTMLButtonElement>(null)
   const active = useActiveSection()
 
   return (
@@ -92,8 +93,9 @@ export function Navbar() {
                 side="top"
                 className="data-[side=top]:h-dvh data-[side=top]:max-h-dvh overflow-y-auto overscroll-contain border-0 bg-background p-0"
                 showCloseButton={false}
+                initialFocus={closeRef}
               >
-                <MenuPanel onNavigate={() => setOpen(false)} />
+                <MenuPanel onNavigate={() => setOpen(false)} closeRef={closeRef} />
               </SheetContent>
             </Sheet>
           </div>
@@ -134,7 +136,7 @@ function ContactBar() {
   )
 }
 
-function MenuPanel({ onNavigate }: { onNavigate: () => void }) {
+function MenuPanel({ onNavigate, closeRef }: { onNavigate: () => void; closeRef: React.RefObject<HTMLButtonElement | null> }) {
   const { contact } = siteConfig
   return (
     <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-5 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-[calc(2.5rem+env(safe-area-inset-bottom))] lg:px-8">
@@ -143,6 +145,7 @@ function MenuPanel({ onNavigate }: { onNavigate: () => void }) {
       <div className="flex h-12 items-center justify-between">
         <BrandLogo />
         <SheetClose
+          ref={closeRef}
           className="flex h-11 items-center gap-3 border border-input px-4 font-mono text-xs uppercase tracking-[0.2em] text-foreground transition-colors hover:bg-accent focus-visible:outline-2"
         >
           Close

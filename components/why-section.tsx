@@ -1,6 +1,6 @@
 import { ArrowRight, Phone } from "lucide-react"
 import { FadeUp } from "@/components/motion-frames"
-import { Emphasis, Eyebrow, SectionTitle } from "@/components/section-heading"
+import { Eyebrow, SectionTitle } from "@/components/section-heading"
 import { Button } from "@/components/ui/button"
 import { getApprovedClaims } from "@/lib/claims"
 import { VALUES } from "@/lib/services"
@@ -11,11 +11,11 @@ export function WhySection() {
 
   return (
     <section id="why-jolu" aria-labelledby="why-title" className="scroll-mt-(--header-h) border-t border-border">
-      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-5 py-24 md:py-32 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-col gap-16 px-5 py-16 md:py-24 lg:px-8">
         <FadeUp className="flex flex-col gap-6">
           <Eyebrow>Why {siteConfig.name}</Eyebrow>
           <SectionTitle id="why-title" className="max-w-3xl">
-            What we <Emphasis>stand</Emphasis> for
+            What we stand for
           </SectionTitle>
         </FadeUp>
 

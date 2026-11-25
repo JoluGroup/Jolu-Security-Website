@@ -25,7 +25,7 @@ export function SiteFooter() {
         <FooterList title="Services" className="md:col-span-3 lg:col-span-2">
           {SERVICES.map((s) => (
             <li key={s.id}>
-              <a href={`/?service=${s.id}#contact`} className="inline-flex min-h-11 items-center md:min-h-8 hover:text-foreground">
+              <a href={`/?service=${s.id}#contact`} className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11 hover:text-foreground">
                 {s.name}
               </a>
             </li>
@@ -33,7 +33,7 @@ export function SiteFooter() {
         </FooterList>
         <FooterList title="Industries" className="md:col-span-3 lg:col-span-2">
           {INDUSTRIES.map((i) => (
-            <li key={i.id} className="inline-flex min-h-11 items-center md:min-h-8">
+            <li key={i.id} className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11">
               {i.name}
             </li>
           ))}
@@ -43,7 +43,7 @@ export function SiteFooter() {
             .filter((item) => item.label !== "Services" && item.label !== "Industries")
             .map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="inline-flex min-h-11 items-center md:min-h-8 hover:text-foreground">
+                <a href={item.href} className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11 hover:text-foreground">
                   {item.label}
                 </a>
               </li>
@@ -52,18 +52,18 @@ export function SiteFooter() {
         <FooterList title="Contact" className="md:col-span-3 lg:col-span-3">
           {contact.phones.map((phone) => (
             <li key={phone.e164}>
-              <a href={phone.href} className="inline-flex min-h-11 items-center md:min-h-8 font-mono hover:text-foreground">
+              <a href={phone.href} className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11 font-mono hover:text-foreground">
                 {phone.displayIntl}
               </a>
             </li>
           ))}
           <li>
-            <a href={contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center md:min-h-8 hover:text-foreground">
+            <a href={contact.whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11 hover:text-foreground">
               WhatsApp<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </li>
           <li>
-            <a href={`mailto:${contact.email}`} className="inline-flex min-h-11 items-center md:min-h-8 break-all hover:text-foreground">
+            <a href={`mailto:${contact.email}`} className="inline-flex min-h-11 min-w-11 items-center md:min-h-8 md:pointer-coarse:min-h-11 break-all hover:text-foreground">
               {contact.email}
             </a>
           </li>

@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react"
 import { AnimatePresence, motion, useMotionValueEvent, useScroll, useTransform } from "framer-motion"
 import { ArrowRight, ChevronDown, MessageCircle, Phone } from "lucide-react"
+import { HeroMark } from "@/components/brand-art"
 import { HeroMedia } from "@/components/hero-media"
 import { LayerScene, type MediaSlot } from "@/components/layer-scene"
 import { PhotoSlot } from "@/components/photo-slot"
@@ -147,7 +148,7 @@ function HeroActions({ tab }: { tab?: number }) {
   return (
     <div className="flex flex-col gap-5 pt-2 [@media(max-height:640px)]:gap-0 [@media(max-height:640px)]:pt-0">
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button size="lg" tabIndex={tab} className="h-12 px-6 text-base [@media(max-height:640px)]:h-11" nativeButton={false} render={<a href={siteConfig.quoteHref} />}>
+        <Button size="lg" tabIndex={tab} className="h-12 px-6 text-base" nativeButton={false} render={<a href={siteConfig.quoteHref} />}>
           Request a Quote
           <ArrowRight aria-hidden="true" />
         </Button>
@@ -200,7 +201,7 @@ function IntroCopy({ active }: { active: boolean }) {
     <motion.div
       // Server-rendered visible so the h1 paints before hydration; the entrance is a CSS animation, not a JS-gated opacity:0 state.
       className={cn(
-        "flex flex-col gap-6 [@media(max-height:640px)]:gap-4 [@media(max-height:480px)]:gap-2! duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:animate-in motion-safe:slide-in-from-bottom-6",
+        "flex flex-col gap-5 md:gap-6 [@media(max-height:640px)]:gap-4 [@media(max-height:480px)]:gap-2! duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:animate-in motion-safe:slide-in-from-bottom-6",
         !active && "pointer-events-none",
       )}
       initial={false}
@@ -216,10 +217,13 @@ function IntroCopy({ active }: { active: boolean }) {
 function IntroText() {
   return (
     <>
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:text-xs sm:tracking-[0.24em]">
-        <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
-        <span>{siteConfig.name}</span> <span aria-hidden="true">•</span> <span>Professional Protection</span>
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <p className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground sm:text-xs sm:tracking-[0.24em]">
+          <span className="size-1.5 rounded-full bg-primary" aria-hidden="true" />
+          <span>{siteConfig.name}</span> <span aria-hidden="true">•</span> <span>Professional Protection</span>
+        </p>
+        <HeroMark />
+      </div>
       <h1
         id="stage-title"
         className="text-balance text-5xl font-semibold leading-[0.98] tracking-tight text-foreground sm:text-6xl lg:text-7xl [@media(max-height:640px)]:text-4xl [@media(max-height:480px)]:text-3xl!"

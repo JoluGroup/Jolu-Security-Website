@@ -382,11 +382,17 @@ export function BrandPlate({ className }: { className?: string }) {
 
 /* ---------- Hero (no footage): rings with the logo, right-hand side ---------- */
 
+/**
+ * Wide-landscape (lg+) emblem: large rings with the logo, right-hand side. Below lg, or in portrait, the
+ * composition is HeroMark (in the text column) instead, so no ring is ever cropped at a viewport edge.
+ * The logo PNG is 501 x 501: the box is capped at 250 CSS px so a 2x display never needs more than ~500 device
+ * pixels (no upscaling past the intrinsic size). The sizes hint lets the browser pick the matching candidate.
+ */
 export function HeroEmblem({ className }: { className?: string }) {
   return (
     <div className={cn("scene pointer-events-none absolute inset-0", className)} aria-hidden="true">
       <svg
-        className="absolute inset-0 size-full"
+        className="absolute inset-0 hidden size-full lg:landscape:block"
         viewBox="0 0 1600 900"
         preserveAspectRatio="xMidYMid slice"
         fill="none"
@@ -407,9 +413,59 @@ export function HeroEmblem({ className }: { className?: string }) {
         <path d="M600 470 H1600 M1170 -100 V1000" stroke={FAINT} />
         <circle cx="1170" cy="470" r="5" fill={RED} opacity="0" />
       </svg>
-      <div className="absolute top-[52%] left-[73%] hidden aspect-square w-[19vw] max-w-[340px] min-w-40 -translate-x-1/2 -translate-y-1/2 lg:landscape:block">
-        <Image src={siteConfig.logo.src} alt="" width={240} height={240} className="size-full object-contain" />
+      <div className="absolute top-[52%] left-[73%] hidden aspect-square w-[19vw] max-w-[250px] min-w-40 -translate-x-1/2 -translate-y-1/2 lg:landscape:block">
+        <Image
+          src={siteConfig.logo.src}
+          alt=""
+          width={250}
+          height={250}
+          sizes="(min-width: 1316px) 250px, 19vw"
+          className="size-full object-contain"
+        />
       </div>
+    </div>
+  )
+}
+
+/**
+ * Brand mark for the hero text column on phones and tablets (and any portrait viewport): the approved logo with
+ * CSS-only rings and glow centred on it. It sits in the flow beside the eyebrow, so it cannot overlap text, and the
+ * rings stay inside the column so nothing is cropped at the right edge. Hidden in short landscape (<= 480px high)
+ * and on wide landscape, where HeroEmblem takes over. Size is 80/72/56 CSS px on phones (3x = 240px of the 501px
+ * PNG, never upscaled) and 160 CSS px from md (2x = 320px).
+ */
+export function HeroMark({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "scene pointer-events-none relative isolate size-20 shrink-0 md:my-6 md:size-40 max-md:[@media(max-height:790px)_and_(min-height:641px)]:size-18 max-md:[@media(max-height:640px)]:size-14 [@media(max-height:480px)]:hidden lg:landscape:hidden",
+        className,
+      )}
+    >
+      <div className="absolute -inset-[22%] rounded-full bg-[radial-gradient(closest-side,rgb(220_38_38/0.30),transparent)]" />
+      <svg className="absolute top-1/2 left-1/2 size-[200%] -translate-x-1/2 -translate-y-1/2" viewBox="0 0 200 200" fill="none">
+        <circle cx="100" cy="100" r="54" stroke={RED} strokeOpacity="0.9" />
+        <circle
+          cx="100"
+          cy="100"
+          r="67"
+          stroke={LINE}
+          strokeOpacity="0.55"
+          strokeDasharray="2 8"
+          className="anim-spin-slow max-md:[@media(max-height:640px)]:hidden"
+          style={{ transformOrigin: "100px 100px" }}
+        />
+        <circle cx="100" cy="100" r="80" stroke={LINE} strokeOpacity="0.3" className="hidden md:block" />
+      </svg>
+      <Image
+        src={siteConfig.logo.src}
+        alt=""
+        width={160}
+        height={160}
+        sizes="(min-width: 768px) 160px, 80px"
+        className="relative size-full object-contain motion-safe:animate-in motion-safe:zoom-in-90 motion-safe:duration-700"
+      />
     </div>
   )
 }

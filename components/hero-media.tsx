@@ -93,10 +93,11 @@ function TypographicComposition() {
     <div className="grain absolute inset-0 overflow-hidden bg-background" aria-hidden="true">
       <div className="scene-grid absolute inset-0 scene" style={{ ["--scene-faint" as string]: "rgb(255 255 255 / 0.07)" }} />
       <div className="scene scene-glow absolute inset-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(70%_32%_at_82%_24%,rgb(220_38_38/0.20),transparent_70%)] lg:landscape:hidden" />
       <HeroEmblem />
       <div className="absolute inset-x-0 top-1/3 hidden h-px bg-border md:block" />
       <div className="absolute inset-x-0 bottom-1/4 hidden h-px bg-border md:block" />
-      <span className="absolute top-1/3 right-[6vw] hidden h-px w-40 -translate-y-px bg-primary md:block" />
+      <span className="absolute top-1/3 right-[6vw] hidden h-px w-40 -translate-y-px bg-primary lg:landscape:block" />
     </div>
   )
 }

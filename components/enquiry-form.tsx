@@ -230,17 +230,17 @@ export function EnquiryForm() {
             onChange={(e) => set("consent", e.target.checked)}
             aria-invalid={errors.consent ? true : undefined}
             aria-describedby={cn("consent-notice", errors.consent && "consent-error")}
-            className="mt-1 size-5 shrink-0 accent-primary"
+            className="mt-2.5 size-6 shrink-0 accent-primary"
           />
-          <label htmlFor="consent" className="text-sm leading-relaxed text-foreground">
+          <label htmlFor="consent" className="min-h-11 py-2.5 text-sm leading-relaxed text-foreground">
             I agree to {siteConfig.name} using these details to respond to my enquiry.
           </label>
         </div>
-        <p id="consent-notice" className="pl-8 text-sm leading-relaxed text-muted-foreground">
+        <p id="consent-notice" className="pl-9 text-sm leading-relaxed text-muted-foreground">
           We collect your name, phone, email, location and the details you write here. They are sent to {siteConfig.name} by email and used only to respond to this enquiry.
         </p>
         {errors.consent && (
-          <p id="consent-error" className="pl-8 text-sm text-primary">
+          <p id="consent-error" className="pl-9 text-sm text-red-400">
             {errors.consent}
           </p>
         )}
@@ -335,7 +335,7 @@ function Field({
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} className="text-sm text-primary">
+        <p id={`${id}-error`} className="text-sm text-red-400">
           {error}
         </p>
       )}

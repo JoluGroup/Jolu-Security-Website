@@ -149,14 +149,14 @@ export function Navbar() {
 function ContactBar() {
   const { phones, email } = siteConfig.contact
   return (
-    <div className="h-(--contact-bar-h) border-b border-border bg-background">
+    <div className="relative z-10 h-(--contact-bar-h) border-b border-border bg-background">
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 px-5 font-mono text-xs lg:px-8">
         <ul className="flex h-full items-center gap-4 md:gap-6">
           {phones.map((phone, i) => (
             <li key={phone.e164} className="flex h-full items-center">
               <a
                 href={phone.href}
-                className="flex h-full items-center gap-2 whitespace-nowrap text-foreground/80 transition-colors hover:text-foreground"
+                className="relative flex h-full items-center gap-2 whitespace-nowrap text-foreground/80 transition-colors hover:text-foreground after:absolute after:inset-x-0 after:top-0 after:h-11 after:content-['']"
               >
                 {i === 0 && <span className="h-px w-3 bg-primary" aria-hidden="true" />}
                 <span className="sr-only">Call </span>
@@ -167,7 +167,7 @@ function ContactBar() {
         </ul>
         <a
           href={`mailto:${email}`}
-          className="hidden h-full items-center gap-2 text-foreground/80 transition-colors hover:text-foreground md:flex"
+          className="relative hidden h-full items-center gap-2 text-foreground/80 transition-colors hover:text-foreground md:flex after:absolute after:inset-x-0 after:top-0 after:h-11 after:content-['']"
         >
           <Mail className="size-3.5" aria-hidden="true" />
           {email}

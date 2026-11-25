@@ -32,7 +32,7 @@ type Status =
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: "Please check the highlighted fields.",
   not_configured: "Online enquiries are not available at the moment, so nothing was sent.",
-  rate_limited: "Too many enquiries are being sent right now, so nothing was sent. Please try again in a few minutes.",
+  rate_limited: "Your enquiry was not sent due to a high volume of requests. Please try again later or contact our team directly by phone or WhatsApp.",
   unavailable: "Online enquiries are temporarily unavailable, so nothing was sent. Please try again shortly.",
   delivery_failed: "Your enquiry could not be submitted, so nothing was sent.",
   server_error: "Something went wrong on our side, so nothing was sent. Please try again, or call or message us on WhatsApp.",

@@ -44,8 +44,9 @@ windows (60-86400) and invalid values fall back to the default. Leave it unset.
   slots (and 30 per hour) and lock real visitors out until the window ends, up to 24 h for the daily cap. The
   daily cap bounds email volume and cost; it does not stop lockout. Per-client identity or an edge rule (see the
   Vercel Firewall note in the report) is the only mitigation for lockout. Phone and WhatsApp stay as the fallback.
-- The form's 429 message says "try again in a few minutes". That is wrong for the daily cap (hours). The form
-  component is a frozen file and was not changed; the copy should be updated separately.
+- The form's 429 message is wording that does not promise a retry time ("try again later" plus phone and
+  WhatsApp), because the daily cap can last hours. It states that the enquiry was not sent, which is true of
+  the 429 path (fail-closed); the status code and Retry-After header are unchanged.
 - The fixed window allows up to 2x the cap across a window boundary (up to 160 in 24 h worst case for the daily
   cap, 60 across an hour boundary); not a sliding window.
 - Verified on open-source Redis (real `redis-server`) and a JavaScript model of Upstash, not on Upstash itself.

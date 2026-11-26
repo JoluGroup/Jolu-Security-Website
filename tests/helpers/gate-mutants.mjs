@@ -18,6 +18,7 @@ export const MUTANTS = [
   M("R04B-02 positioning after the price word allowed", "?\\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\\b", "?\\b(?:zzis)\\b"),
   M("R04B-02 informal amounts allowed", "pattern: INFORMAL_AMOUNTS }", "pattern: /(?!)/ }"),
   M("R04B-02 free and package offers allowed", "pattern: FREE_AND_PACKAGE_OFFERS }", "pattern: /(?!)/ }"),
+  M("R04B-03 spelled-out amounts and bargain phrasing allowed", "|\\bfor the price of\\b|", "|\\bzzfor the price of\\b|"),
   M("R04B-01 free offers allowed", "pattern: /\\b(?:free of charge|", "pattern: /(?!)\\b(?:free of charge|"),
   { ...M("R04B-01 page scan reverts to the keyword pricing rule", 'CLAIM_RULES.filter((r) => r.category !== "pricing")', "CLAIM_RULES"), killBy: "accepts" },
   M("F-02 ignore canonical table", "const needed = new Set<string>(canonical ?? [])", "const needed = new Set<string>()"),

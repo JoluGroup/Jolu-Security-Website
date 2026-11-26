@@ -104,7 +104,7 @@ const FIGURE = String.raw`(?<![A-Za-z])\d`
 // Amounts in local and informal forms (Sh, /=, 15k, bob, thousands separators, amount + period word, percentages).
 const INFORMAL_AMOUNTS = /\bsh\.?\s?\d|\d\s?\/=|(?<![A-Za-z])\d+(?:\.\d+)?\s?k\b|\bbob\b|(?<![A-Za-z])\d{1,3}(?:,\d{3})+(?!\d)|(?<![A-Za-z#])(?<!\b(?:number|no\.?)\s?)\d{2,}[\d,.]*\s+(?:monthly|weekly|daily|hourly|annually|yearly|each|apiece)\b|(?<![A-Za-z])\d+(?:\.\d+)?\s?(?:%|per ?cent\b)/i
 // Free, complimentary or uncharged offers; tiered packages; promotional value.
-const FREE_AND_PACKAGE_OFFERS = /\b(?:is|are)\s+(?:completely\s+|totally\s+|always\s+)?free\b|\bcomplimentary\b|\bno charge\b|\b(?:do not|don't|never|won't|will not)\s+charge\b|\bpay nothing\b|\b(?:basic|standard|premium|gold|silver|bronze|platinum)\b(?:\s*(?:,|and|or)\s*(?:basic|standard|premium|gold|silver|bronze|platinum)\b)+[^.?!]{0,30}\bpackages?\b|\b(?:great|best|good|excellent|unbeatable|real)\s+value\b/i
+const FREE_AND_PACKAGE_OFFERS = /(?<!\bfeel\s)\bfree\b(?![- ]?standing)(?!\s+(?:to|from|of)\b)|\bcomplimentary\b|\bno charge\b|\b(?:do not|don't|never|won't|will not)\s+charge\b|\bpay nothing\b|\b(?:basic|standard|premium|gold|silver|bronze|platinum)\b(?:\s*(?:,|and|or)\s*(?:basic|standard|premium|gold|silver|bronze|platinum)\b)+[^.?!]{0,30}\bpackages?\b|\b(?:great|best|good|excellent|unbeatable|real)\s+value\b/i
 const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
   // currencies and money amounts, with or without a figure
   { category: CATEGORY.pricing, pattern: /\b(?:kes|kshs?|shillings?|usd|dollars?|euros?)\b/i },
@@ -120,8 +120,10 @@ const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = 
   { category: CATEGORY.pricing, pattern: /\b(?:starting (?:at|from)|from as little as|as low as|low[- ]cost|value for money|no hidden (?:costs?|fees?|charges?)|money[- ]back|discounts?|special offers?|promo(?:tion)?s?)\b/i },
   // R04B-02 (independent review): positioning stated AFTER the price word ("rates are the lowest", "price is negotiable",
   // "quotes are free") and comparisons ("cheaper than", "costs less than") are pricing claims too
-  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\b[^.?!]{0,24}?\b(?:lowest|lower|cheapest|cheaper|cheap|less|free|negotiable|affordable|reasonable|competitive|transparent|fair|honest|flexible|pocket[- ]friendly|unbeatable|best|low|great value|good value)\b`, "i") },
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\b[^.?!]{0,24}?\b(?:lowest|lower|cheapest|cheaper|cheap|less|free|negotiable|affordable|reasonable|competitive|transparent|fair|honest|flexible|pocket[- ]friendly|unbeatable|best|low|great value|good value|kept to a minimum|minimal|minimum)\b`, "i") },
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:less|lower) than\b|\b(?:cheaper|less expensive|more affordable|most affordable|most reasonable|unbeatable|pocket[- ]friendly)\b`, "i") },
+  // R04B-03: amounts spelled out or stated as fractions ("cost twenty five thousand", "half of what others ask")
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,40}?\b(?:hundreds?|thousands?|millions?|half|double|twice|triple|quarter)\b|\bfor the price of\b|\b(?:pay|paying|spend|spending)\s+less\b|\bsave money\b|\bon the house\b|\bbundle(?:d)? deals?\b`, "i") },
   // amounts in local and informal forms: "Sh 20,000", "20,000/=", "15k", "25 bob", thousands-separated figures, an amount
   // tied to a period or unit word, percentages, ranges of amounts
   { category: CATEGORY.pricing, pattern: INFORMAL_AMOUNTS },

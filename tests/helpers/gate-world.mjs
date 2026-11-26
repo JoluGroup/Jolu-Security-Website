@@ -140,6 +140,8 @@ export const PRICING_ALLOWED = [
   "The arrangement should fit the risks you face rather than a standard package, and it should be reviewed when things change.",
   "A K9 team can add value at large or open sites, and a site assessment should check whether it suits the property.",
   "Agree in writing how extra cover would be charged, so that you are not negotiating about it on the day of the event.",
+  "The guard is free to call the supervisor at any time during the shift, and every call is written in the post log.",
+  "Keep the fence line free from vegetation, because plants touching the wires can trigger false alarms on the energiser.",
 ]
 /** R04B-01: pricing claims. Each must be refused for claim-sensitive (pricing) wording. [name, text] */
 export const PRICING_BLOCKED = [
@@ -159,6 +161,17 @@ export const PRICING_BLOCKED = [
   // R04B-02: one case per rule that no other rule catches, so each rule is proven load-bearing by the mutation harness
   ["currency word only", "All guarding contracts are invoiced in Kenyan shillings at the end of every calendar month for each site."],
   ["price word near a plain figure", "The fee for a single post is 300 on the standard contract for residential estates and small offices."],
+  // R04B-03: cases from the delta review of 9c39102
+  ["at no extra cost", "Weekend patrol visits are provided at no extra cost to residents of the estate during the first contract month."],
+  ["free of charge", "Alarm testing is done free of charge for residents of the estate during the first month of every contract."],
+  ["spelled-out amount", "Guard services cost twenty five thousand a month for homes, offices and estates across the region we serve."],
+  ["half of what others ask", "Guards cost half of what others ask for homes, offices and estates across the region we serve."],
+  ["price of one", "Two guards for the price of one for homes, offices and estates across the region we serve."],
+  ["kept to a minimum", "Our charges are kept to a minimum for homes, offices and estates across the region we serve."],
+  ["pay less", "You will pay less with us than with the big firms for homes, offices and estates across the region we serve."],
+  ["free monitoring", "Enjoy one month of free monitoring for homes, offices and estates across the region we serve."],
+  ["on the house", "First assessment is on the house for homes, offices and estates across the region we serve."],
+  ["bundle deals", "Save money with our bundle deals for homes, offices and estates across the region we serve."],
   // R04B-02: cases from the independent review of 00212ee (refused at 9907837, published at 00212ee, or missed by both)
   ["rates are the lowest", "Our rates are the lowest in Nakuru for homes, offices and estates across the region we serve."],
   ["prices lower than", "Our prices are lower than other firms for homes, offices and estates across the region we serve."],

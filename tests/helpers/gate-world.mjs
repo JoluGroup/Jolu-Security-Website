@@ -176,6 +176,8 @@ export const PRICING_BLOCKED = [
   ["compound: repeated price words", "The price depends on the site, and our price is the one that estate managers recommend to their neighbours."],
   ["compound: 'so that'", "Agree in writing how extra cover would be charged so that our team can look after returning clients generously."],
   ["relative clause: quotation that beats", "Request a written quotation that beats every other provider for homes, offices and estates in the region."],
+  ["compound: ampersand", "The budget depends on posts and hours & loyal clients see it shrink sharply every single year at renewal time."],
+  ["compound: slash", "The price depends on posts and hours/loyal clients see it shrink sharply every single year at renewal time."],
   ["interim cost: educational compound refused (1)", "Request a quotation through the enquiry form, and a written proposal follows the site assessment agreed with you."],
   ["interim cost: educational compound refused (2)", "Compare what each quotation includes before comparing totals, because a lower figure can reflect a smaller scope of work."],
   ["interim cost: educational compound refused (3)", "Prices for CCTV vary with camera type, storage and cabling distance, so compare proposals line by line before deciding."],

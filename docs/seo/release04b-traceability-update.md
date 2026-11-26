@@ -26,7 +26,7 @@ Outstanding source-recovery requirement (Release 04C or earlier, whenever suppli
 | 4 | `prompt-inventory.csv` (same folder) | not recorded | the 160 prompt-test slots (20 prompts x 4 platforms x baseline and day 90) |
 | 5 | `reconciliation-report.md`, `service-gate-matrix.md` (same folder) | not recorded | the earlier reconciliation narrative and the original "31 requirements" count |
 
-Set A (files 1 and 2) is authoritative: the checksums are pinned above and the matrix can be regenerated from it. Set B (files 3 to 5) restores the previous classifications directly. The original workbooks must not be committed to the public repository; they are verified and used from a private location only.
+Set A (files 1 and 2) is the authoritative source once supplied. The two SHA-256 values above are copied from the Release 04B continuity handover (section 05); they were reported by the previous environment and have NOT been verified in this repository. A supplied file is accepted only if its SHA-256 matches. Set B (files 3 to 5) restores the previous classifications directly. The original workbooks must not be committed to the public repository; they are verified and used from a private location only.
 
 ## Keyword stages (311 rows)
 

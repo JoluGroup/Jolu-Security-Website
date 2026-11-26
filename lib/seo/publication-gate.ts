@@ -161,7 +161,7 @@ const NUMBER_WORD = /(?<![A-Za-z])\d|\b(?:one|two|three|four|five|six|seven|eigh
  * Fail closed: anything that might join two claims is a boundary, so a split that is too fine only means a frame
  * must be repeated, never that a claim slips through.
  */
-const CLAUSE_BOUNDARY = /\s*(?:[;:()\u2013\u2014]|\s-{1,2}\s|,\s*(?:and|but|so|or|nor|yet|while|whereas|although|though|because|since|as|plus|then|which|who|where|with)\b|\s(?:but|while|whereas|yet|plus|so that|and also|and even)\b)\s*/gi
+const CLAUSE_BOUNDARY = /\s*(?:[;:()&\u2013\u2014]|\s*\/\s*|\s-{1,2}\s|,\s*(?:and|but|so|or|nor|yet|while|whereas|although|though|because|since|as|plus|then|which|who|where|with)\b|\s(?:but|while|whereas|yet|plus|so that|and also|and even)\b)\s*/gi
 function clausesOf(sentence: string): { from: number; text: string }[] {
   const out: { from: number; text: string }[] = []
   let last = 0

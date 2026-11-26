@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google"
 import { rootMetadata } from "@/lib/seo/metadata"
+import { AnalyticsRoot } from "@/lib/analytics/analytics-root"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -34,7 +35,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} dark bg-background antialiased`}
     >
-      <body className="min-h-svh">{children}</body>
+      <body className="min-h-svh">
+        {children}
+        <AnalyticsRoot />
+      </body>
     </html>
   )
 }

@@ -209,14 +209,25 @@ test("sitemap and robots are unchanged; the sitemap never breaks and lists no ne
   assert.ok(/try \{[\s\S]*publishedPagePaths\(\)[\s\S]*\} catch/.test(read("app/sitemap.ts")))
 })
 
-test("no service or location route exists and no dynamic route exists (route-to-manifest checks live in manifest-routes.test.mjs)", () => {
-  assert.ok(!existsSync(path.join(ROOT, "app/services")) && !existsSync(path.join(ROOT, "app/locations")))
+// Release 04B: the seven service routes exist as the canonical gated template only (no location route yet, no dynamic route),
+// and ONLY those template files may import the gated renderer. Route-to-manifest checks live in manifest-routes.test.mjs.
+test("service routes are canonical gated templates only; no location route; no dynamic route; manifest still empty", async () => {
+  const R = await import("../helpers/manifest-routes.mjs")
+  assert.ok(!existsSync(path.join(ROOT, "app/locations")))
   assert.equal(PUBLICATION_MANIFEST.length, 0)
+  const slugs = { service: gate.knownSlugs("service"), location: gate.knownSlugs("location") }
+  const v = R.verifyRouteTemplates(ROOT, slugs)
+  assert.deepEqual(v.problems, [])
+  assert.deepEqual(v.files.sort(), slugs.service.map((s) => `app/services/${s}/page.tsx`).sort())
   const routes = []
   const walk = (d) => { for (const n of readdirSync(d)) { const p = path.join(d, n); if (statSync(p).isDirectory()) walk(p); else routes.push(p) } }
   walk(path.join(ROOT, "app"))
   assert.ok(!routes.some((f) => /\[.*\]/.test(f)), "no dynamic route")
-  for (const f of routes.filter((f) => /\.(tsx?|mjs)$/.test(f))) assert.ok(!/components\/pages\//.test(read(path.relative(ROOT, f))), f)
+  const templates = new Set(v.files)
+  for (const f of routes.filter((f) => /\.(tsx?|mjs)$/.test(f))) {
+    const rel = path.relative(ROOT, f).split(path.sep).join("/")
+    if (!templates.has(rel)) assert.ok(!/components\/pages\//.test(read(rel)), rel)
+  }
 })
 
 test("no public structured-data, navigation or link exposure while unpublished", () => {

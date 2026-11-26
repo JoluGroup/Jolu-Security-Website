@@ -218,13 +218,18 @@ describe("structured data", () => {
 })
 
 describe("planned pages stay unpublished and metric-free", () => {
-  it("no planned page is live, in the sitemap, or has a live route", () => {
+  // Release 04B: a planned SERVICE page may have a route directory, holding only the canonical gated template (which answers
+  // 404 until the gate publishes the page). Every other planned page still has no route directory.
+  it("no planned page is live or in the sitemap; only the seven service routes exist, each the canonical gated template", async () => {
+    const R = await import("../helpers/manifest-routes.mjs")
     const live = new Set(LIVE_PAGES.map((p) => p.path))
     const inSitemap = new Set(sitemap().map((e) => new URL(e.url).pathname))
     for (const page of PLANNED_PAGES) {
       assert.equal(live.has(page.path), false, page.path)
       assert.equal(inSitemap.has(page.path), false, page.path)
-      assert.throws(() => statSync(path.join(ROOT, "app", page.path)), undefined, `unexpected route directory for ${page.path}`)
+      const m = /^\/services\/([a-z0-9-]+)\/$/.exec(page.path)
+      if (m) assert.equal(readFileSync(path.join(ROOT, "app/services", m[1], "page.tsx"), "utf8"), R.goodRoute("service", m[1]), page.path)
+      else assert.throws(() => statSync(path.join(ROOT, "app", page.path)), undefined, `unexpected route directory for ${page.path}`)
     }
   })
   it("one primary URL per intent: planned paths and primary keywords are unique", () => {

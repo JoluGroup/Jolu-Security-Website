@@ -102,3 +102,23 @@ export function buildRouteTable(): readonly RouteEntry[] {
   rows.set("/about", { path: "/about", kind: "about", status: "planned-no-gate-support", primaryKeyword: null, keywordCount: 0, briefs: briefsFor("/about") })
   return [...rows.values()]
 }
+
+/**
+ * Release 04B: the three layers of a service or location destination, kept separate on purpose.
+ *  A. routeSupported    a static route file exists for the planned slug. It is ALWAYS the canonical gated template
+ *                       (tests/helpers/manifest-routes.mjs goodRoute, enforced byte for byte by tests), which looks the
+ *                       page up through the publication gate and calls notFound() when the gate refuses it.
+ *  B. manifested        the page has an entry in the approved publication manifest (lib/seo/publication-manifest.ts).
+ *  C. publiclyAvailable the publication gate publishes the page: approved record, verified evidence, reviews, manifest.
+ * Only C makes content reachable. A without C answers 404, with no metadata, JSON-LD, sitemap or navigation entry.
+ */
+export type RouteLayers = { path: string; routeSupported: boolean; manifested: boolean; publiclyAvailable: boolean }
+export const SUPPORTED_SERVICE_ROUTES = Object.freeze(SERVICE_CONTENT.map((c) => `/services/${c.slug}`))
+export function routeLayers(path: string): RouteLayers {
+  return {
+    path,
+    routeSupported: SUPPORTED_SERVICE_ROUTES.includes(path),
+    manifested: PUBLICATION_MANIFEST.some((e) => e.publicPath === path),
+    publiclyAvailable: publishedPagePaths().includes(path),
+  }
+}

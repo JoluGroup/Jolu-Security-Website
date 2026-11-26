@@ -14,6 +14,20 @@ Computed by `lib/seo/traceability.ts` from the repository's keyword registry (`l
 
 Consequence: the 311 keyword rows are updated below. The 189 non-keyword rows (audit findings A01-A15, tasks T01-T28, briefs C01-C15 and the remaining requirement rows) and the 160 AI prompt-test slots are **not re-classified here**, because their source rows are unavailable and inventing them is not acceptable. The 160 slots (20 prompts x 4 platforms x baseline and day 90) remain in the plan as post-launch item `PLQ-04`; branded prompts must use "JOLU SECURITY". No AI visibility result exists. Supplying the workbook ZIP or the four report files would allow the remaining rows to be updated.
 
+## Exact source files needed to restore the 500-row matrix
+
+Outstanding source-recovery requirement (Release 04C or earlier, whenever supplied). Supply any ONE of these sets; nothing is reconstructed from memory.
+
+| # | File | Expected SHA-256 | Restores |
+| --- | --- | --- | --- |
+| 1 | `Jolu Security SEO Keyword(1).xlsx` | `9374da6f84bc56cce9b6e099702a222de6983a564dceda526512773f75abc815` | keyword sheet re-verification (the 311 rows are already in the repository) |
+| 2 | `Jolu Security AEO & GEO.xlsx` | `18d3ef7a6c0c226cc45147f9149e04f34fe26534c289e3961c67f2c2544be618` | audit findings A01-A15, tasks T01-T28, briefs C01-C15, the 20 prompts behind the 160 AI prompt-test slots |
+| 3 | `traceability-matrix.csv` (previous environment, `/home/claude/reports/r04/`) | not recorded | all 500 rows with their earlier classifications |
+| 4 | `prompt-inventory.csv` (same folder) | not recorded | the 160 prompt-test slots (20 prompts x 4 platforms x baseline and day 90) |
+| 5 | `reconciliation-report.md`, `service-gate-matrix.md` (same folder) | not recorded | the earlier reconciliation narrative and the original "31 requirements" count |
+
+Set A (files 1 and 2) is authoritative: the checksums are pinned above and the matrix can be regenerated from it. Set B (files 3 to 5) restores the previous classifications directly. The original workbooks must not be committed to the public repository; they are verified and used from a private location only.
+
 ## Keyword stages (311 rows)
 
 | Stage | Keywords |

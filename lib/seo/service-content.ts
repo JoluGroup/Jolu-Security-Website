@@ -24,7 +24,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     briefId: "C01",
     status: "draft-not-approved",
     metaTitle: "Security Guard Services in Kenya",
-    metaDescription: "What shapes the budget for manned guarding, what to ask any provider, and how to request a site assessment from JOLU SECURITY.",
+    metaDescription: "What to ask any manned guarding provider and how to request a site assessment from JOLU SECURITY. What shapes the budget for guarding.",
     h1: "Manned Guarding",
     answer:
       "The price of manned guarding depends mainly on how many guard posts a site needs, the hours each post is covered, the level of supervision, the risk profile of the site and the equipment required. Because every property differs, a site assessment is the practical way to get a quotation that matches your situation.",
@@ -89,10 +89,10 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     briefId: "C02",
     status: "draft-not-approved",
     metaTitle: "CCTV Installation in Kenya",
-    metaDescription: "How a CCTV installation is planned, what affects its budget, the data protection questions to settle, and how to request a site assessment.",
+    metaDescription: "How a CCTV installation is planned, the data protection questions to settle and how to request a site assessment. What affects the budget.",
     h1: "CCTV Installation",
     answer:
-      "A CCTV installation starts with a site survey that decides where cameras are needed, what each must see and how recordings are stored and viewed. The budget depends on the number of cameras, cabling, recording and storage, and maintenance. Recording people also brings data protection duties, which should be settled before installation.",
+      "A CCTV installation starts with a site survey that decides where cameras are needed, what each must see and how recordings are stored and viewed. The budget depends on the number of cameras, the cabling, recording and storage and the maintenance. Recording people also brings data protection duties, which should be settled before installation.",
     budget: {
       caption: "How budget factors for CCTV installation differ between two hypothetical sites",
       intro: "The scenarios below are invented to show how each factor changes the scope of a CCTV project. They are not past installations, client examples or quotations.",
@@ -154,10 +154,10 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     briefId: "C03",
     status: "draft-not-approved",
     metaTitle: "Electric Fence Installation in Kenya",
-    metaDescription: "What shapes the budget for an electric fence, the safety points to settle with an installer, and how to request a site assessment.",
+    metaDescription: "The safety points to settle with an electric fence installer and how to request a site assessment. What shapes the budget for a fence.",
     h1: "Electric Fencing",
     answer:
-      "The budget for an electric fence depends mainly on the length of the perimeter, the number of strands, the terrain, the energiser, the gates and corners, and ongoing maintenance. Safety matters as much as price, so ask how the system will be earthed, signed and checked. A site assessment gives you a quotation for your boundary.",
+      "The budget for an electric fence depends mainly on the length of the perimeter, the number of strands, the terrain, the energiser, the gates and corners and ongoing maintenance. Safety matters as much as price. Ask how the system will be earthed, signed and checked. A site assessment gives you a quotation for your boundary.",
     budget: {
       caption: "How budget factors for electric fencing differ between two hypothetical properties",
       intro: "The scenarios below are invented to show how each factor changes the scope of a fencing project. They are not past installations, client examples or quotations.",
@@ -220,7 +220,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     briefId: "C05",
     status: "draft-not-approved",
     metaTitle: "Event Security Services in Kenya",
-    metaDescription: "What to plan when hiring event security, what shapes the budget, and how to request a site assessment from JOLU SECURITY.",
+    metaDescription: "What to plan when hiring event security and how to request a site assessment from JOLU SECURITY. What shapes the budget for an event.",
     h1: "Events Security",
     answer:
       "To hire event security, tell the provider the event type, expected attendance, venue layout, entry points and timings. These decide how many personnel are needed and how access and crowd flow are managed. Because plans take time to prepare, ask for a site visit and a written quotation well before the date of your event.",
@@ -274,11 +274,11 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
       quote: quote("the event, the venue, the date and the number of guests you expect", "Tell us the timings, the entrances and any concerns, and who should be contacted to arrange a venue visit.", "The personnel, positions and briefing arrangements are then set out in a written quotation that you can compare with other providers."),
     },
     faqs: [
-      { question: "How early should I contact an event security provider?", answer: "As early as you can, once you know the date, venue and rough numbers. Planning, a site visit and a written quotation all take time, and the earlier you start the more options you will have." },
+      { question: "How early should I contact an event security provider?", answer: "As early as you can, once you know the date, venue and rough numbers. Planning, a site visit and a written quotation all take time. The earlier you start, the more options you will have." },
       { question: "What do I need to tell the provider?", answer: "Give the event type, venue, date and timings, expected attendance, entry points, any VIP or high-profile guests and any concerns. The more precise the brief, the more accurate the plan and quotation will be." },
       { question: "How many security personnel does an event need?", answer: "There is no standard ratio. The number depends on attendance, venue layout, the number of entrances, the type of event and the risks. A site visit is a better basis than a general formula." },
       { question: "Who is responsible for permits?", answer: "The organiser is normally responsible for permits and notifications. Check requirements with the relevant authorities and make sure the security plan respects any conditions of the permit." },
-      { question: "What happens if the guest list grows at the last minute?", answer: "Ask how the provider handles changes. Agree in writing the notice needed to increase personnel and how extra cover would be charged, so that you are not negotiating on the day." },
+      { question: "What happens if the guest list grows at the last minute?", answer: "Ask how the provider handles changes. Agree in writing the notice needed to increase personnel and how extra cover would be charged. That way you are not negotiating on the day." },
     ],
   },
   {
@@ -296,7 +296,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
       scenarioA: { label: "Scenario A: small warehouse (hypothetical)", description: "A modest site where a team is needed for a limited period." },
       scenarioB: { label: "Scenario B: large industrial site (hypothetical)", description: "A large, open site where teams are needed over longer periods." },
       rows: [
-        { factor: "Number of teams", whyItMatters: "Each dog and handler pair is a team, and more teams cost more to provide.", scenarioA: "One team.", scenarioB: "Several teams." },
+        { factor: "Number of teams", whyItMatters: "Each dog and handler pair is a team. More teams cost more to provide.", scenarioA: "One team.", scenarioB: "Several teams." },
         { factor: "Hours of cover", whyItMatters: "Longer cover needs relief arrangements so that dogs and handlers are properly rested.", scenarioA: "A limited period.", scenarioB: "Longer cover with relief teams." },
         { factor: "Site size and layout", whyItMatters: "Large, open or cluttered sites change how a team can be used.", scenarioA: "A contained site.", scenarioB: "A large site with open areas and buildings." },
         { factor: "Welfare and care", whyItMatters: "Housing, veterinary care, transport and rest are part of responsible dog care.", scenarioA: "Standard arrangements.", scenarioB: "Arrangements for longer deployments." },
@@ -352,7 +352,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     briefId: "C04",
     status: "draft-not-approved",
     metaTitle: "Alarm Response Services in Kenya",
-    metaDescription: "What an alarm response service should cover, what affects its budget, and how to request a site assessment from JOLU SECURITY.",
+    metaDescription: "What an alarm response service should cover and how to request a site assessment from JOLU SECURITY. What affects the budget for response.",
     h1: "Alarm Response",
     answer:
       "An alarm response service should state how alarms are monitored, who is dispatched, how a situation is escalated, what is reported to you afterwards and what the contract covers. Response commitments should be made only where operations can support them in writing, so ask for the terms in the contract before you rely on any promise.",

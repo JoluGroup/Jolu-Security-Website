@@ -10,7 +10,7 @@ const ROOT = path.resolve(import.meta.dirname, "../..")
 const { SERVICE_CONTENT, getServiceContent } = await import("@/lib/seo/service-content")
 const { contentToSections, sectionsMatchContent, serviceDisplayName } = await import("@/lib/seo/service-sections")
 const { AEO_HEADINGS } = await import("@/lib/seo/aeo-text")
-const { evaluatePublication, isPublished, publishedPagePaths, publishRecord } = await import("@/lib/seo/publication-gate")
+const { evaluatePublication, getPublishedPage, isPublished, publishedPagePaths, publishRecord } = await import("@/lib/seo/publication-gate")
 const { SERVICE_PAGE_RECORDS, LOCATION_PAGE_RECORDS } = await import("@/lib/seo/page-records")
 const { PUBLICATION_MANIFEST } = await import("@/lib/seo/publication-manifest")
 const { EVIDENCE_LEDGER } = await import("@/lib/seo/evidence-ledger")
@@ -174,9 +174,13 @@ describe("the seven pages stay UNPUBLISHED (the publication gate is the only way
     }
     for (const r of LOCATION_PAGE_RECORDS) assert.equal(isPublished(r), false, r.slug)
   })
-  it("no route file exists for any service page, so each URL is a native 404, and the sitemap omits them", () => {
-    for (const slug of SLUGS) assert.equal(existsSync(path.join(ROOT, "app/services", slug, "page.tsx")), false, slug)
-    assert.equal(existsSync(path.join(ROOT, "app/services")), false)
+  // Release 04B: the seven routes now exist, but ONLY as the canonical gated template (byte for byte), so with the real,
+  // empty registries each URL still answers 404 and the sitemap omits them (actual route rendering:
+  // tests/seo/service-route-acceptance.test.mjs).
+  it("every service route file is exactly the canonical gated template, the gate refuses each page, and the sitemap omits them", async () => {
+    const R = await import("../helpers/manifest-routes.mjs")
+    for (const slug of SLUGS) assert.equal(readFileSync(path.join(ROOT, "app/services", slug, "page.tsx"), "utf8"), R.goodRoute("service", slug), slug)
+    for (const slug of SLUGS) assert.equal(getPublishedPage("service", slug), null, slug)
     const urls = sitemap().map((e) => e.url)
     assert.deepEqual(urls, ["https://jolusecurity.com"])
   })

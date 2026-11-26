@@ -15,7 +15,7 @@ Checked 2026-11-26 from the Claude Account 2 environment. Status words: VERIFIED
 | Vercel deployment commit and preview READY | BLOCKED | Preview is protected (correct). Needs the owner signed in to Vercel to confirm the deployment for `9907837` |
 | Referral field, form validation, mobile menu, phone and WhatsApp links on the preview | BLOCKED | Same: protected preview. Covered by unit and render tests locally |
 | Analytics inactive | VERIFIED (code) | No measurement id, no tag script, no consent banner in the repository; tests assert it |
-| No service-page exposure | VERIFIED (code) | No `app/services`, empty manifest and ledger; sitemap lists only the homepage |
+| No service-page exposure | VERIFIED (code) | Seven `app/services/<slug>/page.tsx` canonical gated templates (Release 04B final) answer `notFound()` with the empty manifest and ledger; sitemap lists only the homepage. To confirm on the deployed preview after push: `curl -I` of each `/services/<slug>` returns HTTP 404 |
 
 ## B. DNS (public resolver, read-only)
 
@@ -45,7 +45,15 @@ Still needed (BLOCKED, owner sign-in): authenticated Cloudflare access, a comple
 | Resend | BLOCKED | Owner sign-in. Verify account ownership, sending domain and DNS verification, authorised sender, intended recipient, provider limits. Then one test enquiry in an approved window to an approved mailbox, with provider acceptance AND mailbox receipt evidence |
 | GitHub governance | PENDING | JoluGroup is a personal account on GitHub Free with a public repository. Confirm the current GitHub Pro price and terms before any spending (separate authorisation). The proposed model must work for a sole owner: required CI, no force-push, no branch deletion, PR-only changes to `main`, independent engineering review recorded in the PR (no impossible second GitHub approver) |
 
-Enquiry limits in the code (for provider sizing): 5 per client per 10 minutes, **30 per hour site-wide** (default; the handover's "200 per hour" is out of date, changed in commit `3320350`), **80 per 24 hours site-wide**, each configurable by environment variable within fixed bounds.
+Enquiry limits, verified in `lib/enquiry/rate-limit.ts` (`DEFAULTS`) and `.env.example`:
+
+| Limit | Default | Override variable | Accepted range |
+| --- | --- | --- | --- |
+| Per client | 5 per 600 s (10 minutes) | `ENQUIRY_CLIENT_LIMIT`, `ENQUIRY_CLIENT_WINDOW_SECONDS` | 1-1000; 60-86400 s |
+| Site-wide hourly | **30 per 3600 s** | `ENQUIRY_GLOBAL_LIMIT`, `ENQUIRY_GLOBAL_WINDOW_SECONDS` | 1-100000; 60-86400 s |
+| Site-wide daily | **80 per 86400 s** | `ENQUIRY_DAILY_LIMIT`, `ENQUIRY_DAILY_WINDOW_SECONDS` | 1-100000; 60-86400 s |
+
+The obsolete "200 per hour" was the hourly default before commit `3320350`. A value outside its range, or not a whole number, falls back to the default. The repository sets no override (no `vercel.json`; `.env.example` lists them commented out). Whether the Vercel project sets any override for preview or production can only be read in Vercel (owner sign-in). No quota was changed.
 
 ## D. Staff-asset privacy containment
 
@@ -55,4 +63,4 @@ Enquiry limits in the code (for provider sizing): 5 per client per 10 minutes, *
 | Live legacy website | **NOT CONTAINED** | `https://jolusecurity.com/` is still the legacy Lovable site, and `/lovable-uploads/company-profile.pdf` still returns the 6-page company profile PDF (checked 2026-11-26). Staff portrait paths were not probed (the repository records hashes only) |
 | Older public Git history | NOT CONTAINED | Old blobs remain in `main` and earlier branches. Making the repository private, or an authorised history rewrite, is required; neither revokes existing copies |
 
-Prepared, not executed: explicit 404 handling for removed assets on the new site (no SPA fallback; Next.js answers unknown paths with a real 404); a hash-only manifest; the containment plan. Not recoverable in this environment: the private recovery archive and the GitHub Support escalation draft (previous environment). Live containment needs owner access to the legacy host behind `64.204.254.44`, a confirmed document root, and a management decision on the two PDFs (questionnaire A11). Do not delete a referenced PDF without that decision.
+Step-by-step owner runbook: `docs/release04b/legacy-containment-runbook.md` (host identification, read-only document-root check against the hash manifest, private backup, removal with explicit 404 instead of SPA fallback, verification). The host behind `64.204.254.44` has no reverse-DNS name (NXDOMAIN, checked 2026-11-27), so it must be identified from the owner's records. Prepared, not executed: explicit 404 handling for removed assets on the new site (no SPA fallback; Next.js answers unknown paths with a real 404); a hash-only manifest; the containment plan. Not recoverable in this environment: the private recovery archive and the GitHub Support escalation draft (previous environment). Live containment needs owner access to the legacy host behind `64.204.254.44`, a confirmed document root, and a management decision on the two PDFs (questionnaire A11). Do not delete a referenced PDF without that decision.

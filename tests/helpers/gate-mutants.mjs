@@ -20,6 +20,8 @@ export const MUTANTS = [
   M("R04B-02 informal amounts allowed", "pattern: INFORMAL_AMOUNTS }", "pattern: /(?!)/ }"),
   M("R04B-02 free and package offers allowed", "pattern: FREE_AND_PACKAGE_OFFERS }", "pattern: /(?!)/ }"),
   M("R04B-03 spelled-out amounts and bargain phrasing allowed", "|\\bfor the price of\\b|", "|\\bzzfor the price of\\b|"),
+  M("R04B-06 one-clause rule bypassed", "    else if (w) {", "    else if (false) {"),
+  M("R04B-06 clause boundaries ignored", "  return out.filter((c) => /[A-Za-z]/.test(c.text))", "  return [{ from: 0, text: sentence }]"),
   M("R04B-05 bargain and offer wording allowed", "pattern: /\\b(?:(?:good|great|better|best|fantastic|unbeatable)\\s+deals?|", "pattern: /(?!)\\b(?:(?:good|great|better|best|fantastic|unbeatable)\\s+deals?|"),
   M("R04B-04 price-word sentence allowlist bypassed", "if (w && !educationalPriceSentence(m[0]))", "if (false)"),
   M("R04B-04 number words allowed inside an educational frame", "&& !NUMBER_WORD.test(sentence.replace(", "&& !/(?!)/.test(sentence.replace("),

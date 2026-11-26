@@ -14,6 +14,8 @@ Under `cacheComponents`:
 
 Each page folder contains only a page that renders `PublishedPage` for its own fixed slug and exports `generateMetadata` using `gatedPageMetadata`. If the gate returns null at build or request time the page calls `notFound()`. No route is created by 5D.4.
 
+**Release 04B: the seven service route folders now exist** (`app/services/<slug>/page.tsx` for manned-guarding, cctv-installation, electric-fencing, events-security, k9-unit-services, alarm-response, vip-close-protection), each byte for byte the canonical template (`goodRoute` in `tests/helpers/manifest-routes.mjs`). Three layers stay separate (`routeLayers()` in `lib/seo/route-architecture.ts`): (A) the route is supported, (B) the page has an approved manifest entry, (C) the gate publishes it. Only C renders content; A alone answers `notFound()` with no metadata, JSON-LD, sitemap or navigation entry. The earlier invariant "no route file without a manifest entry" is replaced by the stronger "every route file is the exact canonical gated template for a planned slug" (`verifyRouteTemplates`), which keeps its purpose: no unpublished page can be reached. Location routes are still not created. Still to confirm on a deployed preview, because it cannot be checked without a real build: `curl -I` of each `/services/<slug>` returns HTTP 404 (not 200 with `noindex`).
+
 ## Files
 
 | File | Role |
@@ -96,7 +98,7 @@ Findings are from the 5D.9 audit. Nothing is published; the allowlist, ledger an
 2. Add independent evidence to the ledger (with attested NAP values for a location, expiry dates for licences).
 3. Approve any claims in `lib/claims.ts` through the existing claims process.
 4. Fill the record: sections with evidence ids and bound claims, `nap` and coverage for a location, the approval with editorial and compliance reviews and per-claim approvals.
-5. Add the manifest entry, the static route folder and its metadata; update `PUBLICATION_AS_OF` in the same change.
+5. Add the manifest entry (service route folders already exist as canonical templates since Release 04B; a location still needs its folder) and update `PUBLICATION_AS_OF` in the same change.
 6. Complete the acceptance checklists in the 5B.1 and 5B.2 documents; run the build and confirm an unknown slug returns HTTP 404.
 7. Independent review before merge (see `governance-codeowners-proposal.md`).
 
@@ -109,7 +111,7 @@ Findings are from the 5D.9 audit. Nothing is published; the allowlist, ledger an
 
 ## Release 04 additions (Lane SEO)
 
-- **Answer-first service content (unpublished).** `lib/seo/service-content.ts` holds draft content for the seven service pages (AEO briefs C01-C07); `lib/seo/service-sections.ts` flattens it into the `ContentSection[]` the gate reviews; `components/aeo/*` render it. `PublishedPage` uses the answer-first layout only when the gate-published record's sections equal the content's sections exactly, so reviewed copy and rendered copy cannot differ. All headings are free of pricing and licensing wording because the gate rejects claims in headings. No route file exists, the manifest and ledger are empty, and the pages answer 404.
+- **Answer-first service content (unpublished).** `lib/seo/service-content.ts` holds draft content for the seven service pages (AEO briefs C01-C07); `lib/seo/service-sections.ts` flattens it into the `ContentSection[]` the gate reviews; `components/aeo/*` render it. `PublishedPage` uses the answer-first layout only when the gate-published record's sections equal the content's sections exactly, so reviewed copy and rendered copy cannot differ. All headings are free of pricing and licensing wording because the gate rejects claims in headings. Since Release 04B the seven route files exist as canonical gated templates; the manifest and ledger are empty, so the pages answer 404.
 - **Structured data for those pages.** `lib/seo/service-json-ld.ts` builds Organization, Service, BreadcrumbList and FAQPage from the same content, and returns null unless the page passed the gate and the sections match.
 - **Route reconciliation.** `lib/seo/route-architecture.ts` gives one canonical path (no trailing slash) per intent, records the four workbook rows whose suggested URL contradicted their intent, and maps AEO briefs C01-C15 onto existing routes without creating second URLs. `lib/seo/location-support.ts` types location opportunities (no address, no coverage).
 - See `release04-technical-audit.md` and `release04-evidence-gated-inventory.md`.

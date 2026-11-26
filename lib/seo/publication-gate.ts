@@ -123,7 +123,7 @@ const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = 
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\b[^.?!]{0,24}?\b(?:lowest|lower|cheapest|cheaper|cheap|less|free|negotiable|affordable|reasonable|competitive|transparent|fair|honest|flexible|pocket[- ]friendly|unbeatable|best|low|great value|good value|kept to a minimum|minimal|minimum)\b`, "i") },
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:less|lower) than\b|\b(?:cheaper|less expensive|more affordable|most affordable|most reasonable|unbeatable|pocket[- ]friendly)\b`, "i") },
   // R04B-05: bargain and offer wording that can ride in a second clause of an educational frame sentence
-  { category: CATEGORY.pricing, pattern: /\b(?:(?:good|great|better|best|fantastic|unbeatable)\s+deals?|bargains?|a steal|gratis|undercut\w*|economical|offer ends|(?:never|won't|will not) (?:go|goes) up|limited[- ]time)\b/i },
+  { category: CATEGORY.pricing, pattern: /\b(?:(?:good|great|better|best|fantastic|unbeatable)\s+deals?|bargains?|a steal|gratis|undercut\w*|economical|offer ends|(?:never|won't|will not) (?:go|goes) up|limited[- ]time|beats?\s+(?:every|any|all|other|the)|outprice\w*)\b/i },
   // R04B-04: a spelled-out amount tied to a period ("under ten thousand a month") needs no price word to be a price
   { category: CATEGORY.pricing, pattern: /\b(?:hundred|thousand|million|k)\b[^.?!]{0,12}?\b(?:a|per|each|every)\s+(?:month|week|day|hour|year|night|shift|visit)\b/i },
   // R04B-03: amounts spelled out or stated as fractions ("cost twenty five thousand", "half of what others ask")
@@ -155,6 +155,25 @@ const EDUCATIONAL_PRICE_FRAMES: readonly RegExp[] = [
   /\bhow\b[^.?!]{0,50}\bwould be charged\b|\b(?:fees|charges)\b[^.?!]{0,30}\bare included\b|\bcost more to provide\b/i,
 ]
 const NUMBER_WORD = /(?<![A-Za-z])\d|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundreds?|thousands?|millions?|half|double|twice|triple|quarter|fraction|zero)\b/i
+/**
+ * Clauses of one sentence. A clause boundary is a semicolon, colon, dash or bracket, or a comma followed by a joining
+ * word, or a joining word that starts a new clause without a comma ("but", "while", "whereas", "yet", "plus").
+ * Fail closed: anything that might join two claims is a boundary, so a split that is too fine only means a frame
+ * must be repeated, never that a claim slips through.
+ */
+const CLAUSE_BOUNDARY = /\s*(?:[;:()\u2013\u2014]|\s-{1,2}\s|,\s*(?:and|but|so|or|nor|yet|while|whereas|although|though|because|since|as|plus|then|which|who|where|with)\b|\s(?:but|while|whereas|yet|plus|so that|and also|and even)\b)\s*/gi
+function clausesOf(sentence: string): { from: number; text: string }[] {
+  const out: { from: number; text: string }[] = []
+  let last = 0
+  CLAUSE_BOUNDARY.lastIndex = 0
+  for (let m = CLAUSE_BOUNDARY.exec(sentence); m; m = CLAUSE_BOUNDARY.exec(sentence)) {
+    if (m[0].length === 0) { CLAUSE_BOUNDARY.lastIndex++; continue }
+    out.push({ from: last, text: sentence.slice(last, m.index) })
+    last = m.index + m[0].length
+  }
+  out.push({ from: last, text: sentence.slice(last) })
+  return out.filter((c) => /[A-Za-z]/.test(c.text))
+}
 function educationalPriceSentence(sentence: string): boolean {
   // "two hypothetical sites" / "the two scenarios" count the worked examples, not money; nothing else is exempt.
   return EDUCATIONAL_PRICE_FRAMES.some((f) => f.test(sentence)) && !NUMBER_WORD.test(sentence.replace(/\btwo (?:hypothetical|scenarios)\b/gi, ""))
@@ -172,6 +191,14 @@ function spansOf(text: string): Span[] {
   for (let m = sentences.exec(text); m; m = sentences.exec(text)) {
     const w = PRICE_WORD.exec(m[0])
     if (w && !educationalPriceSentence(m[0])) out.push({ from: m.index + w.index, to: m.index + w.index + w[0].length, category: CATEGORY.pricing, text: w[0] })
+    // R04B-06 one-clause rule (owner decision, Release 04B final): in a sentence that uses a price word, EVERY clause
+    // must itself carry an approved educational frame. A frame in one clause can no longer admit a commercial claim
+    // in another clause, with or without its own price word. Flagged at the start of each clause that has no frame.
+    else if (w) {
+      for (const c of clausesOf(m[0])) {
+        if (!EDUCATIONAL_PRICE_FRAMES.some((f) => f.test(c.text))) out.push({ from: m.index + c.from, to: m.index + c.from + Math.max(1, c.text.length), category: CATEGORY.pricing, text: c.text })
+      }
+    }
   }
   return out
 }

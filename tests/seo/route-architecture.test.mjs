@@ -103,10 +103,15 @@ describe("status: only the homepage and the Blog placeholder are live; nothing p
     assert.equal(table.find((e) => e.path === "/about").status, "planned-no-gate-support")
     for (const e of table.filter((e) => e.kind === "insight")) assert.equal(e.status, "editorial-planned")
   })
-  it("no route file exists for any non-live path", () => {
+  // Release 04B: a non-live path may have a route file only if it is one of the seven supported service routes (layer A),
+  // and then the gate keeps it unavailable (layer C) until it is manifested (layer B) and published.
+  it("non-live paths: only the seven supported service routes have a route file, and none is manifested or available", () => {
     for (const e of table.filter((e) => e.status !== "live" && e.status !== "live-noindex")) {
-      assert.equal(existsSync(path.join(ROOT, "app", e.path.slice(1), "page.tsx")), false, e.path)
+      const exists = existsSync(path.join(ROOT, "app", e.path.slice(1), "page.tsx"))
+      assert.equal(exists, RA.SUPPORTED_SERVICE_ROUTES.includes(e.path), e.path)
+      assert.deepEqual(RA.routeLayers(e.path), { path: e.path, routeSupported: exists, manifested: false, publiclyAvailable: false }, e.path)
     }
+    assert.equal(RA.SUPPORTED_SERVICE_ROUTES.length, 7)
   })
 })
 

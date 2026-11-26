@@ -25,11 +25,23 @@ const withTree = (files, fn) => { const d = tree(files); try { return fn(d) } fi
 const E = entry("/services/manned-guarding")
 const GOOD = R.goodRoute("service", "manned-guarding")
 
-test("production: the manifest is empty, no route exists, and the verifier would still have caught a mismatch", () => {
+test("production: the manifest is empty, routes exist only as canonical templates, and the verifier would still have caught a mismatch", async () => {
   assert.equal(PUBLICATION_MANIFEST.length, 0)
   const { checked, problems } = R.verifyManifestRoutes(PUBLICATION_MANIFEST, ROOT)
   assert.equal(checked, 0); assert.deepEqual(problems, [])
-  assert.deepEqual(R.findUnmanifestedRoutes(PUBLICATION_MANIFEST, ROOT), [])
+  // Release 04B: route files exist ahead of publication, but every unmanifested one must be the canonical gated template
+  // (stronger than "none exists": the file is pinned byte for byte), so no unpublished page can be reached.
+  const unmanifested = R.findUnmanifestedRoutes(PUBLICATION_MANIFEST, ROOT)
+  const { knownSlugs } = await import("@/lib/seo/publication-gate")
+  const v = R.verifyRouteTemplates(ROOT, { service: knownSlugs("service"), location: knownSlugs("location") })
+  assert.deepEqual(v.problems, [])
+  assert.deepEqual(unmanifested.sort(), v.files.sort())
+  assert.equal(unmanifested.length, 7)
+  // non-vacuity: a tampered template is caught
+  const tampered = withTree({ "app/services/manned-guarding/page.tsx": GOOD.replace("notFound()\n  return", "return") }, (d) => R.verifyRouteTemplates(d, { service: ["manned-guarding"], location: [] }))
+  assert.equal(tampered.problems.length, 1)
+  assert.equal(withTree({ "app/services/unknown-slug/page.tsx": GOOD }, (d) => R.verifyRouteTemplates(d, { service: ["manned-guarding"], location: [] })).problems.length, 1)
+  assert.equal(withTree({ "app/services/[slug]/page.tsx": GOOD }, (d) => R.verifyRouteTemplates(d, { service: ["manned-guarding"], location: [] })).problems.length, 1)
   // non-vacuity: the same verifier against a fixture demonstrably checks something
   const r = withTree({ [E.routeFile]: GOOD }, (d) => R.verifyManifestRoutes([E], d))
   assert.equal(r.checked, 1)

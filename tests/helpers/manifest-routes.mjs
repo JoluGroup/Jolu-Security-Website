@@ -72,3 +72,32 @@ export default function Page() {
   return <PublishedPage kind="${kind}" slug="${slug}" />
 }
 `
+
+/**
+ * Release 04B: route files may exist ahead of publication, but ONLY as the canonical gated template. Every file under
+ * app/services and app/locations must equal goodRoute(kind, slug) byte for byte for a planned slug, in a static folder.
+ * This keeps the security purpose of findUnmanifestedRoutes (no reachable unpublished page): a template route renders
+ * nothing unless the publication gate publishes the page. Returns { files, problems }.
+ */
+export function verifyRouteTemplates(root, plannedSlugs) {
+  const files = []
+  const problems = []
+  const walk = (dir) => {
+    if (!existsSync(dir)) return
+    for (const n of readdirSync(dir)) {
+      const p = path.join(dir, n)
+      if (statSync(p).isDirectory()) walk(p)
+      else files.push(path.relative(root, p).split(path.sep).join("/"))
+    }
+  }
+  walk(path.join(root, "app/services"))
+  walk(path.join(root, "app/locations"))
+  for (const f of files) {
+    const m = /^app\/(services|locations)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/page\.tsx$/.exec(f)
+    if (!m) { problems.push(`${f}: not a static page.tsx in a single planned-slug folder`); continue }
+    const kind = m[1] === "services" ? "service" : "location"
+    if (!(plannedSlugs[kind] ?? []).includes(m[2])) { problems.push(`${f}: ${m[2]} is not a planned ${kind} slug`); continue }
+    if (readFileSync(path.join(root, f), "utf8") !== goodRoute(kind, m[2])) problems.push(`${f}: differs from the canonical gated template`)
+  }
+  return { files, problems }
+}

@@ -1,6 +1,6 @@
 // Release 04B lane D: service route acceptance. The route architecture is the canonical static template
 // (tests/helpers/manifest-routes.mjs, docs/seo/page-architecture.md) rendered through the publication gate. A route file
-// is added in the SAME reviewed change as its manifest entry, so production has no app/services folder today.
+// exists for each of the seven services, pinned byte for byte; only the publication gate decides whether it renders.
 //
 // APPROVED behaviour is proven in isolated fixtures only: a synthetic world (invented evidence and approvals, never the real
 // ledger) whose manifest entry carries the REAL draft metadata, and a temporary route tree written from the canonical
@@ -111,7 +111,7 @@ describe("unapproved (production): every service page is unreachable on every su
       assert.equal(gate.getPublishedPage("service", slug), null, "route lookup returns null, so the route calls notFound()")
       assert.equal(gatedPageMetadata(rec), null, "no metadata")
       assert.equal(buildServicePageJsonLd(rec, contentFor(slug)), null, "no JSON-LD")
-      assert.ok(!existsSync(path.join(ROOT, "app/services", slug)), "no route file")
+      assert.equal(readFileSync(path.join(ROOT, "app/services", slug, "page.tsx"), "utf8"), R.goodRoute("service", slug), "route file is exactly the canonical gated template")
     })
   }
   it("sitemap, navigation and the published-path list are empty of service pages", () => {
@@ -139,5 +139,88 @@ describe("draft content never reaches a client bundle or a public API", () => {
   })
   it("no API route reads draft content or page records", () => {
     for (const f of files.filter((f) => /^app\/api\//.test(rel(f)))) assert.ok(!/lib\/seo\//.test(readFileSync(f, "utf8")), rel(f))
+  })
+})
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Release 04B final: the ACTUAL route files app/services/<slug>/page.tsx, rendered through the real PublishedPage,
+// ServiceLanding, gate and metadata code (tests/helpers/route-render.mjs). Approved behaviour uses isolated fixtures whose
+// evidence and approvals are synthetic and never enter the real ledger; unapproved behaviour uses the real registries.
+const RR = await import("../helpers/route-render.mjs")
+const routeFile = (slug) => `app/services/${slug}/page.tsx`
+
+/** Two pages approved together in one fixture (so related links between published pages can be shown). */
+function approvedPair(a, b) {
+  const A = approved(a), B = approved(b)
+  const records = SERVICE_PAGE_RECORDS.map((r) => (r.slug === a ? A.w.record : r.slug === b ? B.w.record : r))
+  const ids = new Set()
+  const ledger = [...A.w.deps.ledger, ...B.w.deps.ledger].filter((e) => !ids.has(e.id) && ids.add(e.id))
+  const deps = { ...A.w.deps, ledger, manifest: [...A.w.deps.manifest, ...B.w.deps.manifest] }
+  return { records, deps, A, B }
+}
+
+describe("actual route files: approved isolated fixtures render the full page", () => {
+  for (const slug of READY) {
+    it(`${slug}`, async () => {
+      const other = slug === "alarm-response" ? "cctv-installation" : "alarm-response"
+      const { records, deps, A } = approvedPair(slug, other)
+      const c = A.c
+      const fixture = { records, deps }
+      const r = await RR.renderRoute(routeFile(slug), fixture)
+      assert.equal(r.status, 200)
+      const html = r.html
+      const text = textOf(html)
+      // initial semantic HTML: one H1, main landmark content, no client script needed for the copy
+      assert.equal((html.match(/<h1[ >]/g) ?? []).length, 1)
+      assert.match(html, new RegExp(`<h1[^>]*>${c.h1}</h1>`))
+      assert.ok(text.includes(c.answer), "answer-first summary")
+      assert.ok(text.indexOf(c.answer) < text.indexOf(c.budget.caption), "answer before the cost-driver table")
+      assert.equal((html.match(/<table[ >]/g) ?? []).length, 1, "cost-driver table")
+      assert.match(html, /<caption[^>]*>/)
+      assert.ok(text.includes(c.budget.scenarioA.label) && /\(hypothetical\)/.test(c.budget.scenarioA.label), "clearly hypothetical scenario")
+      assert.ok(c.faqs.length >= 4 && c.faqs.length <= 6)
+      for (const f of c.faqs) assert.ok(text.includes(f.question) && text.includes(f.answer), f.question)
+      // related service links: the other APPROVED page is linked; unpublished ones are not
+      const related = /<nav aria-label="Related services".*?<\/nav>/s.exec(html)[0]
+      assert.ok(related.includes(`href="/services/${other}"`), "links the other published service")
+      for (const s of EXPECTED_SLUGS.filter((s) => s !== slug && s !== other)) assert.ok(!related.includes(`href="/services/${s}"`), `no link to unpublished ${s}`)
+      // site-assessment CTA
+      assert.ok(html.includes(`href="/?service=${A.w.record.serviceId}#contact"`))
+      assert.match(text, /Request a site assessment for/)
+      // structured data in the initial HTML, matching the visible FAQ
+      const ld = JSON.parse(/<script type="application\/ld\+json">(.*?)<\/script>/s.exec(html)[1])
+      assert.deepEqual(ld["@graph"].map((n) => n["@type"]).sort(), ["BreadcrumbList", "FAQPage", "Organization", "Service"])
+      assert.deepEqual(ld["@graph"].find((n) => n["@type"] === "FAQPage").mainEntity.map((q) => q.name), c.faqs.map((f) => f.question))
+      // canonical metadata from the route's own generateMetadata
+      const m = await RR.routeMetadata(routeFile(slug), fixture)
+      assert.equal(m.status, 200)
+      assert.equal(m.metadata.title, c.metaTitle)
+      assert.equal(m.metadata.alternates.canonical, `/services/${slug}`)
+      assert.equal(m.metadata.openGraph.url, `/services/${slug}`)
+    })
+  }
+  it("manned guarding: even in an approved fixture, the route answers 404 because the regulator sentence lacks compliance approval", async () => {
+    const { w, records } = approved("manned-guarding")
+    assert.deepEqual((await RR.renderRoute(routeFile("manned-guarding"), { records, deps: w.deps })), { status: 404 })
+    assert.deepEqual((await RR.routeMetadata(routeFile("manned-guarding"), { records, deps: w.deps })), { status: 404 })
+  })
+})
+
+describe("actual route files: unapproved real content answers 404 everywhere", () => {
+  for (const slug of EXPECTED_SLUGS) {
+    it(`${slug}: page and metadata are 404 against the real registries`, async () => {
+      assert.deepEqual(await RR.renderRoute(routeFile(slug)), { status: 404 })
+      assert.deepEqual(await RR.routeMetadata(routeFile(slug)), { status: 404 })
+    })
+  }
+  it("route layers: all seven supported (A), none manifested (B), none publicly available (C)", async () => {
+    const RA = await import("@/lib/seo/route-architecture")
+    for (const slug of EXPECTED_SLUGS) assert.deepEqual(RA.routeLayers(`/services/${slug}`), { path: `/services/${slug}`, routeSupported: true, manifested: false, publiclyAvailable: false })
+  })
+  it("the privacy CI guard does not block approved isolated fixtures (it checks only the real manifest)", async () => {
+    const { records, deps } = approvedPair("cctv-installation", "alarm-response")
+    assert.equal((await RR.renderRoute(routeFile("cctv-installation"), { records, deps })).status, 200)
+    const { PUBLICATION_MANIFEST } = await import("@/lib/seo/publication-manifest")
+    assert.equal(PUBLICATION_MANIFEST.length, 0)
   })
 })

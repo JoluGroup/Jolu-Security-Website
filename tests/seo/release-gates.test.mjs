@@ -100,3 +100,16 @@ test("the disposition document records every reclassified id and the full servic
   for (const p of RG.PRODUCTION_RELEASE_GATE) assert.ok(doc.includes(p.id), p.id)
   for (const p of RG.POST_LAUNCH_QUEUE) assert.ok(doc.includes(p.id), p.id)
 })
+
+// R04B-02 (independent review, finding 2): the production gate is enforced in CI where the repository can enforce it.
+// Every published page carries the enquiry call to action, so no page may enter the publication manifest while the
+// privacy notice (PRG-01) is unverified. Production activation itself (all of PRG-01..08) is an owner-controlled action
+// outside the repository, recorded with productionReleaseBlockers().
+test("CI guard: the publication manifest stays empty until PRG-01 (approved privacy notice) is VERIFIED", async () => {
+  const { PUBLICATION_MANIFEST } = await import("@/lib/seo/publication-manifest")
+  const prg01 = RG.PRODUCTION_RELEASE_GATE.find((p) => p.id === "PRG-01")
+  const privacyReady = RG.productionReleaseBlockers([prg01]).length === 0
+  if (PUBLICATION_MANIFEST.length > 0) assert.ok(privacyReady, "a page is in the publication manifest but the privacy notice (PRG-01) is not verified")
+  assert.equal(privacyReady, false, "today PRG-01 is pending, so this guard is live")
+  assert.equal(PUBLICATION_MANIFEST.length, 0)
+})

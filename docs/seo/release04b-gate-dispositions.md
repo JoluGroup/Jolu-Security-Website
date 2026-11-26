@@ -9,7 +9,7 @@ The handover cites 31 requirements per service page. That figure cannot be repro
 ## Gates
 
 - **A. Content evidence gate.** Per page, enforced by the publication gate. Facts the page states or depends on.
-- **B. Production release gate.** Site-wide, before production activation and DNS cutover (`PRODUCTION_RELEASE_GATE`, items `PRG-01` to `PRG-08`). Checked by `productionReleaseBlockers()`; it never decides whether an individual page's facts are true.
+- **B. Production release gate.** Site-wide, before production activation and DNS cutover (`PRODUCTION_RELEASE_GATE`, items `PRG-01` to `PRG-08`). `productionReleaseBlockers()` lists what is still open; production activation is an owner-controlled action outside the repository, so the full list is a checklist, not code enforcement. CI does enforce one part: `tests/seo/release-gates.test.mjs` fails if any page enters the publication manifest while `PRG-01` (approved privacy notice) is unverified, because every page carries the enquiry form link. The gate never decides whether an individual page's facts are true.
 - **C. Post-launch optimisation queue.** Marketing measurement and growth (`POST_LAUNCH_QUEUE`, items `PLQ-01` to `PLQ-08`). Never a publication condition.
 
 ## Evidence items (13 per service page at 9907837)
@@ -92,7 +92,11 @@ Conditional content evidence is unchanged: a page that asserts a licence, a pric
 
 Before: any page sentence containing cost, price, rate, fee, quote or quotation was a pricing claim, and no claim could unlock it. That refused educational cost-driver guidance and ordinary requests for a quotation.
 
-Now: the keyword classifier keeps its broad rule for keyword research, but on pages the scanner refuses pricing **claims** instead: currency words and money amounts, a price word near a figure, rates per unit, rate cards and price lists, fixed, guaranteed, lowest, cheapest, competitive or discounted prices, prices that "start from", no-hidden-fees and value-for-money claims, discounts, offers and anything free of charge. Still no claim scope permits the pricing category, so a real price needs a reviewed pricing decision and a registered, scoped claim before it can appear. Covered by 8 accepted and 13 refused cases and 6 mutants (`tests/helpers/gate-world.mjs`, `tests/helpers/gate-mutants.mjs`).
+Now: the keyword classifier keeps its broad rule for keyword research, but on pages the scanner looks for pricing **claims**. It refuses currency words and money amounts (including Sh, /=, 15k, "bob", thousands-separated figures and amounts tied to a period or unit), a price word near a figure, percentages, rate cards and price lists, positioning before or after the price word ("lowest prices", "rates are the lowest", "price is negotiable", "quotes are free"), comparisons ("cheaper", "costs less than"), "prices start from", no-hidden-fees, discounts, offers, complimentary or uncharged services, tiered packages and promotional value wording. No claim scope permits the pricing category, so a real price needs a reviewed pricing decision and a registered, scoped claim before it can appear.
+
+Limits, stated plainly: the scanner is a heuristic backstop for known wording, not proof that a page makes no pricing claim. Novel phrasings can still pass and remain the editorial and compliance reviewers' responsibility. It also fails closed on some harmless text: a price word within a short clause of any number is refused ("check the quotation within 7 days"), so editors should write numbers in words or move them to another sentence.
+
+Coverage: 11 accepted and 40 refused cases (including every reproduction from the independent review of `00212ee`) and 9 mutants, each killed by a case no other rule catches (`tests/helpers/gate-world.mjs`, `tests/helpers/gate-mutants.mjs`).
 
 ## Effect on the seven drafts (synthetic approved world, test-only)
 

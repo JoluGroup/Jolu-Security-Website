@@ -137,6 +137,9 @@ export const PRICING_ALLOWED = [
   "Should I choose a guard arrangement on price alone, or compare the scope that each provider proposes for the site?",
   "Budget factors for K9 unit services differ between sites because each dog and handler team adds to the arrangement.",
   "The budget for manned guarding typically depends on the number of security posts, required coverage hours and site requirements.",
+  "The arrangement should fit the risks you face rather than a standard package, and it should be reviewed when things change.",
+  "A K9 team can add value at large or open sites, and a site assessment should check whether it suits the property.",
+  "Agree in writing how extra cover would be charged, so that you are not negotiating about it on the day of the event.",
 ]
 /** R04B-01: pricing claims. Each must be refused for claim-sensitive (pricing) wording. [name, text] */
 export const PRICING_BLOCKED = [
@@ -153,6 +156,35 @@ export const PRICING_BLOCKED = [
   ["free site assessment", "Request your free site assessment today and a member of the team will arrange a convenient visit to the property."],
   ["prices start", "Our prices start low for every guarding contract signed with the operations team before the end of the month."],
   ["competitive rates", "We provide competitive rates for alarm response across the estates and business parks that the team already serves."],
+  // R04B-02: one case per rule that no other rule catches, so each rule is proven load-bearing by the mutation harness
+  ["currency word only", "All guarding contracts are invoiced in Kenyan shillings at the end of every calendar month for each site."],
+  ["price word near a plain figure", "The fee for a single post is 300 on the standard contract for residential estates and small offices."],
+  // R04B-02: cases from the independent review of 00212ee (refused at 9907837, published at 00212ee, or missed by both)
+  ["rates are the lowest", "Our rates are the lowest in Nakuru for homes, offices and estates across the region we serve."],
+  ["prices lower than", "Our prices are lower than other firms for homes, offices and estates across the region we serve."],
+  ["costs less than", "Our CCTV kits cost less than any other provider for homes, offices and estates across the region we serve."],
+  ["price is negotiable", "Price is negotiable after the site visit for homes, offices and estates across the region we serve."],
+  ["rates are negotiable", "Rates are negotiable for long-term clients for homes, offices and estates across the region we serve."],
+  ["most reasonable fees", "Our fees are among the most reasonable for homes, offices and estates across the region we serve."],
+  ["pocket friendly", "Our pricing is pocket friendly and flexible for homes, offices and estates across the region we serve."],
+  ["pricing is transparent", "Pricing is transparent and simple for homes, offices and estates across the region we serve."],
+  ["rates are fair", "Our rates are fair and honest for homes, offices and estates across the region we serve."],
+  ["quotes are free", "Quotes are free and come within one day for homes, offices and estates across the region we serve."],
+  ["Sh amount", "Each guard is Sh 20,000 monthly for homes, offices and estates across the region we serve."],
+  ["slash-equals amount", "A post comes to 20000/= monthly for homes, offices and estates across the region we serve."],
+  ["k amount", "Guarding from 15k monthly for homes, offices and estates across the region we serve."],
+  ["bob", "Patrols at 25 bob an hour for homes, offices and estates across the region we serve."],
+  ["bare amount", "Alarm response is just 2,500 for homes, offices and estates across the region we serve."],
+  ["amount each", "Cameras go for 8000 each for homes, offices and estates across the region we serve."],
+  ["amount range", "Installation typically runs 60,000 to 90,000 installed for homes, offices and estates across the region we serve."],
+  ["percentage saving", "Save 20% on the monthly invoice for homes, offices and estates across the region we serve."],
+  ["percent off", "Get 10 percent off the first contract for homes, offices and estates across the region we serve."],
+  ["survey is free", "The site survey is free for homes, offices and estates across the region we serve."],
+  ["do not charge", "We do not charge for the initial site assessment for homes, offices and estates across the region we serve."],
+  ["complimentary", "Installation is complimentary for homes, offices and estates across the region we serve."],
+  ["pay nothing", "Pay nothing for the first month for homes, offices and estates across the region we serve."],
+  ["unbeatable value", "Unbeatable value on guarding contracts for homes, offices and estates across the region we serve."],
+  ["tiered packages", "Choose Basic, Standard and Premium security packages for homes, offices and estates across the region we serve."],
 ]
 
 /** Worlds that MUST publish. [name, builder] */

@@ -3,9 +3,8 @@
 // Self-contained, DISABLED-BY-DEFAULT analytics mount. It renders nothing. With no
 // NEXT_PUBLIC_GA_MEASUREMENT_ID it does nothing at all (no listener, no script, no network).
 //
-// Integration (one line, for whoever owns app/layout.tsx), inside <body>:
-//     <AnalyticsRoot />      with   import { AnalyticsRoot } from "@/lib/analytics/analytics-root"
-// STATUS: not yet mounted, so phone_click / whatsapp_click are IMPLEMENTED BUT UNWIRED.
+// Mounted once in app/layout.tsx inside <body>. With no ID, phone_click / whatsapp_click
+// tracking is inert. Events also require consent via setAnalyticsConsent(true) (default: denied).
 import { useEffect } from "react"
 import { initAnalytics, track } from "@/lib/analytics/client"
 import { classifyLink, sourceFromTag } from "@/lib/analytics/click-tracking"

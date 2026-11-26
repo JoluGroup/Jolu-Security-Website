@@ -76,7 +76,7 @@ test("approved but unpublishable records are ERRORS, coded by cause (F7-03)", ()
   assert.ok(msgs(r1, "error").some((m) => /marked approved but is not publishable/.test(m) && /COM-05/.test(m)))
   assert.deepEqual(r1.publishedPaths, [])
   assert.ok(r1.errors >= 1)
-  const sup = W.world(); const old = sup.deps.ledger.find((e) => e.id === "CMP-07"); old.supersededBy = "CMP-07-R2"; sup.deps.ledger.push(W.entry("CMP-07-R2", { replaces: "CMP-07" }))
+  const sup = W.world(); const old = sup.deps.ledger.find((e) => e.id === "CMP-05"); old.supersededBy = "CMP-05-R2"; sup.deps.ledger.push(W.entry("CMP-05-R2", { replaces: "CMP-05" }))
   assert.ok(codes(run(sup, "2026-11-19")).includes("SUPERSEDED_EVIDENCE"))
   const exp = W.world({ ...W.SERVICE }, { entryOver: { "COM-05": { expiresOn: "2026-11-01" } } })
   assert.ok(codes(run(exp, "2026-11-19")).includes("EXPIRED_EVIDENCE"))
@@ -107,11 +107,11 @@ test("exit status: errors always fail, warnings fail only in strict mode", async
 })
 
 test("a superseded entry is accepted when the approval cites the current entry, and is not flagged", () => {
-  const w = W.world(); const old = w.deps.ledger.find((e) => e.id === "CMP-07"); old.supersededBy = "CMP-07-R2"
-  w.deps.ledger.push(W.entry("CMP-07-R2", { replaces: "CMP-07", expiresOn: "2026-12-10" })); w.record.approval.evidenceIds.push("CMP-07-R2")
+  const w = W.world(); const old = w.deps.ledger.find((e) => e.id === "CMP-05"); old.supersededBy = "CMP-05-R2"
+  w.deps.ledger.push(W.entry("CMP-05-R2", { replaces: "CMP-05", expiresOn: "2026-12-10" })); w.record.approval.evidenceIds.push("CMP-05-R2")
   const r = run(w, "2026-11-19")
   assert.equal(r.errors, 0)
-  assert.ok(msgs(r, "warning").some((m) => m.includes("CMP-07-R2") && m.includes("2026-12-10")), "the CURRENT entry's expiry is monitored")
+  assert.ok(msgs(r, "warning").some((m) => m.includes("CMP-05-R2") && m.includes("2026-12-10")), "the CURRENT entry's expiry is monitored")
 })
 
 test("unused ledger evidence nearing expiry is a warning, not an error", () => {

@@ -5,7 +5,7 @@
 import { AEO_HEADINGS, assessmentNote, AEO_TABLE_HEADERS, purposeHeading, requestLinkText } from "@/lib/seo/aeo-text"
 import type { ServiceContent } from "@/lib/seo/aeo-types"
 import type { ContentSection } from "@/lib/seo/page-models"
-import { REQUIRED_EVIDENCE } from "@/lib/seo/publication-requirements"
+import { primaryEvidence } from "@/lib/seo/publication-requirements"
 import { SERVICES } from "@/lib/services"
 import { SERVICE_IDENTITY } from "@/lib/seo/publication-requirements"
 
@@ -22,8 +22,9 @@ export function serviceDisplayName(content: ServiceContent): string {
  * evidence ids are assigned during the Business Verification review; this only names the entry the table already requires.
  */
 function sectionEvidence(content: ServiceContent): readonly string[] {
-  const required = REQUIRED_EVIDENCE[`/services/${content.slug}` as keyof typeof REQUIRED_EVIDENCE] as readonly string[]
-  return [required[8]]
+  const id = primaryEvidence(`/services/${content.slug}`)
+  if (id === null) throw new Error(`No primary evidence for /services/${content.slug}`)
+  return [id]
 }
 
 export function contentToSections(content: ServiceContent): readonly ContentSection[] {

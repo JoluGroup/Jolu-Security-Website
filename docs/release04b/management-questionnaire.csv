@@ -1,0 +1,98 @@
+ref,section,question,answer_with,answer,document_supplied,answered_by,date,evidence_ids,pr7_reference
+A01,A. Company,What is the company's exact registered legal name and registration number? (Please attach the registration certificate.),Text + document,,,,,COM-01,Q-LEG-01
+A02,A. Company,Is 'JOLU SECURITY' the official public trading name the website should use?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,COM-02,Q-CEO-06
+A03,A. Company,Is +254 790 298 003 the official primary telephone number for enquiries?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,COM-05,Q-CEO-04
+A04,A. Company,Is +254 705 038 679 an official secondary number? (The company profile shows +254 769 281 518 instead.) Which should the website show?,Text,,,,,COM-05,Q-CEO-04
+A05,A. Company,"Is info@jolusecurity.com the official enquiry email, and who reads it?",Text,,,,,COM-06,Q-MKT-06
+A06,A. Company,"Does the company hold a current Private Security Regulatory Authority licence or registration? If yes: holder name, number, issue and expiry dates, services covered. If no licence applies, please say so.",YES / NO / REQUIRES VERIFICATION + document,,,,,"CMP-01, CMP-02, CMP-03, CMP-04, CLM-01",Q-LEG-02
+A07,A. Company,"Which offices are open and staffed today? Please give each address as shown on its signage. (The website lists Nairobi, Nakuru and Rongo (Migori); the legacy brochure also lists Eldoret and Kisumu.)",Text,,,,,"COM-04, OFF-*-01, OFF-*-02","Q-CEO-01, Q-BR-01"
+A08,A. Company,Which counties and towns does the company actually serve? 'We do not cover this area' is a valid answer.,Text,,,,,"CLM-11, SVC-*-02",Q-OPS-01
+A09,A. Company,"Who is the data controller for website enquiries (legal entity name and contact), and is the company registered with the Office of the Data Protection Commissioner?",Text + document,,,,,CMP-07 (now PRG-01),Q-LEG-05
+A10,A. Company,"How long should enquiry emails be kept, who may read them, and where are they stored (which mailbox provider)?",Text,,,,,CMP-07 (now PRG-01),Q-LEG-05
+A11,A. Company,"The two legacy PDFs (company profile and brochure) are still downloadable from the old website. Keep, correct or withdraw each one?",Keep / Correct / Withdraw,,,,,CLM-10 (now PRG-08),"Q-CEO-15, Q-LEG-07"
+A12,A. Company,Who is the operations approver who confirms that service descriptions are accurate? (Name and role.),Text,,,,,"SVC-*-07, CNT-01",Q-OPS-07
+A13,A. Company,Who is the compliance approver for regulatory wording? (Name and role.),Text,,,,,"CMP-05, CMP-06",Q-CEO-13
+A14,A. Company,Who reviews website text before publication? (Name and role.),Text,,,,,CNT-10,Q-MKT-11
+B-MG-1,B. Each service,Manned guarding: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-MG-01,Q-OPS-02
+B-MG-2,B. Each service,Manned guarding: what is included?,Text,,,,,SVC-MG-01,Q-OPS-02
+B-MG-3,B. Each service,Manned guarding: what is NOT included?,Text,,,,,SVC-MG-01,Q-OPS-02
+B-MG-4,B. Each service,"Manned guarding: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-MG-02,Q-OPS-01
+B-MG-5,B. Each service,Manned guarding: who confirms that the website description is operationally accurate?,Text,,,,,SVC-MG-07,Q-OPS-07
+B-MG-6,B. Each service,Manned guarding: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-MG-7,B. Each service,"Manned guarding: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-MG-05,Q-CEO-14
+B-CC-1,B. Each service,CCTV installation: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-CC-01,Q-OPS-02
+B-CC-2,B. Each service,CCTV installation: what is included?,Text,,,,,SVC-CC-01,Q-OPS-02
+B-CC-3,B. Each service,CCTV installation: what is NOT included?,Text,,,,,SVC-CC-01,Q-OPS-02
+B-CC-4,B. Each service,"CCTV installation: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-CC-02,Q-OPS-01
+B-CC-5,B. Each service,CCTV installation: who confirms that the website description is operationally accurate?,Text,,,,,SVC-CC-07,Q-OPS-07
+B-CC-6,B. Each service,CCTV installation: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-CC-7,B. Each service,"CCTV installation: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-CC-05,Q-CEO-14
+B-EF-1,B. Each service,Electric fencing: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-EF-01,Q-OPS-02
+B-EF-2,B. Each service,Electric fencing: what is included?,Text,,,,,SVC-EF-01,Q-OPS-02
+B-EF-3,B. Each service,Electric fencing: what is NOT included?,Text,,,,,SVC-EF-01,Q-OPS-02
+B-EF-4,B. Each service,"Electric fencing: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-EF-02,Q-OPS-01
+B-EF-5,B. Each service,Electric fencing: who confirms that the website description is operationally accurate?,Text,,,,,SVC-EF-07,Q-OPS-07
+B-EF-6,B. Each service,Electric fencing: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-EF-7,B. Each service,"Electric fencing: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-EF-05,Q-CEO-14
+B-AR-1,B. Each service,Alarm response: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-AR-01,Q-OPS-02
+B-AR-2,B. Each service,Alarm response: what is included?,Text,,,,,SVC-AR-01,Q-OPS-02
+B-AR-3,B. Each service,Alarm response: what is NOT included?,Text,,,,,SVC-AR-01,Q-OPS-02
+B-AR-4,B. Each service,"Alarm response: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-AR-02,Q-OPS-01
+B-AR-5,B. Each service,Alarm response: who confirms that the website description is operationally accurate?,Text,,,,,SVC-AR-07,Q-OPS-07
+B-AR-6,B. Each service,Alarm response: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-AR-7,B. Each service,"Alarm response: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-AR-05,Q-CEO-14
+B-EV-1,B. Each service,Events security: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-EV-01,Q-OPS-02
+B-EV-2,B. Each service,Events security: what is included?,Text,,,,,SVC-EV-01,Q-OPS-02
+B-EV-3,B. Each service,Events security: what is NOT included?,Text,,,,,SVC-EV-01,Q-OPS-02
+B-EV-4,B. Each service,"Events security: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-EV-02,Q-OPS-01
+B-EV-5,B. Each service,Events security: who confirms that the website description is operationally accurate?,Text,,,,,SVC-EV-07,Q-OPS-07
+B-EV-6,B. Each service,Events security: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-EV-7,B. Each service,"Events security: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-EV-05,Q-CEO-14
+B-K9-1,B. Each service,K9 unit services: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-K9-01,Q-OPS-02
+B-K9-2,B. Each service,K9 unit services: what is included?,Text,,,,,SVC-K9-01,Q-OPS-02
+B-K9-3,B. Each service,K9 unit services: what is NOT included?,Text,,,,,SVC-K9-01,Q-OPS-02
+B-K9-4,B. Each service,"K9 unit services: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-K9-02,Q-OPS-01
+B-K9-5,B. Each service,K9 unit services: who confirms that the website description is operationally accurate?,Text,,,,,SVC-K9-07,Q-OPS-07
+B-K9-6,B. Each service,K9 unit services: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-K9-7,B. Each service,"K9 unit services: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-K9-05,Q-CEO-14
+B-VP-1,B. Each service,VIP close protection: is this service currently offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-VP-01,Q-OPS-02
+B-VP-2,B. Each service,VIP close protection: what is included?,Text,,,,,SVC-VP-01,Q-OPS-02
+B-VP-3,B. Each service,VIP close protection: what is NOT included?,Text,,,,,SVC-VP-01,Q-OPS-02
+B-VP-4,B. Each service,"VIP close protection: where is it delivered (counties or towns), and from which office?",Text,,,,,SVC-VP-02,Q-OPS-01
+B-VP-5,B. Each service,VIP close protection: who confirms that the website description is operationally accurate?,Text,,,,,SVC-VP-07,Q-OPS-07
+B-VP-6,B. Each service,VIP close protection: may the company lawfully advertise and provide this service? Any conditions?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,CMP-05,Q-LEG-04
+B-VP-7,B. Each service,"VIP close protection: which further statements can be supported with documents (for example training, vetting, 24-hour cover, response times, warranties)? List each with its document, or write 'none'.",Text + documents,,,,,SVC-VP-05,Q-CEO-14
+C-MG-1,C. Service details,"Manned guarding: which premises types (homes, estates, offices, shops, schools, construction sites, other)?",Text,,,,,SVC-MG-01,
+C-MG-2,C. Service details,"Manned guarding: residential, commercial or both?",Text,,,,,SVC-MG-01,
+C-MG-3,C. Service details,"Manned guarding: which coverage arrangements are offered (day, night, 24-hour, weekends)?",Text,,,,,SVC-MG-01,
+C-MG-4,C. Service details,Manned guarding: are training or vetting claims supported by records? Which?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-MG-01,
+C-CC-1,C. Service details,CCTV: installation offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-CC-01,
+C-CC-2,C. Service details,CCTV: maintenance offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-CC-01,
+C-CC-3,C. Service details,CCTV: remote or on-site monitoring offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-CC-01,
+C-CC-4,C. Service details,CCTV: repair offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-CC-01,
+C-CC-5,C. Service details,"CCTV: what warranty applies, and on what terms?",Text,,,,,SVC-CC-01,
+C-EF-1,C. Service details,Electric fencing: installation offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-EF-01,
+C-EF-2,C. Service details,Electric fencing: maintenance offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-EF-01,
+C-EF-3,C. Service details,Electric fencing: how do clients report a fault?,Text,,,,,SVC-EF-01,
+C-EF-4,C. Service details,Electric fencing: which standards or regulations is the work verified against?,Text,,,,,SVC-EF-01,
+C-AR-1,C. Service details,Alarm response: does the company physically respond to alarms?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-AR-01,
+C-AR-2,C. Service details,"Alarm response: who responds (company staff, a partner, the police)?",Text,,,,,SVC-AR-01,
+C-AR-3,C. Service details,Alarm response: which hours and areas are covered?,Text,,,,,SVC-AR-01,
+C-AR-4,C. Service details,Alarm response: how do alarms reach the company?,Text,,,,,SVC-AR-01,
+C-AR-5,C. Service details,"Alarm response: is any response-time commitment made to clients? If yes, how is it measured?",YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-AR-01,
+C-EV-1,C. Service details,Events security: which event types?,Text,,,,,SVC-EV-01,
+C-EV-2,C. Service details,Events security: which event sizes?,Text,,,,,SVC-EV-01,
+C-EV-3,C. Service details,Events security: are door staff provided?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-EV-01,
+C-K9-1,C. Service details,K9: are dog patrols offered?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-K9-01,
+C-K9-2,C. Service details,"K9: what do handlers do, and are they company staff?",Text,,,,,SVC-K9-01,
+C-K9-3,C. Service details,K9: is any detection work offered (for example explosives or narcotics)?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-K9-01,
+C-K9-4,C. Service details,K9: which handler or dog qualifications can be documented?,Text,,,,,SVC-K9-01,
+C-VP-1,C. Service details,VIP close protection: which client categories are served?,Text,,,,,SVC-VP-01,
+C-VP-2,C. Service details,VIP close protection: what is the authorised operational scope?,Text,,,,,SVC-VP-01,
+C-VP-3,C. Service details,VIP close protection: what confidentiality arrangements apply?,Text,,,,,SVC-VP-01,
+C-VP-4,C. Service details,"VIP close protection: is any armed service offered? If yes, legal and operational documents are required before the website may mention it.",YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,SVC-VP-01,
+D1,D. Older offerings mentioned in legacy material,Is 'CCTV monitoring' a service the company offers today?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,"CLM-10, SVC-*-01",DL-13
+D2,D. Older offerings mentioned in legacy material,Is 'K9 detection (explosives or narcotics)' a service the company offers today?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,"CLM-10, SVC-*-01",DL-13
+D3,D. Older offerings mentioned in legacy material,Is 'Door staff / bouncer services' a service the company offers today?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,"CLM-10, SVC-*-01",DL-13
+D4,D. Older offerings mentioned in legacy material,Is '24-hour alarm response' a service the company offers today?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,"CLM-10, SVC-*-01",DL-13
+D5,D. Older offerings mentioned in legacy material,Is 'Fire-alert response' a service the company offers today?,YES / NO / NOT APPLICABLE / REQUIRES VERIFICATION,,,,,"CLM-10, SVC-*-01",DL-13

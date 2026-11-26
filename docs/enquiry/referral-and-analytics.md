@@ -27,7 +27,7 @@ Modules: `events.ts` (event names + sanitizer, pure), `config.ts`, `consent.ts`,
 
 Events: `generate_lead`, `phone_click`, `whatsapp_click`, `enquiry_attempt`, `enquiry_accepted`, `enquiry_uncertain`, `enquiry_rejected`.
 
-- `generate_lead` fires only when the server answered HTTP 2xx with `state:"accepted"`. Never for validation errors, 429, 5xx, uncertain/network outcomes, or test mode. Note: a 2xx `duplicate:true` reply is also a confirmed acceptance and does count.
+- `generate_lead` fires only for a NEW confirmed lead: HTTP 2xx with `ok:true`, `state:"accepted"`, a reference and no `duplicate` marker (`lib/analytics/lead.ts`, `isNewConfirmedLead`). Never for validation errors, 429, 409 in-progress, 5xx, uncertain/network outcomes, test mode, or a replayed duplicate (`duplicate:true`, which is the earlier enquiry answered again). Release 04B fixed the earlier behaviour in which a replay counted as a second lead. `enquiry_accepted` still mirrors the server state and fires for a replay too; it is a lifecycle event, not a lead count. Tests: `tests/analytics/lead-event.test.mjs` (truth table, real-route replay, form source check).
 - Payload allowlist: `page_path` (path only, query/hash/origin stripped, rejected if it contains characters like `@` or `%`), `service` (service id), `referral_source` (label), `source_component` (enquiry_form/header/footer/nav/main/other). Everything else is dropped. Name, phone, email, message, references, tokens and URLs are never emitted. Link clicks record only the kind of link, never the number or URL.
 - gtag config disables Google signals and ad personalization. GA4's automatic page_view still reports the full page location including any query string by default; configure data-stream settings accordingly.
 

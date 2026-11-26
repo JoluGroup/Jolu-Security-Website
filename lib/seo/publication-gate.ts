@@ -90,7 +90,34 @@ const EXTRA_CLAIM_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
   { category: CATEGORY.guarantee, pattern: /\b(guarantee|guarantees|guaranteed|warranty)\b/i },
   { category: CATEGORY.designation, pattern: /\b(head ?office|head ?quarters?|hq|main office|corporate office|flagship|showroom)\b/i },
 ]
-const SCAN = [...CLAIM_RULES.map((r) => ({ category: String(r.category), pattern: r.pattern })), ...EXTRA_CLAIM_PATTERNS].map((r) => ({ category: r.category, re: new RegExp(r.pattern.source, r.pattern.flags.includes("g") ? r.pattern.flags : `${r.pattern.flags}g`) }))
+// Pricing on PAGES (Release 04B claims policy). The keyword classifier's pricing rule (lib/seo/claim-classifier.ts) marks
+// any search keyword containing "cost", "price", "quotation" and similar as claim-sensitive, and it stays that way for
+// keyword research. On rendered page text that rule wrongly rejected ordinary commercial vocabulary: explaining what
+// drives a budget, inviting a request for a quotation or saying that a written proposal follows a site assessment
+// asserts no price. So on pages the bare words are allowed and the pricing CLAIMS themselves are caught instead:
+// money amounts and currencies, rates tied to a number or a unit, rate cards, fixed, starting or guaranteed prices,
+// cheapest or lowest-price positioning, discounts and free offers. No claim scope permits this category
+// (lib/seo/claim-scope.ts), so any match blocks publication until a scoped, evidenced pricing claim is registered.
+const PRICE_NOUN = String.raw`(?:costs?|costing|prices?|priced|pricing|rates?|fees?|charges?|quotations?|quotes?|quoted|budgets?|tariffs?)`
+// A figure is a number that is not part of a word, so names such as "K9" are not read as amounts.
+const FIGURE = String.raw`(?<![A-Za-z])\d`
+const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
+  // currencies and money amounts, with or without a figure
+  { category: CATEGORY.pricing, pattern: /\b(?:kes|kshs?|shillings?|usd|dollars?|euros?)\b/i },
+  { category: CATEGORY.pricing, pattern: /[$£€]\s?\d|\d\s?\/-|\b(?:kes|kshs?|usd)\s?\d|\d\s?(?:kes|kshs?|usd)\b/i },
+  // a price word within a short clause of a figure, in either order ("rates from 2,000", "5,000 per guard")
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,40}?${FIGURE}`, "i") },
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`${FIGURE}[\d,.]*\s*(?:k\b|m\b|million|thousand)?[^.?!]{0,24}?\b${PRICE_NOUN}\b`, "i") },
+  { category: CATEGORY.pricing, pattern: /(?<![A-Za-z])\d[\d,.]*\s*(?:per|a|an|\/)\s*(?:hour|hr|day|night|shift|week|month|year|annum|guard|post|officer|dog|handler|camera|metre|meter|visit|event)\b/i },
+  // rate cards and price positioning or promises
+  { category: CATEGORY.pricing, pattern: /\b(?:rate cards?|price lists?|price ranges?|price bands?|pricing tiers?|packages? from)\b/i },
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b(?:fixed|flat|set|guaranteed|locked|all[- ]inclusive|transparent|competitive|unbeatable|best|lowest|low|cheapest|cheap|affordable|reasonable|budget[- ]friendly|discounted|special|introductory)\s+${PRICE_NOUN}\b`, "i") },
+  { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\s+(?:start(?:s|ing)?|from|as low as|match(?:ing)?|promise|guarantee|freeze|beat)\b`, "i") },
+  { category: CATEGORY.pricing, pattern: /\b(?:starting (?:at|from)|from as little as|as low as|low[- ]cost|value for money|no hidden (?:costs?|fees?|charges?)|money[- ]back|discounts?|special offers?|promo(?:tion)?s?)\b/i },
+  // something offered free of charge is a commercial promise
+  { category: CATEGORY.pricing, pattern: /\b(?:free of charge|at no (?:extra )?(?:cost|charge)|free (?:quotations?|quotes?|site (?:visits?|assessments?|surveys?)|surveys?|assessments?|installation|consultations?|trials?))\b/i },
+]
+const SCAN = [...CLAIM_RULES.filter((r) => r.category !== "pricing").map((r) => ({ category: String(r.category), pattern: r.pattern })), ...PAGE_PRICING_PATTERNS, ...EXTRA_CLAIM_PATTERNS].map((r) => ({ category: r.category, re: new RegExp(r.pattern.source, r.pattern.flags.includes("g") ? r.pattern.flags : `${r.pattern.flags}g`) }))
 
 type Span = { from: number; to: number; category: string; text: string }
 /** Claim-sensitive spans in `text`. */

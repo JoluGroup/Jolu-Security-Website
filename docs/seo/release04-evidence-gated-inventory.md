@@ -10,7 +10,7 @@ Content: `lib/seo/service-content.ts` (drafts from AEO briefs C01-C07). Sections
 
 | Page | Brief | Required evidence (canonical table) | Brief's own "proof needed" |
 | --- | --- | --- | --- |
-| `/services/manned-guarding` | C01 | COM-05, CMP-07, CNT-10, CLM-10, DIG-02, DIG-03, DIG-05, DIG-08, SVC-MG-01, SVC-MG-02, SVC-MG-07, CMP-05, CNT-01 | pricing disclosure decision; verified supervision and training claims |
+| `/services/manned-guarding` | C01 | COM-05, CNT-10, SVC-MG-01, SVC-MG-02, SVC-MG-07, CMP-05, CNT-01 | pricing disclosure decision; verified supervision and training claims |
 | `/services/cctv-installation` | C02 | same common set + SVC-CC-01, SVC-CC-02, SVC-CC-07 | approved equipment brands and warranty terms; compliance review of the privacy section |
 | `/services/electric-fencing` | C03 | common + SVC-EF-01, -02, -07 | pricing disclosure decision; approved equipment specifications |
 | `/services/events-security` | C05 | common + SVC-EV-01, -02, -07 | approved examples; client permission for any named event |
@@ -18,11 +18,11 @@ Content: `lib/seo/service-content.ts` (drafts from AEO briefs C01-C07). Sections
 | `/services/alarm-response` | C04 | common + SVC-AR-01, -02, -07 | operations confirmation of any response commitment |
 | `/services/vip-close-protection` | C07 | common + SVC-VP-01, -02, -07 | approved credentials only |
 
-Every item in the common set must be VERIFIED and unexpired, plus the owner's written authorisation, editorial and compliance reviews carrying the content digest, and a manifest entry with a real route file (`app/services/<slug>/page.tsx` from the canonical template in `tests/helpers/manifest-routes.mjs`).
+Release 04B: the canonical table now holds content evidence only (`docs/seo/release04b-gate-dispositions.md`); CMP-07, CLM-10, DIG-05 and DIG-08 moved to the production release gate and DIG-02, DIG-03 to the post-launch queue. Every item in the common set must be VERIFIED and unexpired, plus the owner's written authorisation, editorial and compliance reviews carrying the content digest, and a manifest entry with a real route file (`app/services/<slug>/page.tsx` from the canonical template in `tests/helpers/manifest-routes.mjs`).
 
 ### Wording the gate refuses until a reviewer approves a scoped claim
 
-Run on 2026-11-26 in a synthetic world where all evidence and reviews exist (`tests/seo/service-pages.test.mjs`, "gate readiness"). The ONLY refusal reasons are claim-sensitive wording:
+Release 04A result, kept for the record. Release 04B corrected the page pricing rule (plain commercial words are allowed; pricing claims stay blocked), and in the same synthetic world six drafts now pass unchanged and manned guarding is refused only for the regulator sentence (`tests/seo/service-pages.test.mjs`, "gate readiness"). At Release 04A the ONLY refusal reasons were claim-sensitive wording:
 
 | Page | Categories flagged |
 | --- | --- |
@@ -36,7 +36,7 @@ Run on 2026-11-26 in a synthetic world where all evidence and reviews exist (`te
 
 What unlocks it:
 
-1. **Pricing words** ("cost", "price", "quotation", "how much"). These describe what drives a budget and promise no figure. `lib/seo/claim-scope.ts` has no claim whose scope covers the pricing category, so the gate cannot accept this wording at all. Decision needed from the owner and compliance: register a scoped claim such as "pricing explainer, no figures" in `lib/claims.ts` with its evidence (this is the "pricing disclosure decision" the briefs ask for), add its scope in `claim-scope.ts`, then bind it to the statements in each page's sections. If management would rather avoid the claim entirely, reword to "budget" and "written proposal" (the tests include a scrubbed-wording control that proves the pages then pass).
+1. **Pricing words** (resolved in Release 04B: the bare words are no longer treated as a pricing claim; a real price still needs a pricing decision and a scoped claim) ("cost", "price", "quotation", "how much"). These describe what drives a budget and promise no figure. `lib/seo/claim-scope.ts` has no claim whose scope covers the pricing category, so the gate cannot accept this wording at all. Decision needed from the owner and compliance: register a scoped claim such as "pricing explainer, no figures" in `lib/claims.ts` with its evidence (this is the "pricing disclosure decision" the briefs ask for), add its scope in `claim-scope.ts`, then bind it to the statements in each page's sections. If management would rather avoid the claim entirely, reword to "budget" and "written proposal" (the tests include a scrubbed-wording control that proves the pages then pass).
 2. **Regulator reference** (manned guarding). The only licensing claim today, `licensed-compliant`, would assert that JOLU SECURITY is licensed. It must NOT be used for a sentence that merely names the regulator. A separate reference-only claim, or removal of the sentence, is needed.
 3. **Process statements** ("a written quotation after a site assessment", the assessment steps). The page labels them as the process JOLU SECURITY proposes. Operations must confirm the process before publication; until then they are proposals and the label stays.
 

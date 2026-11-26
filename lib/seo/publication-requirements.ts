@@ -1,13 +1,18 @@
 // CANONICAL publication requirements for the ten planned pages. The gate reads this table; a page record cannot
 // add, drop or replace an entry. Ids refer to the Business Verification register (docs/seo/business-verification on
-// PR #7): the "BLOCKS PUBLICATION" items per page, plus the office identity items now needed to display verified NAP.
+// PR #7), plus the office identity items needed to display verified NAP.
+//
+// Release 04B: this table holds CONTENT EVIDENCE only (lib/seo/release-gates.ts). Deployment readiness (privacy notice
+// CMP-07, canonical-host check DIG-05, live crawl DIG-08, legacy PDF review CLM-10) moved to the production release gate,
+// and marketing integrations (Search Console DIG-02, GA4 DIG-03) to the post-launch queue. Confirmation that the service
+// is actually offered (SVC-xx-01) remains mandatory for every service page.
 import { deepFreeze } from "@/lib/seo/freeze"
 import type { LocationSlug, ServiceSlug } from "@/lib/seo/page-models"
+import { CONTENT_COMMON, SERVICE_CONTENT_COMPANY, SERVICE_CONTENT_SUFFIXES } from "@/lib/seo/release-gates"
 import type { ServiceId } from "@/lib/services"
 
-const COMMON_SITE = ["COM-05", "CMP-07", "CNT-10", "CLM-10", "DIG-02", "DIG-03", "DIG-05", "DIG-08"] as const
-const service = (code: string) => [...COMMON_SITE, `SVC-${code}-01`, `SVC-${code}-02`, `SVC-${code}-07`, "CMP-05", "CNT-01"] as const
-const office = (code: string) => [...COMMON_SITE, ...["01", "02", "05", "06", "07", "10"].map((n) => `OFF-${code}-${n}`)] as const
+const service = (code: string) => [...CONTENT_COMMON, ...SERVICE_CONTENT_SUFFIXES.map((n) => `SVC-${code}-${n}`), ...SERVICE_CONTENT_COMPANY] as const
+const office = (code: string) => [...CONTENT_COMMON, ...["01", "02", "05", "06", "07", "10"].map((n) => `OFF-${code}-${n}`)] as const
 
 export const REQUIRED_EVIDENCE = deepFreeze({
   "/services/manned-guarding": service("MG"),
@@ -21,6 +26,15 @@ export const REQUIRED_EVIDENCE = deepFreeze({
   "/locations/nakuru": office("NAK"),
   "/locations/rongo": office("RON"),
 } as const satisfies Record<string, readonly string[]>)
+
+/**
+ * The page's own primary evidence: SVC-xx-01 (the service is offered, with its scope) for a service page and OFF-xxx-01
+ * (the office exists under that name) for a location page. Content sections cite it. Returns null for an unknown path.
+ */
+export function primaryEvidence(publicPath: string): string | null {
+  const list = Object.hasOwn(REQUIRED_EVIDENCE, publicPath) ? (REQUIRED_EVIDENCE as Record<string, readonly string[]>)[publicPath] : undefined
+  return list?.[CONTENT_COMMON.length] ?? null
+}
 
 /** Canonical identity of each page: which service or office it describes, and the entries that attest its NAP. */
 export const SERVICE_IDENTITY: Readonly<Record<ServiceSlug, { serviceId: ServiceId }>> = deepFreeze({

@@ -35,7 +35,7 @@ export const PROTECTED = [
   /^package\.json$/, // holds the test, build and asset-check scripts
   /^pnpm-workspace\.yaml$/,
   /^next\.config\.[cm]?[jt]s$/,
-  /^lib\/seo\/(page-models|evidence-ledger|publication-requirements|publication-manifest|publication-deps|publication-gate|page-records|page-resolve|page-json-ld|page-metadata|freeze|digest|text-policy|claim-scope|claim-classifier|evidence-monitor)\.ts$/,
+  /^lib\/seo\/(page-models|evidence-ledger|publication-requirements|publication-manifest|publication-deps|publication-gate|page-records|page-resolve|page-json-ld|page-metadata|freeze|digest|text-policy|claim-scope|claim-classifier|evidence-monitor|release-gates)\.ts$/,
   /^components\/pages\//,
   /^scripts\/check-evidence-freshness\.mjs$/,
   /^scripts\/seo\/(frozen-files|update-frozen-manifest)\.mjs$/,

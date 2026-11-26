@@ -189,16 +189,33 @@ describe("the seven pages stay UNPUBLISHED (the publication gate is the only way
   })
 })
 
-describe("gate readiness: the ONLY thing blocking each page is claim-sensitive wording that needs an approved claim", () => {
-  for (const slug of SLUGS) {
-    it(`${slug}: with evidence and approvals in a synthetic world, every refusal reason is a claim-wording reason`, () => {
+describe("gate readiness (Release 04B claims policy): ordinary commercial wording no longer blocks; the regulator sentence still does", () => {
+  // Synthetic worlds only: evidence and approvals here are invented to isolate the CONTENT. Nothing is approved for real;
+  // production stays unpublished (asserted above and in page-gate.test.mjs).
+  for (const slug of SLUGS.filter((s) => s !== "manned-guarding")) {
+    it(`${slug}: with evidence and approvals in a synthetic world, the real draft content passes the gate unchanged`, () => {
       const w = worldFor(slug, contentFor(slug))
       const d = evaluatePublication(w.record, w.deps)
-      assert.equal(d.published, false)
-      assert.ok(d.reasons.length > 0)
-      for (const r of d.reasons) assert.match(r, /claim-sensitive wording/, r)
+      assert.deepEqual(d.reasons, [], `${slug}: ${d.reasons.join("; ")}`)
+      assert.equal(d.published, true)
     })
   }
+  it("manned-guarding: the ONLY refusal is the regulator reference (licensing wording) in the regulatory section, awaiting compliance approval", () => {
+    const w = worldFor("manned-guarding", contentFor("manned-guarding"))
+    const d = evaluatePublication(w.record, w.deps)
+    assert.equal(d.published, false)
+    assert.deepEqual(d.reasons, ["section regulatory has claim-sensitive wording (licensing) that no bound, approved claim covers"])
+  })
+  it("the drafts still use plain commercial vocabulary (price, cost, quotation, budget) (figures stay excluded by the content tests above)", () => {
+    const all = JSON.stringify(SERVICE_CONTENT)
+    for (const w of ["price", "cost", "quotation", "budget"]) assert.ok(new RegExp(`\\b${w}`, "i").test(all), w)
+  })
+  it("manned guarding wording: the budget sentence and the price-only FAQ use the Release 04B phrasing", () => {
+    const mg = contentFor("manned-guarding")
+    assert.ok(mg.budget.intro.startsWith("The budget for manned guarding typically depends on the number of security posts, required coverage hours and site-specific security requirements."))
+    assert.ok(mg.faqs.some((f) => f.question === "Should I choose a guard arrangement on price alone?"))
+    assert.ok(!/usually priced from|lowest[- ](price|budget)/i.test(JSON.stringify(mg)))
+  })
   it("the pricing wording has no claim in the registry's scope table that can unlock it (owner decision recorded in the inventory)", async () => {
     const { CLAIM_SCOPE } = await import("@/lib/seo/claim-scope")
     assert.ok(!Object.values(CLAIM_SCOPE).some((s) => s.categories.includes("pricing")))

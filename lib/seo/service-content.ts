@@ -30,7 +30,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
       "The price of manned guarding depends mainly on how many guard posts a site needs, the hours each post is covered, the level of supervision, the risk profile of the site and the equipment required. Because every property differs, a site assessment is the practical way to get a quotation that matches your situation.",
     budget: {
       caption: "How budget factors for manned guarding differ between two hypothetical sites",
-      intro: "Guarding is usually priced from the number of posts and the hours they are staffed. The two scenarios below are invented to show how each factor moves the budget. They are not past work, client examples or quotations.",
+      intro: "The budget for manned guarding typically depends on the number of security posts, required coverage hours and site-specific security requirements. The two scenarios below are invented to show how each factor moves the budget. They are not past work, client examples or quotations.",
       scenarioA: { label: "Scenario A: small office compound (hypothetical)", description: "One main entrance, low visitor traffic and cover needed during business hours only." },
       scenarioB: { label: "Scenario B: large mixed-use estate (hypothetical)", description: "Several gates, a long perimeter, heavy vehicle and visitor traffic and cover needed across day and night shifts." },
       rows: [
@@ -78,7 +78,7 @@ export const SERVICE_CONTENT: readonly ServiceContent[] = [
     },
     faqs: [
       { question: "What decides the price of a security guard arrangement?", answer: "The main drivers are the number of posts, the hours each post is covered, supervision and reporting, the risk and layout of the site, and equipment. Two sites of the same size can differ widely if one needs day and night cover and the other does not." },
-      { question: "Should I choose a guard arrangement by the lowest price?", answer: "Compare what is included before comparing totals. Check posts, hours, supervision, absence cover and equipment line by line, because a lower figure can reflect a smaller scope rather than a better arrangement." },
+      { question: "Should I choose a guard arrangement on price alone?", answer: "Compare what is included before comparing totals. Check posts, hours, supervision, absence cover and equipment line by line, because a lower figure can reflect a smaller scope rather than a better arrangement." },
       { question: "What is a post instruction, and why does it matter?", answer: "A post instruction is a written list of what a guard at a given post must do, such as checking visitors in, recording incidents and who to call. It keeps duties clear for the guard, the supervisor and your own staff." },
       { question: "How do I verify a guarding provider before I hire?", answer: "Ask for current authorisation documents and check them with the Private Security Regulatory Authority. Also ask for the provider's written procedures for supervision, incident reporting and covering an absent guard." },
       { question: "Can guarding be combined with CCTV or alarms?", answer: "Yes, many sites use guards together with cameras, alarms or fencing, so that people and equipment support one another. A site assessment can look at which combination suits the layout and the risks you face." },

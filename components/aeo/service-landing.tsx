@@ -4,6 +4,7 @@ import { CostDriversMatrix } from "@/components/aeo/cost-drivers-matrix"
 import { FaqSection } from "@/components/aeo/faq-section"
 import { ServiceScopeAndCompliance } from "@/components/aeo/service-scope-and-compliance"
 import { ContactCta } from "@/components/pages/contact-cta"
+import { InternalLinks, type InternalLink } from "@/components/pages/internal-links"
 import { Eyebrow, SectionTitle } from "@/components/section-heading"
 import { SiteShell } from "@/components/site-shell"
 import type { ServiceContent } from "@/lib/seo/aeo-types"
@@ -12,6 +13,21 @@ import type { Published, ServicePageRecord } from "@/lib/seo/page-models"
 import { assertPublished } from "@/lib/seo/publication-gate"
 import { buildBreadcrumbItems, buildServicePageJsonLd } from "@/lib/seo/service-json-ld"
 import { sectionsMatchContent, serviceDisplayName } from "@/lib/seo/service-sections"
+import { SERVICE_CONTENT } from "@/lib/seo/service-content"
+import { siteConfig } from "@/lib/site-config"
+
+/**
+ * Related links for a service page: the other service pages, then the homepage services list and contact section.
+ * InternalLinks keeps a service link ONLY if that page passed the publication gate, so an unpublished page is never
+ * linked; the homepage anchors always exist.
+ */
+export function relatedLinks(content: ServiceContent): readonly InternalLink[] {
+  return [
+    ...SERVICE_CONTENT.filter((c) => c.slug !== content.slug).map((c) => ({ href: `/services/${c.slug}`, label: serviceDisplayName(c) })),
+    { href: siteConfig.servicesHref, label: "All services" },
+    { href: siteConfig.quoteHref, label: "Contact JOLU SECURITY" },
+  ]
+}
 
 /**
  * The page content, with no gate and no chrome: H1, the direct answer, the budget-factor matrix, scope and regulatory
@@ -53,6 +69,7 @@ export function ServiceLanding({ page, content }: { page: Published<ServicePageR
       <SiteShell>
         <ServiceLandingBody content={content} requestHref={`/?service=${page.serviceId}#contact`} />
         <ContactCta page={page} />
+        <InternalLinks heading="Related services" links={relatedLinks(content)} />
       </SiteShell>
     </>
   )

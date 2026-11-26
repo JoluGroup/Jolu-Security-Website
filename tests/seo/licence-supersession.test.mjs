@@ -9,7 +9,7 @@ const { evaluatePublication } = await import("@/lib/seo/publication-gate")
 const { REQUIRED_EVIDENCE, rootRequirements, LICENCE_EVIDENCE, expectedScope } = await import("@/lib/seo/publication-requirements")
 
 const need = REQUIRED_EVIDENCE[SERVICE.publicPath]
-const licenceWorld = (expiresOn = "2027-06-30") => world(SERVICE, { extraEvidence: ["CMP-01"], sectionEvidence: [need[8], "CMP-01"], entryOver: { "CMP-01": { expiresOn } } })
+const licenceWorld = (expiresOn = "2027-06-30") => world(SERVICE, { extraEvidence: ["CMP-01"], sectionEvidence: [need[2], "CMP-01"], entryOver: { "CMP-01": { expiresOn } } })
 /** Replace `id` by a chain of entries with the given ids; hops[i] holds that hop's overrides. */
 function chain(w, id, hops) {
   let prev = id

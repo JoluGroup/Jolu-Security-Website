@@ -2,7 +2,7 @@
 // Shared by the behaviour tests and the automated mutation tests, so both exercise the same production code paths.
 // NOTHING here is imported by application code; no real page is approved.
 const { SERVICE_PAGE_RECORDS, LOCATION_PAGE_RECORDS, ALL_PAGE_RECORDS } = await import("@/lib/seo/page-records")
-const { REQUIRED_EVIDENCE, LOCATION_IDENTITY, expectedScope } = await import("@/lib/seo/publication-requirements")
+const { REQUIRED_EVIDENCE, LOCATION_IDENTITY, expectedScope, primaryEvidence } = await import("@/lib/seo/publication-requirements")
 const { contentDigest } = await import("@/lib/seo/publication-gate")
 const { CLAIMS } = await import("@/lib/claims")
 const { SERVICES } = await import("@/lib/services")
@@ -39,7 +39,7 @@ export function redigest(w) {
 export function world(base = SERVICE, opts = {}) {
   const r = clone(base)
   const canonical = [...REQUIRED_EVIDENCE[r.publicPath]]
-  const sectionEvidence = opts.sectionEvidence ?? [canonical[8]]
+  const sectionEvidence = opts.sectionEvidence ?? [primaryEvidence(r.publicPath)]
   r.status = "approved"
   r.sections = opts.sections ?? [{ id: "scope", heading: "Scope of the service", body: [P1, P2], evidenceIds: sectionEvidence, claims: [] }]
   const attested = { "COM-05": { primaryPhone: siteConfig.contact.primaryPhone.e164 } }
@@ -74,9 +74,8 @@ export function world(base = SERVICE, opts = {}) {
 
 /** A world whose single section makes the claim "availability-24-7", fully and explicitly approved. */
 export function claimWorld(base = SERVICE) {
-  const canonical = REQUIRED_EVIDENCE[base.publicPath]
   return world(base, {
-    sections: [{ id: "support", heading: "Support", body: [CLAIM_PARA, P2], evidenceIds: [canonical[8]], claims: [{ claimId: "availability-24-7", statement: CLAIM_STATEMENT }] }],
+    sections: [{ id: "support", heading: "Support", body: [CLAIM_PARA, P2], evidenceIds: [primaryEvidence(base.publicPath)], claims: [{ claimId: "availability-24-7", statement: CLAIM_STATEMENT }] }],
     approvedClaims: ["availability-24-7"],
     compliance: true,
     claimApprovals: [{ claimId: "availability-24-7", sectionId: "support", statement: CLAIM_STATEMENT, editorialApprovedBy: "Test Editor", complianceApprovedBy: "Test Compliance" }],
@@ -102,7 +101,7 @@ const claimed = (fn) => () => {
   return w
 }
 const licence = (over) => () => {
-  const w = world(SERVICE, { extraEvidence: ["CMP-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CMP-01"], entryOver: { "CMP-01": { expiresOn: "2027-06-30", ...over } } })
+  const w = world(SERVICE, { extraEvidence: ["CMP-01"], sectionEvidence: [primaryEvidence(SERVICE.publicPath), "CMP-01"], entryOver: { "CMP-01": { expiresOn: "2027-06-30", ...over } } })
   return w
 }
 /** 5D.10 chain helpers: replace `id` by hops [id, overrides], each hop inheriting the previous entry's scope. */
@@ -120,13 +119,41 @@ const hop = (w, id, hops) => {
 const longChain = (n, tailId, tailOver = {}) => {
   const w = world(SERVICE)
   const hops = Array.from({ length: n }, (_, i) => (i === n - 1 && tailId ? [tailId, { expiresOn: null, ...tailOver }] : [`ZZZ-${String(i).padStart(2, "0")}`, {}]))
-  return hop(w, "CMP-07", hops)
+  return hop(w, "CMP-05", hops)
 }
 const svc = (fn) => () => {
   const w = world()
   fn(w)
   return w
 }
+
+/** R04B-01: page text that uses plain commercial words and asserts no price. Each must publish in a synthetic world. */
+export const PRICING_ALLOWED = [
+  "The price of manned guarding depends on the number of posts, the hours covered and the supervision a site needs.",
+  "Request a quotation through the enquiry form, and a written proposal follows the site assessment agreed with you.",
+  "Compare what each quotation includes before comparing totals, because a lower figure can reflect a smaller scope of work.",
+  "This guide explains the cost drivers for CCTV installation so that buyers can plan a realistic budget for their site.",
+  "Ask every provider which fees and charges are included in the written proposal before you sign any contract at all.",
+  "Should I choose a guard arrangement on price alone, or compare the scope that each provider proposes for the site?",
+  "Budget factors for K9 unit services differ between sites because each dog and handler team adds to the arrangement.",
+  "The budget for manned guarding typically depends on the number of security posts, required coverage hours and site requirements.",
+]
+/** R04B-01: pricing claims. Each must be refused for claim-sensitive (pricing) wording. [name, text] */
+export const PRICING_BLOCKED = [
+  ["KES amount", "Guarding rates start from KES 25,000 per guard each month for a standard residential post in the estate."],
+  ["shillings amount", "Our CCTV packages are 45,000 shillings including installation and a basic recorder for small shops and offices."],
+  ["amount per unit", "Alarm response is available at 3,500 a month for residential properties within the agreed service area here."],
+  ["currency glued to a figure", "Clients pay Ksh5000 for each camera in a standard indoor installation including cabling within the building."],
+  ["price word then figure", "The monthly fee for one post is 30,000 on the standard contract for residential estates and small offices."],
+  ["figure then price word", "A single post comes to 2,000 in fees for each shift, with the supervisor visit included in that arrangement."],
+  ["lowest prices", "We offer the lowest prices for manned guarding of any provider in the area for homes and offices alike today."],
+  ["fixed price", "Every client receives a fixed price for the whole contract period with no surprises at the annual review meeting."],
+  ["rate card", "Ask for our rate card to compare guarding options for residential, commercial and construction sites in the region."],
+  ["no hidden fees and discount", "Electric fencing is installed with no hidden fees and a discount for estates that sign up together this season."],
+  ["free site assessment", "Request your free site assessment today and a member of the team will arrange a convenient visit to the property."],
+  ["prices start", "Our prices start low for every guarding contract signed with the operations team before the end of the month."],
+  ["competitive rates", "We provide competitive rates for alarm response across the estates and business parks that the team already serves."],
+]
 
 /** Worlds that MUST publish. [name, builder] */
 export const GOOD = [
@@ -150,6 +177,8 @@ export const GOOD = [
     w.record.approval.evidenceIds.push(`${id}-R2`)
   })],
   ["location with verified coverage", () => world(NAKURU, { coverage: { serviceIds: ["manned-guarding"], areas: ["Test Estate"], evidenceIds: ["OFF-NAK-06", "OFF-NAK-10"] } })],
+  // R04B-01 claims policy: ordinary commercial vocabulary is not a pricing claim on a page
+  ...PRICING_ALLOWED.map((t, i) => [`R04B-01 commercial vocabulary is accepted (${i + 1})`, () => redigest(withSecText(t)())]),
 ].filter(([, b]) => b)
 
 /** Worlds that MUST NOT publish. [name, builder] */
@@ -195,9 +224,9 @@ export const BAD = [
   ["invalid expiry date", svc((w) => setEntry(w, "COM-05", { expiresOn: "2027-02-30" }))],
   ["revoked evidence", svc((w) => setEntry(w, "COM-05", { revokedOn: "2026-11-18" }))],
   ["superseded evidence with no replacement", svc((w) => setEntry(w, "COM-05", { supersededBy: "COM-05-R2" }))],
-  ["superseded evidence whose replacement does not point back", svc((w) => { setEntry(w, "CMP-07", { supersededBy: "CMP-07-R2" }); w.deps.ledger.push(entry("CMP-07-R2")) })],
-  ["replacement of an entry that does not name it", svc((w) => w.deps.ledger.push(entry("CMP-07-R2", { replaces: "CMP-07" })))],
-  ["superseded evidence whose replacement is revoked", svc((w) => { setEntry(w, "CMP-07", { supersededBy: "CMP-07-R2" }); w.deps.ledger.push(entry("CMP-07-R2", { replaces: "CMP-07", revokedOn: "2026-11-18" })) })],
+  ["superseded evidence whose replacement does not point back", svc((w) => { setEntry(w, "CMP-05", { supersededBy: "CMP-05-R2" }); w.deps.ledger.push(entry("CMP-05-R2")) })],
+  ["replacement of an entry that does not name it", svc((w) => w.deps.ledger.push(entry("CMP-05-R2", { replaces: "CMP-05" })))],
+  ["superseded evidence whose replacement is revoked", svc((w) => { setEntry(w, "CMP-05", { supersededBy: "CMP-05-R2" }); w.deps.ledger.push(entry("CMP-05-R2", { replaces: "CMP-05", revokedOn: "2026-11-18" })) })],
   ["duplicate evidence id", svc((w) => w.deps.ledger.push({ ...firstLedger(w), status: "CONFLICTED" }))],
   ["duplicate evidence id (identical)", svc((w) => w.deps.ledger.push({ ...firstLedger(w) }))],
   ["PROVISIONAL evidence", svc((w) => setEntry(w, "COM-05", { status: "PROVISIONAL" }))],
@@ -210,7 +239,7 @@ export const BAD = [
   ["verification dated after the approval", svc((w) => { w.record.approval.approvedOn = "2026-11-17"; w.record.approval.editorialReview.reviewedOn = "2026-11-16" })],
   ["evidence expired between approval and the decision date", svc((w) => { w.record.approval.approvedOn = "2026-11-17"; w.record.approval.editorialReview.reviewedOn = "2026-11-16"; for (const e of w.deps.ledger) e.verifiedOn = "2026-11-16"; setEntry(w, "COM-05", { expiresOn: "2026-11-18" }) })],
   ["inconsistent supersession pair on an unneeded entry", svc((w) => { w.deps.ledger.push(entry("ZZZ-01", { supersededBy: "ZZZ-02" }), entry("ZZZ-02")) })],
-  ["malformed attested values on a needed entry", svc((w) => setEntry(w, "CMP-07", { attested: { anything: 5 } }))],
+  ["malformed attested values on a needed entry", svc((w) => setEntry(w, "CMP-05", { attested: { anything: 5 } }))],
   ["malformed claims on a neutral section", svc((w) => (sec(w).claims = [{ claimId: "" }]))],
   ["claim statement absent from neutral text", svc((w) => { sec(w).claims = [{ claimId: "availability-24-7", statement: "open all night" }]; w.deps.claims = w.deps.claims.map((c) => (c.id === "availability-24-7" ? { ...c, status: "approved", evidence: "e" } : c)); w.record.approval.complianceReview = { reviewedBy: "C", reviewedOn: "2026-11-18", reference: "R" }; w.record.approval.claimApprovals = [{ claimId: "availability-24-7", sectionId: "scope", statement: "open all night", editorialApprovedBy: "E", complianceApprovedBy: "C" }] })],
   ["a bound claim does not cover other claim-sensitive wording in the same paragraph", claimed((w) => { sec(w).body = [CLAIM_PARA + " Our licensed guards are also on every post, and each one reports to the named supervisor.", P2] })],
@@ -300,9 +329,8 @@ const supersede = (w, id, attested, over = {}, approve = true) => {
   return rid
 }
 const cw = ({ body, claims, approve, approvals }) => () => {
-  const need = REQUIRED_EVIDENCE[SERVICE.publicPath]
   return world(SERVICE, {
-    sections: [{ id: "support", heading: "Support", body: [body, P2], evidenceIds: [need[8]], claims }],
+    sections: [{ id: "support", heading: "Support", body: [body, P2], evidenceIds: [primaryEvidence(SERVICE.publicPath)], claims }],
     approvedClaims: approve,
     compliance: true,
     claimApprovals: (approvals ?? claims).map((c) => ({ claimId: c.claimId, sectionId: "support", statement: c.statement, editorialApprovedBy: "Test Editor", complianceApprovedBy: "Test Compliance" })),
@@ -319,19 +347,19 @@ const flakyObject = (obj, key, bad, after = 1) => {
 GOOD.push(
   ["F9-01 licence replaced by a same-family id with a valid expiry", () => hop(licence({})(), "CMP-01", [["CMP-02", { expiresOn: "2027-09-30" }]])],
   ["F9-01 licence replaced under an unregistered id with a valid expiry", () => hop(licence({})(), "CMP-01", [["ZZZ-91", { expiresOn: "2027-09-30" }]])],
-  ["F9-01 non-licence root replaced under an unregistered id without an expiry", () => hop(world(SERVICE), "CMP-07", [["ZZZ-91", { expiresOn: null }]])],
-  ["F9-01 non-licence root replaced by a same-profile company id", () => hop(world(SERVICE), "CMP-07", [["CMP-06", { expiresOn: null }]])],
+  ["F9-01 non-licence root replaced under an unregistered id without an expiry", () => hop(world(SERVICE), "CMP-05", [["ZZZ-91", { expiresOn: null }]])],
+  ["F9-01 non-licence root replaced by a same-profile company id", () => hop(world(SERVICE), "CMP-05", [["CMP-06", { expiresOn: null }]])],
   ["F9-01 a chain of seventeen replacements", () => longChain(17)],
-  ["F9-02 evidence that expires the day after the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-20", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
-  ["F9-02 evidence that expires the day after the decision date", () => world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-20" } } })],
-  ["F9-02 CLM-01 evidence with a valid expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } })],
+  ["F9-02 evidence that expires the day after the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-05": { expiresOn: "2026-11-20", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
+  ["F9-02 evidence that expires the day after the decision date", () => world(SERVICE, { entryOver: { "CMP-05": { expiresOn: "2026-11-20" } } })],
+  ["F9-02 CLM-01 evidence with a valid expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [primaryEvidence(SERVICE.publicPath), "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } })],
   ["F7-05 evidence verified on the approval date itself", () => { const w = world(SERVICE, { entryOver: { "CNT-10": { verifiedOn: "2026-11-19" } } }); return w }],
-  ["F7-05 a supersession chain of five entries", () => { const w = world(SERVICE); let prev = "CMP-07"; for (let i = 0; i < 5; i++) { const rid = `CMP-07-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return redigest(w) }],
+  ["F7-05 a supersession chain of five entries", () => { const w = world(SERVICE); let prev = "CMP-05"; for (let i = 0; i < 5; i++) { const rid = `CMP-05-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return redigest(w) }],
   ["F5D5-01 corrected address via a replacement entry", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-02", { streetAddress: "2 New Road", locality: "Testville" }); w.record.nap.streetAddress = "2 New Road"; return redigest(w) }],
   ["F5D5-01 corrected name via a replacement entry", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-01", { displayName: "Renamed Office", branchDesignation: "Regional Office" }); w.record.nap.displayName = "Renamed Office"; return redigest(w) }],
   ["F5D5-01 corrected phone via a replacement entry", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-05", { telephone: "+254700000009" }); w.record.nap.telephone = "+254700000009"; return redigest(w) }],
   ["F5D5-01 COM-05 replaced by an entry attesting the same primary phone", () => { const w = world(); supersede(w, "COM-05", { primaryPhone: siteConfig.contact.primaryPhone.e164 }); return w }],
-  ["F5D5-01 three-step supersession chain ending in a valid current entry", () => { const w = world(); const b = supersede(w, "CMP-07", null); const old = w.deps.ledger.find((e) => e.id === b); old.supersededBy = "CMP-07-R3"; w.deps.ledger.push(entry("CMP-07-R3", { replaces: b, scope: old.scope })); w.record.approval.evidenceIds.push("CMP-07-R3"); return w }],
+  ["F5D5-01 three-step supersession chain ending in a valid current entry", () => { const w = world(); const b = supersede(w, "CMP-05", null); const old = w.deps.ledger.find((e) => e.id === b); old.supersededBy = "CMP-05-R3"; w.deps.ledger.push(entry("CMP-05-R3", { replaces: b, scope: old.scope })); w.record.approval.evidenceIds.push("CMP-05-R3"); return w }],
   ["F5D5-03 plain ASCII punctuation is accepted", () => redigest(withSecText("Guards stand at each entrance (the client's choice) and every post reports to a named supervisor - on each shift.")())],
   ["F5D5-04 evidence scoped to the page's own office", () => world(NAIROBI, { sectionEvidence: ["OFF-NBO-06"] })],
   ["F5D5-04 company-wide evidence on an office page", () => world(NAIROBI, { sectionEvidence: ["DIG-02"] })],
@@ -355,9 +383,9 @@ BAD.push(
   ["F5D5-01 replacement is revoked", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-02", { streetAddress: "2 New Road", locality: "Testville" }, { revokedOn: "2026-11-15" }); w.record.nap.streetAddress = "2 New Road"; return redigest(w) }],
   ["F5D5-01 replacement has a different scope", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-02", { streetAddress: "2 New Road", locality: "Testville" }, { scope: "company" }); w.record.nap.streetAddress = "2 New Road"; return redigest(w) }],
   ["F5D5-01 replacement verified after the approval", () => { const w = world(NAIROBI); supersede(w, "OFF-NBO-02", { streetAddress: "2 New Road", locality: "Testville" }, { verifiedOn: "2026-11-19" }); w.record.approval.approvedOn = "2026-11-18"; w.record.nap.streetAddress = "2 New Road"; return redigest(w) }],
-  ["F5D5-01 circular supersession A to B to A", svc((w) => { setEntry(w, "CMP-07", { supersededBy: "CMP-07-R2", replaces: "CMP-07-R2" }); w.deps.ledger.push(entry("CMP-07-R2", { supersededBy: "CMP-07", replaces: "CMP-07" })) })],
-  ["F5D5-01 chain whose last entry is revoked", svc((w) => { const b = supersede(w, "CMP-07", null); const o = w.deps.ledger.find((e) => e.id === b); o.supersededBy = "CMP-07-R3"; w.deps.ledger.push(entry("CMP-07-R3", { replaces: b, revokedOn: "2026-11-15" })); w.record.approval.evidenceIds.push("CMP-07-R3") })],
-  ["F5D5-01 chain with a missing middle entry", svc((w) => { setEntry(w, "CMP-07", { supersededBy: "CMP-07-R2" }); w.deps.ledger.push(entry("CMP-07-R3", { replaces: "CMP-07-R2" })) })],
+  ["F5D5-01 circular supersession A to B to A", svc((w) => { setEntry(w, "CMP-05", { supersededBy: "CMP-05-R2", replaces: "CMP-05-R2" }); w.deps.ledger.push(entry("CMP-05-R2", { supersededBy: "CMP-05", replaces: "CMP-05" })) })],
+  ["F5D5-01 chain whose last entry is revoked", svc((w) => { const b = supersede(w, "CMP-05", null); const o = w.deps.ledger.find((e) => e.id === b); o.supersededBy = "CMP-05-R3"; w.deps.ledger.push(entry("CMP-05-R3", { replaces: b, revokedOn: "2026-11-15" })); w.record.approval.evidenceIds.push("CMP-05-R3") })],
+  ["F5D5-01 chain with a missing middle entry", svc((w) => { setEntry(w, "CMP-05", { supersededBy: "CMP-05-R2" }); w.deps.ledger.push(entry("CMP-05-R3", { replaces: "CMP-05-R2" })) })],
   // F5D5-03 Unicode
   ["F5D5-03 zero-width space in 24/7", uni("24​/7")],
   ["F5D5-03 soft hyphen in licensed", withSecText("Our licen­sed guards stand at each entrance the client chooses and report to a named supervisor on every shift.")],
@@ -421,21 +449,23 @@ BAD.push(
   // 5D.8 mutation-harness corrections: invariants that no earlier case pinned
   ["F5D5-05 an unscoped claim bound to neutral text is not tolerated", () => { const w = world(SERVICE, { approvedClaims: ["brand-new-claim"], compliance: true }); w.record.sections[0].claims = [{ claimId: "brand-new-claim", statement: "written scope sheet" }]; w.record.approval.claimApprovals = [{ claimId: "brand-new-claim", sectionId: w.record.sections[0].id, statement: "written scope sheet", editorialApprovedBy: "E", complianceApprovedBy: "C" }]; return w }],
   ["F5D5-01 a superseded entry whose scope differs from its correct replacement", () => { const w = world(NAIROBI); const old = w.deps.ledger.find((e) => e.id === "OFF-NBO-02"); old.supersededBy = "OFF-NBO-52"; old.scope = "company"; w.deps.ledger.push(entry("OFF-NBO-52", { replaces: "OFF-NBO-02", scope: "office:nairobi", attested: old.attested })); w.record.approval.evidenceIds.push("OFF-NBO-52"); return w }],
-  ["F5D5-01 a supersession chain of twenty entries", () => { const w = world(SERVICE); let prev = "CMP-07"; for (let i = 0; i < 20; i++) { const rid = `CMP-07-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return w }],
+  ["F5D5-01 a supersession chain of twenty entries", () => { const w = world(SERVICE); let prev = "CMP-05"; for (let i = 0; i < 20; i++) { const rid = `CMP-05-R${i + 2}`; w.deps.ledger.find((e) => e.id === prev).supersededBy = rid; w.deps.ledger.push(entry(rid, { replaces: prev, scope: "company" })); w.record.approval.evidenceIds.push(rid); prev = rid } return w }],
   // ---- 5D.10 (F9-01, F9-02, F9-03): every canonical identity in a chain counts
-  ["F9-01 non-licence root replaced by the licence id CMP-01 without an expiry", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: null }]])],
-  ["F9-01 non-licence root replaced by the licence id CMP-01 with a valid expiry", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 non-licence root replaced by the licence id CMP-01 without an expiry", () => hop(world(SERVICE), "CMP-05", [["CMP-01", { expiresOn: null }]])],
+  ["F9-01 non-licence root replaced by the licence id CMP-01 with a valid expiry", () => hop(world(SERVICE), "CMP-05", [["CMP-01", { expiresOn: "2027-09-30" }]])],
   ["F9-01 licence root replaced by a different company id with a valid expiry", () => hop(licence({})(), "CMP-01", [["CMP-06", { expiresOn: "2027-09-30" }]])],
-  ["F9-01 licence id in the middle of a chain with a non-licence root", () => hop(world(SERVICE), "CMP-07", [["CMP-01", { expiresOn: "2027-09-30" }], ["ZZZ-92", { expiresOn: "2027-09-30" }]])],
+  ["F9-01 licence id in the middle of a chain with a non-licence root", () => hop(world(SERVICE), "CMP-05", [["CMP-01", { expiresOn: "2027-09-30" }], ["ZZZ-92", { expiresOn: "2027-09-30" }]])],
   ["F9-01 non-licence id at the end of a licence chain", () => hop(licence({})(), "CMP-01", [["ZZZ-91", { expiresOn: "2027-09-30" }], ["CMP-06", { expiresOn: "2027-09-30" }]])],
   ["F9-01 office root replaced by a registered company id", () => { const w = world(NAIROBI); const old = w.deps.ledger.find((e) => e.id === "OFF-NBO-02"); return hop(w, "OFF-NBO-02", [["COM-88", { attested: old.attested }]]) }],
   ["F9-01 licence id at the end of a 17-replacement chain", () => longChain(17, "CMP-01")],
-  ["F9-02 CLM-01 evidence without an expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: null } } })],
-  ["F9-02 CLM-01 replaced under an unrelated id without an expiry", () => hop(world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [REQUIRED_EVIDENCE[SERVICE.publicPath][8], "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } }), "CLM-01", [["ZZZ-91", { expiresOn: null }]])],
-  ["F9-02 evidence that expires on the decision date", () => world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-19" } } })],
+  ["F9-02 CLM-01 evidence without an expiry", () => world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [primaryEvidence(SERVICE.publicPath), "CLM-01"], entryOver: { "CLM-01": { expiresOn: null } } })],
+  ["F9-02 CLM-01 replaced under an unrelated id without an expiry", () => hop(world(SERVICE, { extraEvidence: ["CLM-01"], sectionEvidence: [primaryEvidence(SERVICE.publicPath), "CLM-01"], entryOver: { "CLM-01": { expiresOn: "2027-06-30" } } }), "CLM-01", [["ZZZ-91", { expiresOn: null }]])],
+  ["F9-02 evidence that expires on the decision date", () => world(SERVICE, { entryOver: { "CMP-05": { expiresOn: "2026-11-19" } } })],
   // the approval is dated BEFORE the decision date, so only the decision-date comparison can refuse this entry
-  ["F9-02 evidence that expires on the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-07": { expiresOn: "2026-11-19", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
+  ["F9-02 evidence that expires on the decision date (approval dated earlier)", () => { const w = world(SERVICE, { entryOver: { "CMP-05": { expiresOn: "2026-11-19", verifiedOn: "2026-11-17" } } }); w.record.approval.approvedOn = "2026-11-18"; return w }],
   ...["are Number-one in Kenya", "are #one in Kenya", "are 1st in Kenya", "are first-ranked", "are ranked first", "are the first choice for security", "are numero uno"].map((t) => [`F9-03 ranking claim ${JSON.stringify(t)} without an approved claim`, withSecText(`Our patrol teams ${t} and every post reports to a named supervisor at the start of each shift.`)]),
+  // R04B-01 claims policy: pricing CLAIMS stay blocked on pages (no claim scope permits the pricing category)
+  ...PRICING_BLOCKED.map(([n, t]) => [`R04B-01 pricing claim: ${n}`, withSecText(t)]),
   // F5D5-06 designation allowlist
   ...["Main Office", "Corporate Office", "Head Quarters", "HQ", "head office", "Regional Office ", "Branch", "Showroom", "Headquarters"].map((d) => [`F5D5-06 designation ${JSON.stringify(d)} is not allowlisted`, () => world(NAIROBI, { nap: { branchDesignation: d } })]),
   ["F5D5-06 head office attested for a different office", () => world(NAIROBI, { nap: { branchDesignation: "Head Office" }, headOfficeFor: "Nakuru" })],

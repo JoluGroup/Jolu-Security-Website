@@ -10,6 +10,13 @@ const GATE = "lib/seo/publication-gate.ts"
 const TRACE = (id) => `globalThis.__mutHit("${id}")`
 
 export const MUTANTS = [
+  // ---- R04B-01 page pricing policy (pricing CLAIMS blocked; bare commercial words allowed)
+  M("R04B-01 page pricing patterns dropped", "...PAGE_PRICING_PATTERNS, ...EXTRA_CLAIM_PATTERNS]", "...EXTRA_CLAIM_PATTERNS]"),
+  M("R04B-01 currency without a figure allowed", "pattern: /\\b(?:kes|kshs?|shillings?|usd|dollars?|euros?)\\b/i", "pattern: /(?!)/"),
+  M("R04B-01 price positioning allowed", "String.raw`\\b(?:fixed|flat|set|guaranteed|locked|", "String.raw`(?!)\\b(?:fixed|flat|set|guaranteed|locked|"),
+  M("R04B-01 figure near a price word allowed", "[^.?!]{0,40}?${FIGURE}", "[^.?!]{0,0}?zz${FIGURE}"),
+  M("R04B-01 free offers allowed", "pattern: /\\b(?:free of charge|", "pattern: /(?!)\\b(?:free of charge|"),
+  { ...M("R04B-01 page scan reverts to the keyword pricing rule", 'CLAIM_RULES.filter((r) => r.category !== "pricing")', "CLAIM_RULES"), killBy: "accepts" },
   M("F-02 ignore canonical table", "const needed = new Set<string>(canonical ?? [])", "const needed = new Set<string>()"),
   M("F-03 skip serviceId check", "r.serviceId !== id.serviceId ||", "false ||"),
   M("F-03 skip locationId check", "r.locationId !== slug", "false"),

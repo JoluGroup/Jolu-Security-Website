@@ -14,7 +14,7 @@ const { contentToSections } = await import("@/lib/seo/service-sections")
 const FILL = "Guards are placed at the entrances and gates that the client chooses for the site, and each post reports to a named supervisor."
 const LICENCE_PARA = "JOLU SECURITY is licensed and compliant according to the register that the regulator publishes for the whole sector."
 const STATEMENT = "licensed and compliant"
-const ev = (path) => REQUIRED_EVIDENCE[path][8]
+const ev = (path) => REQUIRED_EVIDENCE[path][2]
 
 /** A world whose single section asserts licensing, bound to claim `licensed-compliant`, with knobs for each way it can be wrong. */
 function licensingWorld({ claimStatus = "approved", claimEvidence = "licence-register-extract", approval = true, bound = true } = {}) {

@@ -65,7 +65,13 @@ test("records and the canonical table agree with the planned pages and keyword r
     assert.equal(r.plannedPath, `${r.publicPath}/`)
     assert.ok(resolvePlanned(r).primaryKeyword.length > 0)
     for (const k of ["primaryKeyword", "supportingKeywords", "keywords", "title", "description", "requiredEvidence", "claimRefs", "napEvidenceIds"]) assert.ok(!(k in r), `record has ${k}`)
-    assert.ok(REQUIRED_EVIDENCE[r.publicPath].length >= 13, r.publicPath)
+    // Release 04B: the table holds exactly the content evidence for the page (lib/seo/release-gates.ts), never fewer.
+    // An exact list is stronger than the former ">= 13" floor: no item can be dropped OR added without failing here.
+    const code = r.kind === "service" ? { "manned-guarding": "MG", "cctv-installation": "CC", "electric-fencing": "EF", "events-security": "EV", "k9-unit-services": "K9", "alarm-response": "AR", "vip-close-protection": "VP" }[r.slug] : { nairobi: "NBO", nakuru: "NAK", rongo: "RON" }[r.slug]
+    const exact = r.kind === "service"
+      ? ["COM-05", "CNT-10", `SVC-${code}-01`, `SVC-${code}-02`, `SVC-${code}-07`, "CMP-05", "CNT-01"]
+      : ["COM-05", "CNT-10", ...["01", "02", "05", "06", "07", "10"].map((n) => `OFF-${code}-${n}`)]
+    assert.deepEqual([...REQUIRED_EVIDENCE[r.publicPath]], exact, r.publicPath)
     for (const id of REQUIRED_EVIDENCE[r.publicPath]) assert.match(id, /^(COM|OFF-(NBO|NAK|RON)|SVC-(MG|CC|EF|EV|K9|AR|VP)|CMP|CNT|CLM|DIG)-\d{2}$/)
   }
   assert.ok(!ALL_PAGE_RECORDS.some((r) => /migori/i.test(r.slug)), "no migori page")

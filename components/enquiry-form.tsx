@@ -17,6 +17,7 @@ import {
 } from "@/lib/enquiry/schema"
 import { REFERRAL_SOURCES } from "@/lib/enquiry/referral"
 import { track } from "@/lib/analytics/client"
+import { isNewConfirmedLead } from "@/lib/analytics/lead"
 import { SERVICES, isServiceId } from "@/lib/services"
 import { siteConfig, whatsappLink } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
@@ -114,10 +115,9 @@ export function EnquiryForm() {
 
     if (result?.ok && "state" in result && result.state === "accepted") {
       // Confirmed server acceptance only (HTTP 2xx with state "accepted").
-      if (httpOk) {
-        track("enquiry_accepted", ctx)
-        track("generate_lead", ctx)
-      }
+      if (httpOk) track("enquiry_accepted", ctx)
+      // A replayed identical enquiry is answered as accepted with `duplicate: true`: it is the earlier lead, not a new one.
+      if (isNewConfirmedLead(httpOk, result)) track("generate_lead", ctx)
       setStatus({ kind: "accepted", ref: result.ref })
       setValues(EMPTY)
     } else if (result?.ok && "mode" in result && result.mode === "test") {

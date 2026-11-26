@@ -14,11 +14,15 @@ export const MUTANTS = [
   M("R04B-01 page pricing patterns dropped", "...PAGE_PRICING_PATTERNS, ...EXTRA_CLAIM_PATTERNS]", "...EXTRA_CLAIM_PATTERNS]"),
   M("R04B-01 currency without a figure allowed", "pattern: /\\b(?:kes|kshs?|shillings?|usd|dollars?|euros?)\\b/i", "pattern: /(?!)/"),
   M("R04B-01 price positioning allowed", "String.raw`\\b(?:fixed|flat|set|guaranteed|locked|", "String.raw`(?!)\\b(?:fixed|flat|set|guaranteed|locked|"),
-  M("R04B-01 figure near a price word allowed", "[^.?!]{0,40}?${FIGURE}", "[^.?!]{0,0}?zz${FIGURE}"),
+  // "R04B-01 figure near a price word" is no longer a separate mutant: since R04B-04 a sentence with a price word is refused
+  // unless it fits an educational frame AND has no figure, so that rule cannot be the only one to refuse any input.
   M("R04B-02 positioning after the price word allowed", "?\\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\\b", "?\\b(?:zzis)\\b"),
   M("R04B-02 informal amounts allowed", "pattern: INFORMAL_AMOUNTS }", "pattern: /(?!)/ }"),
   M("R04B-02 free and package offers allowed", "pattern: FREE_AND_PACKAGE_OFFERS }", "pattern: /(?!)/ }"),
   M("R04B-03 spelled-out amounts and bargain phrasing allowed", "|\\bfor the price of\\b|", "|\\bzzfor the price of\\b|"),
+  M("R04B-04 price-word sentence allowlist bypassed", "if (w && !educationalPriceSentence(m[0]))", "if (false)"),
+  M("R04B-04 number words allowed inside an educational frame", "&& !NUMBER_WORD.test(sentence.replace(", "&& !/(?!)/.test(sentence.replace("),
+  M("R04B-04 spelled-out amount per period allowed", "pattern: /\\b(?:hundred|thousand|million|k)\\b[^.?!]{0,12}?", "pattern: /(?!)\\b(?:hundred|thousand|million|k)\\b[^.?!]{0,12}?"),
   M("R04B-01 free offers allowed", "pattern: /\\b(?:free of charge|", "pattern: /(?!)\\b(?:free of charge|"),
   { ...M("R04B-01 page scan reverts to the keyword pricing rule", 'CLAIM_RULES.filter((r) => r.category !== "pricing")', "CLAIM_RULES"), killBy: "accepts" },
   M("F-02 ignore canonical table", "const needed = new Set<string>(canonical ?? [])", "const needed = new Set<string>()"),

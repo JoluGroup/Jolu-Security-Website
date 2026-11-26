@@ -161,6 +161,20 @@ export const PRICING_BLOCKED = [
   // R04B-02: one case per rule that no other rule catches, so each rule is proven load-bearing by the mutation harness
   ["currency word only", "All guarding contracts are invoiced in Kenyan shillings at the end of every calendar month for each site."],
   ["price word near a plain figure", "The fee for a single post is 300 on the standard contract for residential estates and small offices."],
+  // R04B-04: claims inside an approved educational frame are still refused by the phrase rules (defence in depth)
+  ["frame + price positioning", "The price depends on the site, and we offer the lowest prices for homes, offices and estates across the region we serve."],
+  ["frame + positioning after", "The budget depends on the site, and our rates are the lowest in town for homes, offices and estates across the region we serve."],
+  ["frame + for the price of", "The budget depends on the site, and you get extra cover for the price of basic cover for homes, offices and estates across the region we serve."],
+  ["frame + free of charge", "The cost depends on the site, and alarm testing is free of charge for homes, offices and estates across the region we serve."],
+  // R04B-04: cases from the final delta review of 43b0fb6 (price words are now allowlisted by sentence)
+  ["free from the first day", "Monitoring is free from the first day you sign up for homes, offices and estates across the region we serve."],
+  ["fraction of", "Guarding costs a fraction of what the big firms charge for homes, offices and estates across the region we serve."],
+  ["zero cost", "Get two months of monitoring at zero cost for homes, offices and estates across the region we serve."],
+  ["thrown in", "The second guard is thrown in at no extra fee for homes, offices and estates across the region we serve."],
+  ["price beats", "Our price beats everyone in town for homes, offices and estates across the region we serve."],
+  ["break the bank", "Our fees won't break the bank for homes, offices and estates across the region we serve."],
+  ["spelled amount per month", "Alarm response for under ten thousand a month for homes, offices and estates across the region we serve."],
+  ["frame with a number word", "The price depends on the site, and guards cost a fraction of what others ask for homes, offices and estates across the region we serve."],
   // R04B-03: cases from the delta review of 9c39102
   ["at no extra cost", "Weekend patrol visits are provided at no extra cost to residents of the estate during the first contract month."],
   ["free of charge", "Alarm testing is done free of charge for residents of the estate during the first month of every contract."],

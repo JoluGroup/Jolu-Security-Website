@@ -7,11 +7,10 @@ const { contentToSections } = await import("@/lib/seo/service-sections")
 const { SERVICE_PAGE_RECORDS } = await import("@/lib/seo/page-records")
 const W = await import("./gate-world.mjs")
 
+// Release 04B: the pricing swaps were removed. Plain commercial wording now passes the gate unchanged (lib/seo/publication-gate.ts,
+// R04B claims policy), and rewriting it here produced ungrammatical text that the sentence allowlist rightly refuses.
+// Only the regulator wording, which still needs compliance approval, is stood in for.
 const SWAPS = [
-  [/\bquotations?\b/gi, "proposal"],
-  [/\bquotes?\b/gi, "proposal"],
-  [/\bcosts?\b/gi, "budget"],
-  [/\bprices?\b/gi, "budget"],
   [/\bPrivate Security Regulatory Authority \(PSRA\)/g, "Authority"],
   [/\bPrivate Security Regulatory Authority\b/g, "Authority"],
   [/\bPSRA\b/g, "Authority"],

@@ -104,7 +104,7 @@ const FIGURE = String.raw`(?<![A-Za-z])\d`
 // Amounts in local and informal forms (Sh, /=, 15k, bob, thousands separators, amount + period word, percentages).
 const INFORMAL_AMOUNTS = /\bsh\.?\s?\d|\d\s?\/=|(?<![A-Za-z])\d+(?:\.\d+)?\s?k\b|\bbob\b|(?<![A-Za-z])\d{1,3}(?:,\d{3})+(?!\d)|(?<![A-Za-z#])(?<!\b(?:number|no\.?)\s?)\d{2,}[\d,.]*\s+(?:monthly|weekly|daily|hourly|annually|yearly|each|apiece)\b|(?<![A-Za-z])\d+(?:\.\d+)?\s?(?:%|per ?cent\b)/i
 // Free, complimentary or uncharged offers; tiered packages; promotional value.
-const FREE_AND_PACKAGE_OFFERS = /(?<!\bfeel\s)\bfree\b(?![- ]?standing)(?!\s+(?:to|from|of)\b)|\bcomplimentary\b|\bno charge\b|\b(?:do not|don't|never|won't|will not)\s+charge\b|\bpay nothing\b|\b(?:basic|standard|premium|gold|silver|bronze|platinum)\b(?:\s*(?:,|and|or)\s*(?:basic|standard|premium|gold|silver|bronze|platinum)\b)+[^.?!]{0,30}\bpackages?\b|\b(?:great|best|good|excellent|unbeatable|real)\s+value\b/i
+const FREE_AND_PACKAGE_OFFERS = /(?<!\bfeel\s)\bfree\b(?![- ]?standing)(?!\s+(?:to|of)\b)(?!\s+from\b(?!\s+(?:the\s+)?(?:first|day|date|start|today|now|month|week|signing|sign)))|\bcomplimentary\b|\bno charge\b|\b(?:do not|don't|never|won't|will not)\s+charge\b|\bpay nothing\b|\b(?:basic|standard|premium|gold|silver|bronze|platinum)\b(?:\s*(?:,|and|or)\s*(?:basic|standard|premium|gold|silver|bronze|platinum)\b)+[^.?!]{0,30}\bpackages?\b|\b(?:great|best|good|excellent|unbeatable|real)\s+value\b/i
 const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = [
   // currencies and money amounts, with or without a figure
   { category: CATEGORY.pricing, pattern: /\b(?:kes|kshs?|shillings?|usd|dollars?|euros?)\b/i },
@@ -122,6 +122,8 @@ const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = 
   // "quotes are free") and comparisons ("cheaper than", "costs less than") are pricing claims too
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\b[^.?!]{0,24}?\b(?:lowest|lower|cheapest|cheaper|cheap|less|free|negotiable|affordable|reasonable|competitive|transparent|fair|honest|flexible|pocket[- ]friendly|unbeatable|best|low|great value|good value|kept to a minimum|minimal|minimum)\b`, "i") },
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:less|lower) than\b|\b(?:cheaper|less expensive|more affordable|most affordable|most reasonable|unbeatable|pocket[- ]friendly)\b`, "i") },
+  // R04B-04: a spelled-out amount tied to a period ("under ten thousand a month") needs no price word to be a price
+  { category: CATEGORY.pricing, pattern: /\b(?:hundred|thousand|million|k)\b[^.?!]{0,12}?\b(?:a|per|each|every)\s+(?:month|week|day|hour|year|night|shift|visit)\b/i },
   // R04B-03: amounts spelled out or stated as fractions ("cost twenty five thousand", "half of what others ask")
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,40}?\b(?:hundreds?|thousands?|millions?|half|double|twice|triple|quarter)\b|\bfor the price of\b|\b(?:pay|paying|spend|spending)\s+less\b|\bsave money\b|\bon the house\b|\bbundle(?:d)? deals?\b`, "i") },
   // amounts in local and informal forms: "Sh 20,000", "20,000/=", "15k", "25 bob", thousands-separated figures, an amount
@@ -136,6 +138,24 @@ const SCAN = [...CLAIM_RULES.filter((r) => r.category !== "pricing").map((r) => 
 
 type Span = { from: number; to: number; category: string; text: string }
 /** Claim-sensitive spans in `text`. */
+// R04B-04: price words are ALLOWLISTED by sentence, not blocklisted by phrase (fail closed). A sentence that contains a
+// price word is a pricing claim UNLESS it uses one of these educational frames AND contains no figure or number word.
+// Any new way of saying "cheap", "free" or "a fraction of the price" is therefore refused until a reviewer adds a frame
+// in a reviewed change. The phrase blocklist above still applies on top, so a frame cannot excuse a price claim inside it.
+// Frames are the vocabulary editors may use; docs/seo/release04b-gate-dispositions.md lists them.
+const PRICE_WORD = new RegExp(String.raw`\b${PRICE_NOUN}\b|\bcharged\b`, "i")
+const EDUCATIONAL_PRICE_FRAMES: readonly RegExp[] = [
+  /\b(?:price|cost|budget|fee)s?\b[^.?!]{0,60}?\b(?:depends?|varies|vary)(?:\s+(?:mainly|largely|mostly))?\s+on\b/i, // "the budget depends on the number of posts"
+  /\bbudget factors?\b|\b(?:affects?|moves?|shapes?|drives?) (?:the|its|your) (?:budget|cost|price)\b|\bcost drivers?\b|\bplan (?:a|your) (?:realistic )?budget\b/i,
+  /\b(?:decides?|affects?|determines?) the (?:price|cost|budget) of\b|\bon price alone\b|\bas much as price\b/i,
+  /\b(?:written|a|the) quotation\b|\bplan and quotation\b|\bclient examples or quotations\b|\beach quotation includes\b/i,
+  /\bhow\b[^.?!]{0,50}\bwould be charged\b|\b(?:fees|charges)\b[^.?!]{0,30}\bare included\b|\bcost more to provide\b/i,
+]
+const NUMBER_WORD = /(?<![A-Za-z])\d|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|twenty|thirty|forty|fifty|hundreds?|thousands?|millions?|half|double|twice|triple|quarter|fraction|zero)\b/i
+function educationalPriceSentence(sentence: string): boolean {
+  // "two hypothetical sites" / "the two scenarios" count the worked examples, not money; nothing else is exempt.
+  return EDUCATIONAL_PRICE_FRAMES.some((f) => f.test(sentence)) && !NUMBER_WORD.test(sentence.replace(/\btwo (?:hypothetical|scenarios)\b/gi, ""))
+}
 function spansOf(text: string): Span[] {
   const out: Span[] = []
   for (const { category, re } of SCAN) {
@@ -144,6 +164,11 @@ function spansOf(text: string): Span[] {
       out.push({ from: m.index, to: m.index + Math.max(m[0].length, 1), category, text: m[0] })
       if (m[0].length === 0) re.lastIndex++
     }
+  }
+  const sentences = /[^.?!]+[.?!]*/g
+  for (let m = sentences.exec(text); m; m = sentences.exec(text)) {
+    const w = PRICE_WORD.exec(m[0])
+    if (w && !educationalPriceSentence(m[0])) out.push({ from: m.index + w.index, to: m.index + w.index + w[0].length, category: CATEGORY.pricing, text: w[0] })
   }
   return out
 }

@@ -106,3 +106,10 @@ Findings are from the 5D.9 audit. Nothing is published; the allowlist, ledger an
 - The claim scan and claim scope are heuristic; per-statement approvals and human review are the real control, and the gate does not prove factual accuracy.
 - Separation of duties between reviewers is not enforced in code.
 - Route-file existence and rendering are checked by tests in CI, not at runtime.
+
+## Release 04 additions (Lane SEO)
+
+- **Answer-first service content (unpublished).** `lib/seo/service-content.ts` holds draft content for the seven service pages (AEO briefs C01-C07); `lib/seo/service-sections.ts` flattens it into the `ContentSection[]` the gate reviews; `components/aeo/*` render it. `PublishedPage` uses the answer-first layout only when the gate-published record's sections equal the content's sections exactly, so reviewed copy and rendered copy cannot differ. All headings are free of pricing and licensing wording because the gate rejects claims in headings. No route file exists, the manifest and ledger are empty, and the pages answer 404.
+- **Structured data for those pages.** `lib/seo/service-json-ld.ts` builds Organization, Service, BreadcrumbList and FAQPage from the same content, and returns null unless the page passed the gate and the sections match.
+- **Route reconciliation.** `lib/seo/route-architecture.ts` gives one canonical path (no trailing slash) per intent, records the four workbook rows whose suggested URL contradicted their intent, and maps AEO briefs C01-C15 onto existing routes without creating second URLs. `lib/seo/location-support.ts` types location opportunities (no address, no coverage).
+- See `release04-technical-audit.md` and `release04-evidence-gated-inventory.md`.

@@ -2,8 +2,8 @@ import { BRAND } from "@/lib/seo/brand"
 import { SERVICES } from "@/lib/services"
 import { siteConfig } from "@/lib/site-config"
 
-const ORG_ID = `${siteConfig.url}/#organization`
-const WEBSITE_ID = `${siteConfig.url}/#website`
+export const ORG_ID = `${siteConfig.url}/#organization`
+export const WEBSITE_ID = `${siteConfig.url}/#website`
 
 /**
  * Organization and WebSite structured data for the homepage. Every value is already visible on the page
@@ -12,9 +12,10 @@ const WEBSITE_ID = `${siteConfig.url}/#website`
  * licence or registration numbers, offices/addresses (PostalAddress, location), areaServed (unverified;
  * see lib/offices.ts), and FAQ markup (there are no on-page FAQs).
  */
-export function buildHomeJsonLd() {
+/** Organization identity shared by every page that embeds it. Verified values only: name, apex URL, approved logo, contacts. */
+export function buildOrganizationCore() {
   const { contact } = siteConfig
-  const organization = {
+  return {
     "@type": "Organization",
     "@id": ORG_ID,
     name: BRAND,
@@ -34,6 +35,12 @@ export function buildHomeJsonLd() {
       email: contact.email,
       contactType: "customer service",
     })),
+  }
+}
+
+export function buildHomeJsonLd() {
+  const organization = {
+    ...buildOrganizationCore(),
     hasOfferCatalog: {
       "@type": "OfferCatalog",
       name: `${BRAND} services`,

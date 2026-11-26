@@ -122,6 +122,8 @@ const PAGE_PRICING_PATTERNS: readonly { category: string; pattern: RegExp }[] = 
   // "quotes are free") and comparisons ("cheaper than", "costs less than") are pricing claims too
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:is|are|stay|stays|remain|remains|come|comes|will be)\b[^.?!]{0,24}?\b(?:lowest|lower|cheapest|cheaper|cheap|less|free|negotiable|affordable|reasonable|competitive|transparent|fair|honest|flexible|pocket[- ]friendly|unbeatable|best|low|great value|good value|kept to a minimum|minimal|minimum)\b`, "i") },
   { category: CATEGORY.pricing, pattern: new RegExp(String.raw`\b${PRICE_NOUN}\b[^.?!]{0,30}?\b(?:less|lower) than\b|\b(?:cheaper|less expensive|more affordable|most affordable|most reasonable|unbeatable|pocket[- ]friendly)\b`, "i") },
+  // R04B-05: bargain and offer wording that can ride in a second clause of an educational frame sentence
+  { category: CATEGORY.pricing, pattern: /\b(?:(?:good|great|better|best|fantastic|unbeatable)\s+deals?|bargains?|a steal|gratis|undercut\w*|economical|offer ends|(?:never|won't|will not) (?:go|goes) up|limited[- ]time)\b/i },
   // R04B-04: a spelled-out amount tied to a period ("under ten thousand a month") needs no price word to be a price
   { category: CATEGORY.pricing, pattern: /\b(?:hundred|thousand|million|k)\b[^.?!]{0,12}?\b(?:a|per|each|every)\s+(?:month|week|day|hour|year|night|shift|visit)\b/i },
   // R04B-03: amounts spelled out or stated as fractions ("cost twenty five thousand", "half of what others ask")
@@ -141,11 +143,12 @@ type Span = { from: number; to: number; category: string; text: string }
 // R04B-04: price words are ALLOWLISTED by sentence, not blocklisted by phrase (fail closed). A sentence that contains a
 // price word is a pricing claim UNLESS it uses one of these educational frames AND contains no figure or number word.
 // Any new way of saying "cheap", "free" or "a fraction of the price" is therefore refused until a reviewer adds a frame
-// in a reviewed change. The phrase blocklist above still applies on top, so a frame cannot excuse a price claim inside it.
+// in a reviewed change. The phrase blocklist above still applies on top, inside frames too; but a claim that uses no
+// price word and no listed phrase can still sit in a second clause of a frame sentence (documented limit, owner condition).
 // Frames are the vocabulary editors may use; docs/seo/release04b-gate-dispositions.md lists them.
 const PRICE_WORD = new RegExp(String.raw`\b${PRICE_NOUN}\b|\bcharged\b`, "i")
 const EDUCATIONAL_PRICE_FRAMES: readonly RegExp[] = [
-  /\b(?:price|cost|budget|fee)s?\b[^.?!]{0,60}?\b(?:depends?|varies|vary)(?:\s+(?:mainly|largely|mostly))?\s+on\b/i, // "the budget depends on the number of posts"
+  /\b(?:price|cost|budget|fee)s?\b[^.?!]{0,60}?\b(?:depends?(?:\s+(?:mainly|largely|mostly))?\s+on|vary\s+with|varies\s+with)\b/i, // "the budget depends on the number of posts", "prices vary with camera type"
   /\bbudget factors?\b|\b(?:affects?|moves?|shapes?|drives?) (?:the|its|your) (?:budget|cost|price)\b|\bcost drivers?\b|\bplan (?:a|your) (?:realistic )?budget\b/i,
   /\b(?:decides?|affects?|determines?) the (?:price|cost|budget) of\b|\bon price alone\b|\bas much as price\b/i,
   /\b(?:written|a|the) quotation\b|\bplan and quotation\b|\bclient examples or quotations\b|\beach quotation includes\b/i,

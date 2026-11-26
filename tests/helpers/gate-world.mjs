@@ -141,6 +141,7 @@ export const PRICING_ALLOWED = [
   "A K9 team can add value at large or open sites, and a site assessment should check whether it suits the property.",
   "Agree in writing how extra cover would be charged, so that you are not negotiating about it on the day of the event.",
   "The guard is free to call the supervisor at any time during the shift, and every call is written in the post log.",
+  "Prices for CCTV vary with camera type, storage and cabling distance, so compare proposals line by line before deciding.",
   "Keep the fence line free from vegetation, because plants touching the wires can trigger false alarms on the energiser.",
 ]
 /** R04B-01: pricing claims. Each must be refused for claim-sensitive (pricing) wording. [name, text] */
@@ -161,6 +162,13 @@ export const PRICING_BLOCKED = [
   // R04B-02: one case per rule that no other rule catches, so each rule is proven load-bearing by the mutation harness
   ["currency word only", "All guarding contracts are invoiced in Kenyan shillings at the end of every calendar month for each site."],
   ["price word near a plain figure", "The fee for a single post is 300 on the standard contract for residential estates and small offices."],
+  // R04B-05: from the review of a54d4ac (second-clause claims inside a frame sentence)
+  ["frame + better deal", "The price depends on the site, but you will never find a better deal anywhere in Kenya today."],
+  ["frame + undercut", "Request a written quotation, and expect it to undercut every competitor you have spoken to so far."],
+  ["frame + bargain", "The cost depends on the number of posts, and many clients tell us it is a bargain for what they get."],
+  ["frame + gratis", "The fee depends mainly on hours, and new clients get the first week of cover gratis from us."],
+  ["frame + never goes up", "The price depends on the site, and it never goes up during the contract for loyal clients like you."],
+  ["frame + offer ends", "The budget depends on the site, so get in touch today before this offer ends at the end of the month."],
   // R04B-04: claims inside an approved educational frame are still refused by the phrase rules (defence in depth)
   ["frame + price positioning", "The price depends on the site, and we offer the lowest prices for homes, offices and estates across the region we serve."],
   ["frame + positioning after", "The budget depends on the site, and our rates are the lowest in town for homes, offices and estates across the region we serve."],

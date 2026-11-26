@@ -242,7 +242,7 @@ async function handle(request: Request, progress: Progress): Promise<Response> {
     const finish = await finishDedup(handle, "sent", ref)
     if (finish === "error") log("dedup_record_failed", ref)
     else if (finish === "lock_lost") log("dedup_lock_lost", ref)
-    log("accepted", ref)
+    log("accepted", ref, { referral: result.data.referralSource ?? "none" })
     return respond({ ok: true, ref, state: "accepted" }, 200)
   }
 

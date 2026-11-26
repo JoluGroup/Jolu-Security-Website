@@ -2,6 +2,7 @@
 import { isKenyaCounty, type KenyaCounty } from "@/lib/kenya-counties"
 import { isServiceId, type ServiceId } from "@/lib/services"
 import { cleanLine, cleanMultiline } from "@/lib/enquiry/sanitize"
+import { isReferralSource, type ReferralSource } from "@/lib/enquiry/referral"
 
 export const LIMITS = {
   name: 80,
@@ -12,7 +13,7 @@ export const LIMITS = {
   rawBodyBytes: 16 * 1024,
 } as const
 
-export const ENQUIRY_FIELDS = ["name", "phone", "email", "service", "county", "town", "details", "consent"] as const
+export const ENQUIRY_FIELDS = ["name", "phone", "email", "service", "county", "town", "details", "referral_source", "consent"] as const
 export type EnquiryField = (typeof ENQUIRY_FIELDS)[number]
 export type FieldErrors = Partial<Record<EnquiryField, string>>
 
@@ -24,6 +25,8 @@ export type Enquiry = {
   county: KenyaCounty
   town: string
   details: string
+  /** Optional, allowlisted. Never part of the duplicate fingerprint (see lib/enquiry/dedup.ts). */
+  referralSource?: ReferralSource
 }
 
 /** Honeypot field name. Real visitors never see or fill it. */
@@ -79,6 +82,12 @@ export function validateEnquiry(
   const details = cleanMultiline(input.details, LIMITS.details)
   if (details.length < 10) errors.details = "Tell us a little about what you need (at least 10 characters)."
 
+  // Optional. Missing, null or empty means "not stated". Anything else must be one of the allowlisted labels
+  // exactly; the rejected value is never echoed back.
+  const referral = input.referral_source
+  const referralGiven = referral !== undefined && referral !== null && referral !== ""
+  if (referralGiven && !isReferralSource(referral)) errors.referral_source = "Choose an option from the list."
+
   if (input.consent !== true) errors.consent = "Please confirm you agree to us using these details to respond."
 
   if (Object.keys(errors).length > 0) return { ok: false, errors }
@@ -93,6 +102,7 @@ export function validateEnquiry(
       county: county as KenyaCounty,
       town,
       details,
+      ...(referralGiven ? { referralSource: referral as ReferralSource } : {}),
     },
   }
 }

@@ -15,12 +15,14 @@ import {
   type EnquiryResponse,
   type FieldErrors,
 } from "@/lib/enquiry/schema"
+import { REFERRAL_SOURCES } from "@/lib/enquiry/referral"
+import { track } from "@/lib/analytics/client"
 import { SERVICES, isServiceId } from "@/lib/services"
 import { siteConfig, whatsappLink } from "@/lib/site-config"
 import { cn } from "@/lib/utils"
 
-type Values = { name: string; phone: string; email: string; service: string; county: string; town: string; details: string; consent: boolean }
-const EMPTY: Values = { name: "", phone: "", email: "", service: "", county: "", town: "", details: "", consent: false }
+type Values = { name: string; phone: string; email: string; service: string; county: string; town: string; details: string; referral_source: string; consent: boolean }
+const EMPTY: Values = { name: "", phone: "", email: "", service: "", county: "", town: "", details: "", referral_source: "", consent: false }
 
 type Status =
   | { kind: "idle" }
@@ -91,32 +93,44 @@ export function EnquiryForm() {
 
     setErrors({})
     setStatus({ kind: "submitting" })
+    const ctx = { service: check.data.service, referral_source: check.data.referralSource, source_component: "enquiry_form" } as const
+    track("enquiry_attempt", ctx)
     let result: EnquiryResponse | null = null
+    let httpOk = false
     try {
       const res = await fetch("/api/enquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...values, [HONEYPOT_FIELD]: honeypot }),
       })
+      httpOk = res.ok
       result = (await res.json().catch(() => null)) as EnquiryResponse | null
     } catch {
+      track("enquiry_uncertain", ctx)
       setStatus({ kind: "error", message: ERROR_MESSAGES.network })
       statusRef.current?.focus()
       return
     }
 
     if (result?.ok && "state" in result && result.state === "accepted") {
+      // Confirmed server acceptance only (HTTP 2xx with state "accepted").
+      if (httpOk) {
+        track("enquiry_accepted", ctx)
+        track("generate_lead", ctx)
+      }
       setStatus({ kind: "accepted", ref: result.ref })
       setValues(EMPTY)
     } else if (result?.ok && "mode" in result && result.mode === "test") {
       setStatus({ kind: "test" })
     } else if (result && !result.ok && result.code === "invalid") {
+      track("enquiry_rejected", ctx)
       setErrors(result.errors)
       setStatus({ kind: "error", message: ERROR_MESSAGES.invalid })
       focusFirstError(result.errors)
       return
     } else {
       const code = result && !result.ok ? result.code : ""
+      track(result === null || code === "delivery_uncertain" ? "enquiry_uncertain" : "enquiry_rejected", ctx)
       // The outcome is unknown: it may have reached us, so never say it was not sent.
       const message =
         result === null
@@ -210,6 +224,18 @@ export function EnquiryForm() {
               onChange={(e) => set("details", e.target.value)}
               className={cn(inputClass, "h-auto py-3 leading-relaxed")}
             />
+          )}
+        </Field>
+        <Field id="referral_source" label="How did you hear about us? (optional)" error={errors.referral_source} className="sm:col-span-2">
+          {(props) => (
+            <select {...props} value={values.referral_source} onChange={(e) => set("referral_source", e.target.value)} className={inputClass}>
+              <option value="">Select an option</option>
+              {REFERRAL_SOURCES.map((label) => (
+                <option key={label} value={label}>
+                  {label}
+                </option>
+              ))}
+            </select>
           )}
         </Field>
       </div>

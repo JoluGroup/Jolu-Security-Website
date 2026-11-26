@@ -50,6 +50,7 @@ function buildText(enquiry: Enquiry, ref: string) {
     `Service: ${service}`,
     `County: ${enquiry.county}`,
     `Town/area: ${enquiry.town}`,
+    ...(enquiry.referralSource ? [`How they heard about us: ${enquiry.referralSource}`] : []),
     "",
     "Details:",
     enquiry.details,

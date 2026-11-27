@@ -1,0 +1,38 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Geist;src:url("__FONT_DIR__/geist-latin-wght-normal.woff2");font-weight:100 900}
+@font-face{font-family:GeistMono;src:url("__FONT_DIR__/geist-mono-latin-wght-normal.woff2");font-weight:100 900}
+@font-face{font-family:Serif;src:url("__FONT_DIR__/instrument-serif-latin-400-italic.woff2");font-style:italic}
+*{box-sizing:border-box;margin:0}
+body{width:1200px;height:630px;background:#0a0a0b;color:#f4f4f5;font-family:Geist,sans-serif;position:relative;overflow:hidden}
+.grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(55% 75% at 78% 50%,#000,transparent 80%)}
+.glow{position:absolute;inset:0;background:radial-gradient(45% 60% at 78% 50%,rgba(220,38,38,.22),transparent 70%)}
+svg{position:absolute;inset:0}
+.logo{position:absolute;left:782px;top:140px;width:350px;height:350px}
+.copy{position:absolute;left:72px;top:0;bottom:0;width:640px;display:flex;flex-direction:column;justify-content:center;gap:26px}
+.eyebrow{font-family:GeistMono,monospace;font-size:20px;letter-spacing:.26em;text-transform:uppercase;color:#a1a1aa;display:flex;align-items:center;gap:16px}
+.eyebrow i{display:block;width:40px;height:2px;background:#dc2626}
+h1{font-size:76px;line-height:1.02;font-weight:600;letter-spacing:-.03em}
+h1 em{font-family:Serif,serif;font-style:italic;font-weight:400;color:#dc2626}
+.svc{font-family:GeistMono,monospace;font-size:17px;letter-spacing:.12em;text-transform:uppercase;color:#a1a1aa;line-height:1.7}
+.svc span{white-space:nowrap}.svc b{color:#dc2626;font-weight:400;padding:0 8px}
+.foot{position:absolute;left:72px;bottom:44px;font-family:GeistMono,monospace;font-size:18px;letter-spacing:.2em;color:#f4f4f5}
+.bar{position:absolute;left:0;top:0;bottom:0;width:8px;background:#dc2626}
+</style></head><body>
+<div class="grid"></div><div class="glow"></div>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+ <g transform="translate(957 315)" stroke="rgba(255,255,255,.4)">
+  <circle r="150" stroke="#dc2626"/><circle r="215" stroke-dasharray="2 10"/><circle r="280"/><circle r="345" stroke-dasharray="2 10"/>
+  <path d="M-420 0H420M0 -420V420" stroke="rgba(255,255,255,.07)"/>
+ </g>
+</svg>
+<img class="logo" src="__LOGO__">
+<div class="bar"></div>
+<div class="copy">
+ <div class="eyebrow"><i></i>Jolu Security</div>
+ <h1>Confidence in every <em>layer</em> of protection.</h1>
+ <div class="svc"><span>Guarding</span><b>/</b><span>Events</span><b>/</b><span>K9</span><b>/</b><span>CCTV</span><b>/</b><br><span>Electric fencing</span><b>/</b><span>Alarm response</span><b>/</b><span>VIP protection</span></div>
+</div>
+<div class="foot">JOLUSECURITY.COM</div>
+</body></html>

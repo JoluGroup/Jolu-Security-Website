@@ -1,0 +1,180 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --font-serif: var(--font-instrument-serif);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+:root {
+  --background: #0a0a0b;
+  --foreground: #f4f4f5;
+  --card: #111113;
+  --card-foreground: #f4f4f5;
+  --popover: #111113;
+  --popover-foreground: #f4f4f5;
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
+  --secondary: #111113;
+  --secondary-foreground: #f4f4f5;
+  --muted: #111113;
+  --muted-foreground: #a1a1aa;
+  --accent: rgb(255 255 255 / 0.06);
+  --accent-foreground: #f4f4f5;
+  --destructive: #dc2626;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.15);
+  --ring: #f4f4f5;
+  --status: #22c55e;
+  --radius: 0.625rem;
+
+  /* Fixed header geometry: contact bar + main nav row. Used for every offset below the header. */
+  --contact-bar-h: 2.75rem;
+  --nav-h: 4rem;
+  --header-h: calc(var(--contact-bar-h) + var(--nav-h));
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --contact-bar-h: 2.25rem;
+    --nav-h: 5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+    scroll-padding-top: var(--header-h);
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+/* Layers of Protection scenes */
+.scene {
+  --scene-line: rgb(255 255 255 / 0.45);
+  --scene-faint: rgb(255 255 255 / 0.07);
+}
+.scene svg * {
+  transform-box: view-box;
+}
+.scene-grid {
+  background-image:
+    linear-gradient(var(--scene-faint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--scene-faint) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(60% 60% at 70% 50%, #000, transparent 75%);
+}
+.scene svg {
+  will-change: transform;
+}
+.scene-glow {
+  background: radial-gradient(60% 55% at 70% 50%, rgb(220 38 38 / 0.14), transparent 70%);
+}
+
+/* Photo treatment: preserves faces, uniforms and identifying detail. */
+.photo-grade {
+  filter: saturate(0.85) contrast(1.05) brightness(0.92);
+}
+.photo-grade-overlay {
+  background: rgb(10 10 11 / 0.18);
+  mix-blend-mode: multiply;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.photo-slot {
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.hero-outline {
+  font-size: clamp(9rem, 38vw, 36rem);
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(255 255 255 / 0.09);
+}
+.stage-veil {
+  background:
+    linear-gradient(90deg, var(--background) 0%, rgb(10 10 11 / 0.85) 35%, rgb(10 10 11 / 0.2) 70%, transparent 100%),
+    linear-gradient(0deg, var(--background) 0%, transparent 30%);
+}
+@media (max-width: 767px) {
+  .stage-veil {
+    background: linear-gradient(0deg, var(--background) 10%, rgb(10 10 11 / 0.75) 55%, rgb(10 10 11 / 0.55) 100%);
+  }
+}
+
+@keyframes scene-spin { to { transform: rotate(360deg); } }
+@keyframes scene-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes scene-dash { to { stroke-dashoffset: -320; } }
+@keyframes scene-scan-y { from { transform: translateY(220px); } to { transform: translateY(680px); } }
+@keyframes scene-scan-cam { from { transform: translateY(0); } to { transform: translateY(150px); } }
+@keyframes scene-pulse-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(5); opacity: 0; }
+}
+@keyframes scene-breathe { 50% { opacity: 0.45; } }
+@keyframes scene-trace { from { stroke-dashoffset: 800; } to { stroke-dashoffset: -800; } }
+
+.anim-spin { animation: scene-spin 6s linear infinite; }
+.anim-spin-slow { animation: scene-spin 60s linear infinite; }
+.anim-spin-rev { animation: scene-spin-rev 90s linear infinite; }
+.anim-dash { animation: scene-dash 6s linear infinite; }
+.anim-scan-y { animation: scene-scan-y 3.6s ease-in-out infinite alternate; }
+.anim-scan-cam { animation: scene-scan-cam 2.4s linear infinite; }
+.anim-pulse-ring { animation: scene-pulse-ring 2.4s ease-out infinite; }
+.anim-breathe { animation: scene-breathe 4s ease-in-out infinite; }
+.anim-trace { animation: scene-trace 5s linear infinite; }
+
+/* Lighter motion on small screens */
+@media (max-width: 767px) {
+  .scene [class*="anim-"] { animation-duration: 12s; }
+  .scene .anim-spin { animation-duration: 10s; }
+  .scene .anim-scan-cam,
+  .scene .anim-trace { animation: none; opacity: 0; }
+}
+
+.scene-static [class*="anim-"] { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .scene [class*="anim-"] { animation: none !important; }
+}

@@ -1,0 +1,99 @@
+name: CI
+
+# Runs on every pull request. Read-only token, no secrets, no deployment.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Test, typecheck, lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # The real-Redis suite must execute in CI: a missing redis-server makes the test file fail instead of skip.
+      REQUIRE_REAL_REDIS: "1"
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # Dependency, build and machine-local files must never be committed (they would bypass the lockfile and the checks).
+      - name: No tracked dependency, build or machine-local files
+        run: |
+          bad=$(git ls-files | grep -E '(^|/)(node_modules|\.next|\.vercel|coverage|\.turbo)(/|$)|(^|/)(\.env\.local|\.env\.[^/]*\.local|tsconfig\.tsbuildinfo|next-env\.d\.ts|\.DS_Store)$|\.log$' || true)
+          if [ -n "$bad" ]; then echo "$bad"; echo "Tracked build, dependency or machine-local files found"; exit 1; fi
+
+      # Runs BEFORE any install or package script, using only the runner's built-in Node, so install-time code
+      # from a pull request cannot disable it. It is run again after install below.
+      - name: Frozen-files guard (before install)
+        run: node scripts/seo/frozen-files.mjs --check
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.3
+
+      # Node 22 (latest 22.x): the unit tests rely on Node's built-in TypeScript type
+      # stripping, which needs 22.18 or later.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Runs the guard directly, so deleting its test files cannot switch it off.
+      - name: Frozen-files guard (after install)
+        run: node scripts/seo/frozen-files.mjs --check
+
+      # The finalize-script tests run the real Lua script on a real redis-server that the test spawns itself on a
+      # free port. Installed from Ubuntu's apt archive (no third-party action, no service container, no secrets);
+      # the package does not need to run as a system service, so the service is stopped to keep the runner clean.
+      - name: Install Redis server (required by the real-Redis tests)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends redis-server
+          sudo systemctl stop redis-server || true
+          command -v redis-server
+          redis-server --version
+          redis-server --version | grep -Eq 'v=(6|7|8)\.' || { echo "Unexpected redis-server major version"; exit 1; }
+
+      - name: Unit tests
+        run: pnpm test
+
+      # Mandatory-Redis gate: runs the real-Redis suite on its own and requires that all 7 tests ran and none skipped.
+      - name: Real-Redis suite must run (not skip)
+        run: |
+          set -o pipefail
+          tap="$RUNNER_TEMP/redis-suite.tap"
+          node --import ./tests/register.mjs --test --test-reporter=tap tests/enquiry/finalize-script.redis.test.mjs | tee "$tap"
+          grep -Eq '^# tests 7$' "$tap" || { echo "Real-Redis suite did not run exactly 7 tests"; exit 1; }
+          grep -Eq '^# skipped 0$' "$tap" || { echo "Real-Redis suite had skipped tests"; exit 1; }
+          grep -Eq '^# fail 0$' "$tap" || { echo "Real-Redis suite had failures"; exit 1; }
+          rm -f "$tap"
+
+      # Fails if unapproved or withheld media is present anywhere in the tree.
+      - name: Asset security checks
+        run: pnpm check:assets
+
+      - name: Generate Next.js route types
+        run: pnpm exec next typegen
+
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+
+      - name: ESLint
+        run: pnpm lint
+
+      # Uses the real next/font/google configuration; GitHub-hosted runners can reach Google Fonts.
+      - name: Production build
+        run: pnpm build
